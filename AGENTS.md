@@ -12,3 +12,17 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 - **README.md Currency**: At the end of every feature or significant change, you MUST update `README.md` to reflect the latest project state.
 - **AGENTS.md Currency**: You MUST keep `AGENTS.md` updated with any new context, rules, or environment changes so future agent chat sessions inherit the full historical context.
+
+---
+
+### Architecture Specification (Binding)
+
+The file `docs/architecture-review.md` is the **authoritative technical specification** for this project.
+
+**All AI agents MUST:**
+
+1. **Read `docs/architecture-review.md` before writing feature code.**
+2. **Follow the folder structure (Section 13).** Features go in `src/features/<feature-name>/`.
+3. **Use `proxy.ts` (Never `middleware.ts`).**
+4. **Always `await` params, cookies(), and headers().**
+5. **Validate all inputs with Zod schemas.**
