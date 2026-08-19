@@ -1,4 +1,4 @@
-import { auth } from "@/auth";
+import { auth } from "@/features/auth/lib/auth";
 
 export const proxy = auth((req) => {
     const isLoggedIn = !!req.auth;
