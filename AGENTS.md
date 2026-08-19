@@ -26,3 +26,9 @@ The file `docs/architecture-review.md` is the **authoritative technical specific
 3. **Use `proxy.ts` (Never `middleware.ts`).**
 4. **Always `await` params, cookies(), and headers().**
 5. **Validate all inputs with Zod schemas.**
+
+---
+
+### Workflow Rules
+
+- **Always Read Skills**: Before executing complex tool workflows (like Git operations), you MUST check the `Available skills` list and read the corresponding `SKILL.md` file. You are bound by the instructions within those skills.
