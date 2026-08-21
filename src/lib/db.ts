@@ -1,0 +1,35 @@
+import { PrismaClient } from "@prisma/client";
+import { withAccelerate } from "@prisma/extension-accelerate";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
+import { env } from "./env";
+
+type ExtendedPrismaClient = ReturnType<typeof createExtendedPrismaClient>;
+
+export function createRawPrismaClient() {
+    if (env.DATABASE_URL.startsWith("prisma://")) {
+        return new PrismaClient({
+            accelerateUrl: env.DATABASE_URL,
+        });
+    }
+    const pool = new Pool({ connectionString: env.DATABASE_URL });
+    const adapter = new PrismaPg(pool);
+    return new PrismaClient({ adapter });
+}
+
+function createExtendedPrismaClient() {
+    return createRawPrismaClient().$extends(withAccelerate());
+}
+
+const globalForPrisma = globalThis as unknown as {
+    prisma: ExtendedPrismaClient;
+    rawPrisma: PrismaClient;
+};
+
+export const db = globalForPrisma.prisma || createExtendedPrismaClient();
+export const rawDb = globalForPrisma.rawPrisma || createRawPrismaClient();
+
+if (process.env.NODE_ENV !== "production") {
+    globalForPrisma.prisma = db;
+    globalForPrisma.rawPrisma = rawDb;
+}
