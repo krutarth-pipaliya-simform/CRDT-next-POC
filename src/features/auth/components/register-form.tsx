@@ -2,8 +2,10 @@
 
 import { useActionState } from "react";
 import { registerAction } from "@/features/auth/actions/register";
-import { AuthInput } from "@/components/ui/auth-input";
-import { AuthButton } from "@/components/ui/auth-button";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Alert } from "@/components/ui/alert";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 
@@ -13,96 +15,71 @@ export function RegisterForm() {
     return (
         <div className="w-full max-w-sm flex flex-col gap-12">
             <div>
-                <h2 className="font-mono text-xs uppercase tracking-widest text-[#555555] mb-4">
+                <h2 className="font-brand-mono text-xs uppercase tracking-widest text-brand-subtle mb-4">
                     Create Account
                 </h2>
-                <h1 className="text-3xl font-medium tracking-tight text-[#1A1A1A]">
+                <h1 className="text-3xl font-medium tracking-tight text-brand-ink">
                     Sign Up
                 </h1>
             </div>
 
             <form action={formAction} className="flex flex-col gap-6">
-                <div className="flex flex-col gap-2">
-                    <label
-                        htmlFor="name"
-                        className="font-mono text-xs uppercase tracking-wider text-[#1A1A1A]"
-                    >
-                        Name
-                    </label>
-                    <AuthInput
-                        id="name"
-                        name="name"
-                        type="text"
-                        placeholder="Jane Doe"
-                        required
-                    />
-                </div>
+                <Input
+                    id="name"
+                    name="name"
+                    type="text"
+                    label="Name"
+                    placeholder="Jane Doe"
+                    required
+                />
+                <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    label="Email"
+                    placeholder="name@example.com"
+                    required
+                />
+                <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    label="Password"
+                    placeholder="••••••••"
+                    required
+                    minLength={8}
+                />
 
-                <div className="flex flex-col gap-2">
-                    <label
-                        htmlFor="email"
-                        className="font-mono text-xs uppercase tracking-wider text-[#1A1A1A]"
-                    >
-                        Email
-                    </label>
-                    <AuthInput
-                        id="email"
-                        name="email"
-                        type="email"
-                        placeholder="name@example.com"
-                        required
-                    />
-                </div>
-
-                <div className="flex flex-col gap-2">
-                    <label
-                        htmlFor="password"
-                        className="font-mono text-xs uppercase tracking-wider text-[#1A1A1A]"
-                    >
-                        Password
-                    </label>
-                    <AuthInput
-                        id="password"
-                        name="password"
-                        type="password"
-                        placeholder="••••••••"
-                        required
-                        minLength={8}
-                    />
-                </div>
-
-                {state?.error && (
-                    <div className="p-3 border-2 border-[#E53E3E] bg-[#E53E3E]/5 text-[#E53E3E] text-xs font-mono uppercase tracking-wider">
-                        {state.error}
-                    </div>
-                )}
+                {state?.error && <Alert intent="danger">{state.error}</Alert>}
 
                 <div className="pt-2">
-                    <AuthButton type="submit">Sign Up</AuthButton>
+                    <Button
+                        type="submit"
+                        withArrow
+                        className="w-full justify-between"
+                    >
+                        Sign Up
+                    </Button>
                 </div>
             </form>
 
             <div className="flex flex-col gap-4">
-                <div className="h-[2px] w-full bg-[#F0F0F0] relative">
-                    <span className="absolute left-1/2 -translate-x-1/2 -top-2 bg-[#FBFBFB] px-4 font-mono text-[10px] text-[#555555] uppercase tracking-widest">
-                        Or continue with
-                    </span>
-                </div>
-
-                <AuthButton
+                <Separator label="Or continue with" />
+                <Button
                     type="button"
                     variant="secondary"
+                    className="w-full"
                     onClick={() => signIn("google", { redirectTo: "/" })}
                 >
                     Sign up with Google
-                </AuthButton>
+                </Button>
             </div>
 
-            <div className="font-mono text-xs text-[#555555]">
+            <div className="font-brand-mono text-xs text-brand-subtle">
                 Already have an account?{" "}
                 <Link
                     href="/login"
-                    className="text-[#2948FF] underline underline-offset-4 hover:text-[#1A1A1A] uppercase tracking-wider"
+                    className="text-brand-accent underline underline-offset-4 hover:text-brand-ink uppercase tracking-wider"
                 >
                     Sign In
                 </Link>
