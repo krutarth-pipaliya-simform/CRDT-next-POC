@@ -6,7 +6,7 @@ export default function AuthLayout({
     children: React.ReactNode;
 }) {
     return (
-        <div className="min-h-screen w-full flex bg-[#FBFBFB] font-sans selection:bg-[#2948FF] selection:text-white">
+        <main className="min-h-screen w-full flex bg-[#FBFBFB] font-sans selection:bg-[#2948FF] selection:text-white">
             {/* Left Column - Form Area */}
             <div className="w-full lg:w-1/3 min-w-[400px] flex flex-col justify-center items-center p-8 sm:p-12 border-r-2 border-[#F0F0F0]">
                 {children}
@@ -49,6 +49,6 @@ PROTOCOL: YJS_WS`}
                     }}
                 />
             </div>
-        </div>
+        </main>
     );
 }
