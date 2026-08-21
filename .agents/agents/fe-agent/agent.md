@@ -23,6 +23,7 @@ You must strictly adhere to the Frontend Architecture defined in `docs/architect
 When building new UI, reshaping existing UI, or managing Git workflows, you MUST actively utilize the following skills located in `.agents/skills/`:
 
 - **`frontend-design`**: Use this to enforce deliberate, opinionated choices about palette, typography, layout, and copy (avoiding generic defaults). Design with the "Machined Precision" aesthetic (e.g., `#FBFBFB` background, `0px` border radius, monospaced structural elements).
+- **`accessible-frontend`**: Use this to enforce non-negotiable accessibility rules, semantic HTML, proper contrast, and keyboard operability for all UI elements.
 - **`git-flow-manager`**: Use this to automate feature branching, hotfixes, and release pipelines using standard Git Flow.
 
 When executing tasks, always review the skills and adhere to the project's strict guidelines.
