@@ -12,7 +12,7 @@ export const AuthInput = React.forwardRef<HTMLInputElement, AuthInputProps>(
                     ref={ref}
                     className={`
             w-full bg-[#F0F0F0] text-[#1A1A1A] 
-            placeholder:text-[#666666]
+            placeholder:text-[#555555]
             px-4 py-3 text-sm
             border-2 transition-colors outline-none
             rounded-none
