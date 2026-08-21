@@ -23,10 +23,14 @@ export function RegisterForm() {
 
             <form action={formAction} className="flex flex-col gap-6">
                 <div className="flex flex-col gap-2">
-                    <label className="font-mono text-xs uppercase tracking-wider text-[#1A1A1A]">
+                    <label
+                        htmlFor="name"
+                        className="font-mono text-xs uppercase tracking-wider text-[#1A1A1A]"
+                    >
                         Name
                     </label>
                     <AuthInput
+                        id="name"
                         name="name"
                         type="text"
                         placeholder="Jane Doe"
@@ -35,10 +39,14 @@ export function RegisterForm() {
                 </div>
 
                 <div className="flex flex-col gap-2">
-                    <label className="font-mono text-xs uppercase tracking-wider text-[#1A1A1A]">
+                    <label
+                        htmlFor="email"
+                        className="font-mono text-xs uppercase tracking-wider text-[#1A1A1A]"
+                    >
                         Email
                     </label>
                     <AuthInput
+                        id="email"
                         name="email"
                         type="email"
                         placeholder="name@example.com"
@@ -47,10 +55,14 @@ export function RegisterForm() {
                 </div>
 
                 <div className="flex flex-col gap-2">
-                    <label className="font-mono text-xs uppercase tracking-wider text-[#1A1A1A]">
+                    <label
+                        htmlFor="password"
+                        className="font-mono text-xs uppercase tracking-wider text-[#1A1A1A]"
+                    >
                         Password
                     </label>
                     <AuthInput
+                        id="password"
                         name="password"
                         type="password"
                         placeholder="••••••••"

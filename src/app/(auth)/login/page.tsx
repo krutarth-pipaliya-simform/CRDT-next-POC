@@ -6,13 +6,6 @@ export const metadata: Metadata = {
     description: "Login to the CRDT workspace",
 };
 
-export default async function LoginPage({
-    searchParams,
-}: {
-    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}) {
-    // Next.js 16 requires awaiting searchParams
-    await searchParams;
-
+export default function LoginPage() {
     return <LoginForm />;
 }

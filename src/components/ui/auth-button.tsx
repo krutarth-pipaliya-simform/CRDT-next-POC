@@ -42,7 +42,10 @@ export const AuthButton = React.forwardRef<HTMLButtonElement, AuthButtonProps>(
             >
                 <span>{pending ? pendingText : children}</span>
                 {isPrimary && !pending && (
-                    <span className="opacity-0 -translate-x-2 transition-all group-hover:opacity-100 group-hover:translate-x-0">
+                    <span
+                        aria-hidden="true"
+                        className="opacity-0 -translate-x-2 transition-all group-hover:opacity-100 group-hover:translate-x-0"
+                    >
                         -&gt;
                     </span>
                 )}

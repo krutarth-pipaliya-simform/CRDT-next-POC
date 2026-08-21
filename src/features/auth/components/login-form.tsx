@@ -23,10 +23,14 @@ export function LoginForm() {
 
             <form action={formAction} className="flex flex-col gap-6">
                 <div className="flex flex-col gap-2">
-                    <label className="font-mono text-xs uppercase tracking-wider text-[#1A1A1A]">
+                    <label
+                        htmlFor="email"
+                        className="font-mono text-xs uppercase tracking-wider text-[#1A1A1A]"
+                    >
                         Email
                     </label>
                     <AuthInput
+                        id="email"
                         name="email"
                         type="email"
                         placeholder="name@example.com"
@@ -35,10 +39,14 @@ export function LoginForm() {
                 </div>
 
                 <div className="flex flex-col gap-2">
-                    <label className="font-mono text-xs uppercase tracking-wider text-[#1A1A1A]">
+                    <label
+                        htmlFor="password"
+                        className="font-mono text-xs uppercase tracking-wider text-[#1A1A1A]"
+                    >
                         Password
                     </label>
                     <AuthInput
+                        id="password"
                         name="password"
                         type="password"
                         placeholder="••••••••"
