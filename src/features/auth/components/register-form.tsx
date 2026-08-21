@@ -92,7 +92,7 @@ export function RegisterForm() {
                     href="/login"
                     className="text-[#2948FF] hover:underline uppercase tracking-wider"
                 >
-                    Log In
+                    Sign In
                 </Link>
             </div>
         </div>

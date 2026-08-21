@@ -17,7 +17,7 @@ export function LoginForm() {
                     Welcome Back
                 </h2>
                 <h1 className="text-3xl font-medium tracking-tight text-[#1A1A1A]">
-                    Log In
+                    Sign In
                 </h1>
             </div>
 
