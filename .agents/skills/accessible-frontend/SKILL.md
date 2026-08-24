@@ -122,11 +122,26 @@ Focus must never be left in a void. After every state change, focus lands on a m
 - **next:** SSR-safe (guard `window`). RTL: logical CSS props, swap arrow keys.
 - `tabindex`: `0` = focusable, `-1` = programmatic only, never positive.
 
-## Testing
+## Validation Workflow (Required)
+
+After implementing any accessibility improvements, you MUST perform an end-to-end Lighthouse validation loop. This is not optional; do not wait for the user to ask you to run Lighthouse.
+
+1. **Run Lighthouse Audit:** Execute a Lighthouse accessibility audit against the updated page/component using the `run_command` tool (e.g., using `npx lighthouse <url> --only-categories=accessibility --output=json` or the project's specific testing script).
+2. **Analyze Report:** Review the output to identify any accessibility violations caught by Lighthouse.
+3. **Iterate and Fix:** Immediately fix the reported issues in the codebase.
+4. **Re-run Audit:** Run the Lighthouse audit again to verify your fixes. Repeat steps 2-4 until no further improvements can be made or the accessibility score reaches the highest practical value (ideally 100).
+5. **Final Output & Summary:** Once the loop is complete, your final response to the user MUST include:
+    - The final Lighthouse accessibility score.
+    - A summary of the issues that were initially detected.
+    - How each issue was resolved.
+    - Any remaining issues that could not be fixed and a technical justification for why.
+
+## Manual Testing (To be done by Developer)
+
+While the agent handles Lighthouse automation, the following manual checks are still strictly required for a complete audit (Lighthouse only catches ~30-40% of issues):
 
 1. Keyboard-only: complete every flow via `Tab`.
 2. Screen reader: VoiceOver / NVDA / TalkBack.
 3. Contrast: WebAIM checker or DevTools.
 4. Zoom 200% + 400%/320px reflow.
 5. `prefers-reduced-motion`: animations stop.
-6. axe/Lighthouse/WAVE scan (catches ~30-40%; manual testing essential).
