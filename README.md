@@ -25,6 +25,7 @@ An enterprise-grade collaborative SaaS workspace built with Next.js 16 and React
 2. **Authentication Flow (Frontend & Backend)**
     - Custom `login` and `register` pages matching the "Machined Precision" design specification.
     - Robust Next.js 16 Server Actions (`loginAction`, `registerAction`) for handling credentials securely.
+    - Full email verification flow using Nodemailer, generating secure 24-hour verification tokens. Users cannot log in until their email is verified.
     - Route protection established via `proxy.ts` (Next.js 16 middleware replacement).
     - Zod validation at both the client layer and server boundaries.
     - Password hashing with `bcryptjs`.
