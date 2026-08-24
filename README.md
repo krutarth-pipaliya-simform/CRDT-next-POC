@@ -16,14 +16,20 @@ An enterprise-grade collaborative SaaS workspace built with Next.js 16 and React
 
 ## Current State / Implemented Features
 
-1. **Authentication Flow (Frontend & Backend)**
+1. **Design System & Component Library**
+    - Built a robust, centralized design system utilizing Tailwind v4 `@theme` block in `globals.css`.
+    - **Strict Styling Convention**: Usage of raw Tailwind colors (e.g. `bg-blue-500`) is prohibited. All UI must be styled using semantic brand tokens (e.g. `bg-brand-accent`). New colors must be added to the design system first.
+    - Kitchen-sink component showcase available at `/design-system`.
+    - Base primitives (Button, Input, FormField, Card, Badge, Alert, etc.) established in `src/components/ui/`.
+
+2. **Authentication Flow (Frontend & Backend)**
     - Custom `login` and `register` pages matching the "Machined Precision" design specification.
     - Robust Next.js 16 Server Actions (`loginAction`, `registerAction`) for handling credentials securely.
     - Route protection established via `proxy.ts` (Next.js 16 middleware replacement).
     - Zod validation at both the client layer and server boundaries.
     - Password hashing with `bcryptjs`.
 
-2. **Database (Prisma)**
+3. **Database (Prisma)**
     - Configured `schema.prisma` for NextAuth integration (User, Account, Session, VerificationToken) alongside base domain models (Workspace, Document, Task).
 
 ## Getting Started
