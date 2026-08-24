@@ -20,7 +20,12 @@ model User {
   emailVerified DateTime?
   password      String?
   image         String?
+
+  // TODO(Tech-Debt): Remove this global 'role' field in the future.
+  // Roles (ADMIN, MEMBER, GUEST) belong to WorkspaceMember, not User.
+  // This was temporarily added for testing purposes.
   role          Role      @default(MEMBER)
+
   accounts      Account[]
   sessions      Session[]
   workspaces    WorkspaceMember[]

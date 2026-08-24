@@ -37,6 +37,8 @@ export async function registerAction(state: unknown, formData: FormData) {
                 name,
                 email,
                 password: hashedPassword,
+                // TODO(Tech-Debt): Remove hardcoded role when 'role' is removed from the User schema.
+                // Users should receive their roles via WorkspaceMember records upon joining a workspace.
                 role: Role.MEMBER,
                 // Email is not verified by default
             },
