@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
+import GitHub from "next-auth/providers/github";
 import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { rawDb } from "@/lib/db";
@@ -20,6 +21,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                     prompt: "select_account",
                 },
             },
+        }),
+        GitHub({
+            clientId: process.env.AUTH_GITHUB_ID,
+            clientSecret: process.env.AUTH_GITHUB_SECRET,
+            allowDangerousEmailAccountLinking: true,
         }),
         Credentials({
             name: "Credentials",
