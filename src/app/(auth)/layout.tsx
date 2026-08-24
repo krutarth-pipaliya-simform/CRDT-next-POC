@@ -6,28 +6,28 @@ export default function AuthLayout({
     children: React.ReactNode;
 }) {
     return (
-        <main className="min-h-screen w-full flex bg-[#FBFBFB] font-sans selection:bg-[#2948FF] selection:text-white">
+        <main className="min-h-screen w-full flex bg-brand-surface font-brand-sans">
             {/* Left Column - Form Area */}
-            <div className="w-full lg:w-1/3 min-w-[400px] flex flex-col justify-center items-center p-8 sm:p-12 border-r-2 border-[#F0F0F0]">
+            <div className="w-full lg:w-1/3 min-w-[400px] flex flex-col justify-center items-center p-8 sm:p-12 border-r-2 border-brand-muted">
                 {children}
             </div>
 
             {/* Right Column - Visual Area */}
-            <div className="hidden lg:flex flex-1 flex-col justify-center bg-[#F0F0F0] relative overflow-hidden p-16">
+            <div className="hidden lg:flex flex-1 flex-col justify-center bg-brand-muted relative overflow-hidden p-16">
                 <div className="absolute top-12 left-12">
-                    <div className="font-mono text-sm tracking-widest text-[#1A1A1A] font-bold">
+                    <div className="font-brand-mono text-sm tracking-widest text-brand-ink font-bold">
                         [ CRDT-NEXT-POC ]
                     </div>
                 </div>
 
                 <div className="relative z-10 max-w-2xl">
-                    <h1 className="text-5xl font-bold tracking-tighter text-[#1A1A1A] leading-tight mb-8">
+                    <h1 className="text-5xl font-bold tracking-tighter text-brand-ink leading-tight mb-8">
                         Synchronized. <br />
                         Distributed. <br />
                         Precise.
                     </h1>
 
-                    <div className="font-mono text-sm text-[#666666] leading-relaxed p-6 bg-[#FBFBFB] border-2 border-[#1A1A1A]">
+                    <div className="font-brand-mono text-sm text-brand-subtle leading-relaxed p-6 bg-brand-surface border-2 border-brand-ink">
                         <pre className="whitespace-pre-wrap">
                             {`[ Client A ] <---> [ Sync Server ]
        |                  |
@@ -44,7 +44,7 @@ PROTOCOL: YJS_WS`}
                 <div
                     className="absolute inset-0 pointer-events-none opacity-20"
                     style={{
-                        backgroundImage: `linear-gradient(#1A1A1A 1px, transparent 1px), linear-gradient(90deg, #1A1A1A 1px, transparent 1px)`,
+                        backgroundImage: `linear-gradient(var(--color-brand-ink) 1px, transparent 1px), linear-gradient(90deg, var(--color-brand-ink) 1px, transparent 1px)`,
                         backgroundSize: "40px 40px",
                     }}
                 />

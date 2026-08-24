@@ -33,6 +33,7 @@ export async function registerAction(state: unknown, formData: FormData) {
                 name,
                 email,
                 password: hashedPassword,
+                emailVerified: new Date(),
             },
         });
 

@@ -577,6 +577,13 @@ CRDT-next-POC/
 - Always validate inputs with Zod before processing
 - Always return a consistent result type: `{ success: boolean; data?: T; error?: string }`
 
+### React 19 Standards
+- **No `forwardRef`**: Destructure `ref` directly from props (`function MyComponent({ ref, ...props })`).
+- **Context Providers**: Use `<Context>` instead of `<Context.Provider>`.
+- **Hooks**: Use `useActionState` instead of deprecated `useFormState`.
+- **Resource Loading**: Use `use()` instead of `useContext()` to consume contexts, and `use()` to unwrap Promises in render.
+- **Form Status**: Use `useFormStatus` to handle pending states in form submit buttons without manual state.
+
 ### API Response Contract
 ```typescript
 // Standard success response

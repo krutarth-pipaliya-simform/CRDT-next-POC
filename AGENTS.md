@@ -29,6 +29,14 @@ The file `docs/architecture-review.md` is the **authoritative technical specific
 
 ---
 
+### Styling Conventions (Binding)
+
+- **Design System First**: DO NOT use raw Tailwind color classes directly in components (e.g., `bg-blue-500`, `text-red-600`).
+- **Semantic Tokens**: You MUST use semantic brand tokens defined in the design system (e.g., `bg-brand-accent`, `text-brand-danger`).
+- **Extending the System**: If a required color or design token does not exist, you must first define it in `src/app/globals.css` inside the `@theme` block as a `--color-brand-*` variable (or similar brand token), and then consume it in the UI.
+
+---
+
 ### Workflow Rules
 
 - **Always Read Skills**: Before executing complex tool workflows (like Git operations), you MUST check the `Available skills` list and read the corresponding `SKILL.md` file. You are bound by the instructions within those skills.
