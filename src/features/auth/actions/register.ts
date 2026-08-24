@@ -1,11 +1,15 @@
 "use server";
 
-import { signIn } from "@/features/auth/lib/auth";
 import { registerSchema } from "@/schemas/auth";
 import { rawDb } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { AuthError } from "next-auth";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
+import { Role } from "@prisma/client";
+
+import { generateVerificationToken } from "@/features/auth/lib/tokens";
+import { sendVerificationEmail } from "@/features/auth/lib/email";
+import { headers } from "next/headers";
 
 export async function registerAction(state: unknown, formData: FormData) {
     try {
@@ -33,17 +37,33 @@ export async function registerAction(state: unknown, formData: FormData) {
                 name,
                 email,
                 password: hashedPassword,
-                emailVerified: new Date(),
+                // TODO(Tech-Debt): Remove hardcoded role when 'role' is removed from the User schema.
+                // Users should receive their roles via WorkspaceMember records upon joining a workspace.
+                role: Role.MEMBER,
+                // Email is not verified by default
             },
         });
 
-        await signIn("credentials", {
-            email,
-            password,
-            redirectTo: "/",
-        });
+        // Generate verification token and send email
+        const verificationToken = await generateVerificationToken(email);
 
-        return { success: true };
+        const headersList = await headers();
+        const host = headersList.get("host") || "localhost:3000";
+        const protocol =
+            headersList.get("x-forwarded-proto") ??
+            (host.startsWith("localhost") ? "http" : "https");
+        const appUrl = `${protocol}://${host}`;
+
+        await sendVerificationEmail(
+            verificationToken.identifier,
+            verificationToken.token,
+            appUrl,
+        );
+
+        return {
+            success: true,
+            message: "Confirmation email sent! Please check your inbox.",
+        };
     } catch (error) {
         if (isRedirectError(error)) {
             throw error;

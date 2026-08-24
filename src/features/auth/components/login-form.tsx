@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState, useTransition } from "react";
 import { loginAction } from "@/features/auth/actions/login";
+import { resendVerificationAction } from "@/features/auth/actions/resend-verification";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -11,6 +12,29 @@ import { signIn } from "next-auth/react";
 
 export function LoginForm() {
     const [state, formAction] = useActionState(loginAction, null);
+    const [isPending, startTransition] = useTransition();
+    const [resendStatus, setResendStatus] = useState<{
+        type: "success" | "error";
+        message: string;
+    } | null>(null);
+
+    const handleResend = () => {
+        if (state?.unverifiedEmail) {
+            startTransition(async () => {
+                const result = await resendVerificationAction(
+                    state.unverifiedEmail as string,
+                );
+                if (result.success) {
+                    setResendStatus({
+                        type: "success",
+                        message: result.message!,
+                    });
+                } else {
+                    setResendStatus({ type: "error", message: result.error! });
+                }
+            });
+        }
+    };
 
     return (
         <div className="w-full max-w-sm flex flex-col gap-12">
@@ -41,7 +65,38 @@ export function LoginForm() {
                     required
                 />
 
-                {state?.error && <Alert intent="danger">{state.error}</Alert>}
+                {state?.error && state.error !== "unverified" && (
+                    <Alert intent="danger">{state.error}</Alert>
+                )}
+
+                {state?.error === "unverified" && (
+                    <div className="flex flex-col gap-2">
+                        <Alert intent="danger">
+                            Your email is not verified.
+                        </Alert>
+                        {resendStatus && (
+                            <Alert
+                                intent={
+                                    resendStatus.type === "success"
+                                        ? "success"
+                                        : "danger"
+                                }
+                            >
+                                {resendStatus.message}
+                            </Alert>
+                        )}
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={handleResend}
+                            disabled={isPending}
+                        >
+                            {isPending
+                                ? "Sending..."
+                                : "Resend Verification Email"}
+                        </Button>
+                    </div>
+                )}
 
                 <div className="pt-2">
                     <Button

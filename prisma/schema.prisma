@@ -6,6 +6,12 @@ generator client {
   provider = "prisma-client-js"
 }
 
+enum Role {
+  ADMIN
+  MEMBER
+  GUEST
+}
+
 // --- Auth.js Models ---
 model User {
   id            String    @id @default(cuid())
@@ -14,6 +20,12 @@ model User {
   emailVerified DateTime?
   password      String?
   image         String?
+
+  // TODO(Tech-Debt): Remove this global 'role' field in the future.
+  // Roles (ADMIN, MEMBER, GUEST) belong to WorkspaceMember, not User.
+  // This was temporarily added for testing purposes.
+  role          Role      @default(MEMBER)
+
   accounts      Account[]
   sessions      Session[]
   workspaces    WorkspaceMember[]
@@ -72,12 +84,6 @@ model WorkspaceMember {
   role        Role      @default(MEMBER)
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-enum Role {
-  ADMIN
-  MEMBER
-  GUEST
 }
 
 model Document {

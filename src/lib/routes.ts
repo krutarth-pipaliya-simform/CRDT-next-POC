@@ -4,6 +4,7 @@
  */
 export const publicRoutes: string[] = [
     // Add public landing pages, pricing, etc. here
+    "/verify-email",
 ];
 
 /**

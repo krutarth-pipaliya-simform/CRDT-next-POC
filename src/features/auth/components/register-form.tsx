@@ -23,67 +23,87 @@ export function RegisterForm() {
                 </h1>
             </div>
 
-            <form action={formAction} className="flex flex-col gap-6">
-                <Input
-                    id="name"
-                    name="name"
-                    type="text"
-                    label="Name"
-                    placeholder="Jane Doe"
-                    required
-                />
-                <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    label="Email"
-                    placeholder="name@example.com"
-                    required
-                />
-                <Input
-                    id="password"
-                    name="password"
-                    type="password"
-                    label="Password"
-                    placeholder="••••••••"
-                    required
-                    minLength={8}
-                />
-
-                {state?.error && <Alert intent="danger">{state.error}</Alert>}
-
-                <div className="pt-2">
-                    <Button
-                        type="submit"
-                        withArrow
-                        className="w-full justify-between"
-                    >
-                        Sign Up
-                    </Button>
+            {state?.success ? (
+                <div className="flex flex-col gap-6">
+                    <Alert intent="success">{state.message}</Alert>
+                    <div className="font-brand-mono text-xs text-brand-subtle">
+                        <Link
+                            href="/login"
+                            className="text-brand-accent underline underline-offset-4 hover:text-brand-ink uppercase tracking-wider"
+                        >
+                            Return to Sign In
+                        </Link>
+                    </div>
                 </div>
-            </form>
+            ) : (
+                <>
+                    <form action={formAction} className="flex flex-col gap-6">
+                        <Input
+                            id="name"
+                            name="name"
+                            type="text"
+                            label="Name"
+                            placeholder="Jane Doe"
+                            required
+                        />
+                        <Input
+                            id="email"
+                            name="email"
+                            type="email"
+                            label="Email"
+                            placeholder="name@example.com"
+                            required
+                        />
+                        <Input
+                            id="password"
+                            name="password"
+                            type="password"
+                            label="Password"
+                            placeholder="••••••••"
+                            required
+                            minLength={8}
+                        />
 
-            <div className="flex flex-col gap-4">
-                <Separator label="Or continue with" />
-                <Button
-                    type="button"
-                    variant="secondary"
-                    className="w-full"
-                    onClick={() => signIn("google", { redirectTo: "/" })}
-                >
-                    Sign up with Google
-                </Button>
-            </div>
+                        {state?.error && (
+                            <Alert intent="danger">{state.error}</Alert>
+                        )}
 
-            <div className="font-brand-mono text-xs text-brand-subtle">
-                Already have an account?{" "}
-                <Link
-                    href="/login"
-                    className="text-brand-accent underline underline-offset-4 hover:text-brand-ink uppercase tracking-wider"
-                >
-                    Sign In
-                </Link>
-            </div>
+                        <div className="pt-2">
+                            <Button
+                                type="submit"
+                                withArrow
+                                className="w-full justify-between"
+                            >
+                                Sign Up
+                            </Button>
+                        </div>
+                    </form>
+
+                    <div className="flex flex-col gap-4">
+                        <Separator label="Or continue with" />
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            className="w-full"
+                            onClick={() =>
+                                signIn("google", { redirectTo: "/" })
+                            }
+                        >
+                            Sign up with Google
+                        </Button>
+                    </div>
+
+                    <div className="font-brand-mono text-xs text-brand-subtle">
+                        Already have an account?{" "}
+                        <Link
+                            href="/login"
+                            className="text-brand-accent underline underline-offset-4 hover:text-brand-ink uppercase tracking-wider"
+                        >
+                            Sign In
+                        </Link>
+                    </div>
+                </>
+            )}
         </div>
     );
 }
