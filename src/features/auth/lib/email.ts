@@ -2,9 +2,16 @@ import nodemailer from "nodemailer";
 
 let testAccount: nodemailer.TestAccount | null = null;
 
+const globalForEmail = globalThis as unknown as {
+    nodemailerTransporter: nodemailer.Transporter | undefined;
+};
+
 async function getTransporter() {
+    if (globalForEmail.nodemailerTransporter)
+        return globalForEmail.nodemailerTransporter;
+
     if (process.env.EMAIL_SERVER_HOST) {
-        return nodemailer.createTransport({
+        globalForEmail.nodemailerTransporter = nodemailer.createTransport({
             host: process.env.EMAIL_SERVER_HOST,
             port: parseInt(process.env.EMAIL_SERVER_PORT || "587"),
             auth: {
@@ -12,6 +19,7 @@ async function getTransporter() {
                 pass: process.env.EMAIL_SERVER_PASSWORD,
             },
         });
+        return globalForEmail.nodemailerTransporter;
     }
 
     // Fallback to Ethereal for testing
@@ -19,7 +27,7 @@ async function getTransporter() {
         testAccount = await nodemailer.createTestAccount();
     }
 
-    return nodemailer.createTransport({
+    globalForEmail.nodemailerTransporter = nodemailer.createTransport({
         host: "smtp.ethereal.email",
         port: 587,
         secure: false,
@@ -28,6 +36,8 @@ async function getTransporter() {
             pass: testAccount.pass,
         },
     });
+
+    return globalForEmail.nodemailerTransporter;
 }
 
 export async function sendVerificationEmail(
