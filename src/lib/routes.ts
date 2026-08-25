@@ -2,10 +2,7 @@
  * An array of routes that are accessible to the public.
  * These routes do not require authentication.
  */
-export const publicRoutes: string[] = [
-    // Add public landing pages, pricing, etc. here
-    "/verify-email",
-];
+export const publicRoutes: string[] = ["/", "/verify-email"];
 
 /**
  * An array of routes that are used for authentication.
@@ -23,7 +20,7 @@ export const apiAuthPrefix: string = "/api/auth";
 /**
  * The default redirect path after a successful login.
  */
-export const DEFAULT_LOGIN_REDIRECT: string = "/";
+export const DEFAULT_LOGIN_REDIRECT: string = "/dashboard";
 
 /**
  * The default redirect path when an unauthenticated user tries to access a protected route.

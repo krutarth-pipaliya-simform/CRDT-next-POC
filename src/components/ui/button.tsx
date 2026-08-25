@@ -16,7 +16,7 @@ export interface ButtonProps extends Omit<
     ref?: React.Ref<HTMLButtonElement>;
 }
 
-const variantClasses: Record<ButtonVariant, string> = {
+export const variantClasses: Record<ButtonVariant, string> = {
     primary:
         "bg-brand-ink text-brand-surface border-2 border-brand-ink hover:bg-brand-accent hover:border-brand-accent focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2",
     secondary:
@@ -25,7 +25,7 @@ const variantClasses: Record<ButtonVariant, string> = {
     danger: "bg-brand-danger text-brand-surface border-2 border-brand-danger hover:opacity-90 focus-visible:ring-2 focus-visible:ring-brand-danger focus-visible:ring-offset-2",
 };
 
-const sizeClasses: Record<Size, string> = {
+export const sizeClasses: Record<Size, string> = {
     sm: "px-4 py-2 text-xs",
     md: "px-6 py-3 text-sm",
     lg: "px-8 py-4 text-base",

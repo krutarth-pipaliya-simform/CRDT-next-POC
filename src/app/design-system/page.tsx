@@ -1,5 +1,6 @@
 import * as React from "react";
 import { Button } from "@/components/ui/button";
+import { LinkButton } from "@/components/ui/link-button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -62,6 +63,40 @@ export default function ComponentsKitchenSink() {
                         <div className="flex flex-wrap items-center gap-4">
                             <Button withArrow>With Arrow</Button>
                             <Button disabled>Disabled</Button>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Link Buttons */}
+                <section className="space-y-6">
+                    <h2 className="text-2xl font-semibold border-b-2 border-brand-muted pb-2">
+                        Link Buttons
+                    </h2>
+                    <p className="text-sm text-brand-subtle mb-4">
+                        Uses next/link but styled identical to Buttons
+                    </p>
+                    <div className="space-y-8">
+                        <div className="flex flex-wrap items-center gap-4">
+                            <LinkButton href="#" variant="primary">
+                                Primary Link
+                            </LinkButton>
+                            <LinkButton href="#" variant="secondary">
+                                Secondary Link
+                            </LinkButton>
+                            <LinkButton href="#" variant="ghost">
+                                Ghost Link
+                            </LinkButton>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-4">
+                            <LinkButton href="#" size="sm">
+                                Small Link
+                            </LinkButton>
+                            <LinkButton href="#" size="md">
+                                Medium Link
+                            </LinkButton>
+                            <LinkButton href="#" size="lg">
+                                Large Link
+                            </LinkButton>
                         </div>
                     </div>
                 </section>
