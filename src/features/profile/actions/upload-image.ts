@@ -9,6 +9,24 @@ import path from "path";
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
 
+async function deleteOldImageFile(oldImageUrl: string | null) {
+    if (!oldImageUrl || !oldImageUrl.startsWith("/api/uploads/")) {
+        return; // Don't attempt to delete external OAuth avatars
+    }
+    try {
+        const relativePath = oldImageUrl.replace("/api/uploads/", "");
+        const filePath = path.join(
+            process.cwd(),
+            "storage",
+            "uploads",
+            ...relativePath.split("/"),
+        );
+        await fs.unlink(filePath);
+    } catch (e) {
+        console.error("Failed to delete old profile picture:", e);
+    }
+}
+
 export async function uploadProfilePicture(
     prevState: unknown,
     formData: FormData,
@@ -40,6 +58,13 @@ export async function uploadProfilePicture(
     }
 
     try {
+        // Fetch current user to get old image URL
+        const user = await rawDb.user.findUnique({
+            where: { id: session.user.id },
+            select: { image: true },
+        });
+        const oldImageUrl = user?.image || null;
+
         const buffer = Buffer.from(await file.arrayBuffer());
         const extension = file.type.split("/")[1];
         const filename = `${session.user.id}-${Date.now()}.${extension}`;
@@ -53,13 +78,19 @@ export async function uploadProfilePicture(
         await fs.mkdir(uploadsDir, { recursive: true });
         const filepath = path.join(uploadsDir, filename);
 
+        // Upload the new profile picture
         await fs.writeFile(filepath, buffer);
         const imageUrl = `/api/uploads/profiles/${filename}`;
 
+        // Update the user's profile to reference the new image
         await rawDb.user.update({
             where: { id: session.user.id },
             data: { image: imageUrl },
         });
+
+        // Verify that the upload completed successfully (implied if we reach here without throwing)
+        // Delete the old image from storage
+        await deleteOldImageFile(oldImageUrl);
 
         revalidatePath("/profile");
         return {
@@ -83,10 +114,19 @@ export async function removeProfilePicture() {
     }
 
     try {
+        const user = await rawDb.user.findUnique({
+            where: { id: session.user.id },
+            select: { image: true },
+        });
+        const oldImageUrl = user?.image || null;
+
         await rawDb.user.update({
             where: { id: session.user.id },
             data: { image: null },
         });
+
+        // Delete the old image from storage
+        await deleteOldImageFile(oldImageUrl);
 
         revalidatePath("/profile");
         return {
