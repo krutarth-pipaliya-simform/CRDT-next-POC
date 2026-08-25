@@ -33,6 +33,13 @@ An enterprise-grade collaborative SaaS workspace built with Next.js 16 and React
 3. **Database (Prisma)**
     - Configured `schema.prisma` for NextAuth integration (User, Account, Session, VerificationToken) alongside base domain models (Workspace, Document, Task).
 
+4. **User Profile & Account Settings**
+    - Comprehensive profile page at `/profile` for users to manage personal details and account preferences.
+    - Features Profile Picture Upload (local file storage) supporting JPEG, PNG, and WebP up to 5MB, with image preview before uploading and removal.
+    - Supports modifying the user's Full Name.
+    - Secure Change Password functionality with current password validation.
+    - Built with Server Actions and Zod validation.
+
 ## Getting Started
 
 1. **Environment Setup**
