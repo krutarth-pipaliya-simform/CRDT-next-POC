@@ -1,7 +1,14 @@
+import { SiteHeader } from "@/components/layout/site-header";
+
 export default function DashboardLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
-    return <div className="dashboard-layout">{children}</div>;
+    return (
+        <>
+            <SiteHeader />
+            <div className="dashboard-layout flex-1">{children}</div>
+        </>
+    );
 }
