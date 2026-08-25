@@ -40,6 +40,12 @@ An enterprise-grade collaborative SaaS workspace built with Next.js 16 and React
     - Secure Change Password functionality with current password validation.
     - Built with Server Actions and Zod validation.
 
+5. **Universal Landing Page & Navigation**
+    - Created a universal marketing landing page at `/` accessible by both authenticated and unauthenticated users.
+    - Relocated the authenticated Workspace Selector to `/dashboard`.
+    - Enhanced the global navigation bar with a responsive `UserDropdown` component for quick access to Profile Settings and Logout.
+    - Built a reusable `LinkButton` component in the design system to ensure all links styled as buttons adhere to the project's aesthetic constraints.
+
 ## Getting Started
 
 1. **Environment Setup**

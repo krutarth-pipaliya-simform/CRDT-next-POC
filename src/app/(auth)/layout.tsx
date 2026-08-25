@@ -1,4 +1,5 @@
 import * as React from "react";
+import Link from "next/link";
 
 export default function AuthLayout({
     children,
@@ -8,7 +9,15 @@ export default function AuthLayout({
     return (
         <main className="min-h-screen w-full flex bg-brand-surface font-brand-sans">
             {/* Left Column - Form Area */}
-            <div className="w-full lg:w-1/3 min-w-[400px] flex flex-col justify-center items-center p-8 sm:p-12 border-r-2 border-brand-muted">
+            <div className="w-full lg:w-1/3 min-w-[400px] flex flex-col justify-center items-center p-8 sm:p-12 border-r-2 border-brand-muted relative">
+                <div className="absolute top-8 left-8 sm:top-12 sm:left-12">
+                    <Link
+                        href="/"
+                        className="text-sm font-brand-mono uppercase tracking-widest text-brand-subtle hover:text-brand-ink transition-colors flex items-center gap-2"
+                    >
+                        <span>←</span> Back to Home
+                    </Link>
+                </div>
                 {children}
             </div>
 
