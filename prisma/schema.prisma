@@ -29,6 +29,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   workspaces    WorkspaceMember[]
+  invitationsCreated WorkspaceInvitation[]
 }
 
 model Account {
@@ -75,6 +76,23 @@ model Workspace {
   members   WorkspaceMember[]
   documents Document[]
   tasks     Task[]
+  invitations WorkspaceInvitation[]
+}
+
+model WorkspaceInvitation {
+  id          String    @id @default(cuid())
+  workspaceId String
+  token       String    @unique @default(cuid())
+  createdById String
+  expiresAt   DateTime
+  usedAt      DateTime?
+  createdAt   DateTime  @default(now())
+
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdBy   User      @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([workspaceId])
 }
 
 model WorkspaceMember {
