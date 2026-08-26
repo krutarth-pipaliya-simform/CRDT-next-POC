@@ -1,13 +1,14 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useState, useRef, useEffect } from "react";
+
 import { Badge } from "@/components/ui/badge";
 import { NavTabs, type NavTabItem } from "@/components/ui/nav-tabs";
 import { cn } from "@/lib/cn";
-import { WorkspaceRole } from "@/schemas/workspace";
+import type { WorkspaceRole } from "@/schemas/workspace";
 
-interface WorkspaceNavProps {
+export interface WorkspaceNavProps {
     workspaceId: string;
     workspaceName: string;
     userRole: WorkspaceRole;

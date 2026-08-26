@@ -1,17 +1,18 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
+
 import { logoutAction } from "@/features/auth/actions/logout";
 
-type UserDropdownProps = {
+export interface UserDropdownProps {
     user: {
         name?: string | null;
         email?: string | null;
         image?: string | null;
     };
-};
+}
 
 export function UserDropdown({ user }: UserDropdownProps) {
     const [isOpen, setIsOpen] = useState(false);
