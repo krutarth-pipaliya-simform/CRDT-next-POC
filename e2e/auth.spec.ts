@@ -18,13 +18,10 @@ test.describe("Authentication", () => {
             .getByRole("button", { name: "Sign Up", exact: true })
             .click();
 
-        // After successful registration, it redirects to the dashboard (/)
-        await page.waitForURL("/");
-
-        // Let's verify we are on the homepage
-        // Wait for auth session to be available, maybe check for some text
-        // Or at least check we left the register page
-        expect(page.url()).toBe("http://localhost:3000/");
+        // After successful registration, verification email notice is displayed
+        await expect(
+            page.getByText("Confirmation email sent! Please check your inbox."),
+        ).toBeVisible({ timeout: 15000 });
     });
 
     test("should show error for invalid login", async ({ page }) => {

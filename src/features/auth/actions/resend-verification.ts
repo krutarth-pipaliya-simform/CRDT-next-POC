@@ -48,13 +48,23 @@ export async function resendVerificationAction(email: string) {
             (host.startsWith("localhost") ? "http" : "https");
         const appUrl = `${protocol}://${host}`;
 
+        const verifyUrl = `${appUrl}/verify-email?token=${verificationToken.token}`;
+
         await sendVerificationEmail(
             verificationToken.identifier,
             verificationToken.token,
             appUrl,
         );
 
-        return { success: true, message: "Verification email sent!" };
+        return {
+            success: true,
+            message: "Verification email sent!",
+            verifyUrl:
+                process.env.NODE_ENV !== "production" ||
+                !process.env.EMAIL_SERVER_HOST
+                    ? verifyUrl
+                    : undefined,
+        };
     } catch (error) {
         console.error("Resend verification error:", error);
         return { error: "Failed to send verification email" };

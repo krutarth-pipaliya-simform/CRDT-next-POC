@@ -54,6 +54,8 @@ export async function registerAction(state: unknown, formData: FormData) {
             (host.startsWith("localhost") ? "http" : "https");
         const appUrl = `${protocol}://${host}`;
 
+        const verifyUrl = `${appUrl}/verify-email?token=${verificationToken.token}`;
+
         await sendVerificationEmail(
             verificationToken.identifier,
             verificationToken.token,
@@ -63,6 +65,11 @@ export async function registerAction(state: unknown, formData: FormData) {
         return {
             success: true,
             message: "Confirmation email sent! Please check your inbox.",
+            verifyUrl:
+                process.env.NODE_ENV !== "production" ||
+                !process.env.EMAIL_SERVER_HOST
+                    ? verifyUrl
+                    : undefined,
         };
     } catch (error) {
         if (isRedirectError(error)) {

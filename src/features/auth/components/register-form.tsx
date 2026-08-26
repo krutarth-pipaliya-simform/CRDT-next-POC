@@ -26,6 +26,19 @@ export function RegisterForm() {
             {state?.success ? (
                 <div className="flex flex-col gap-6">
                     <Alert intent="success">{state.message}</Alert>
+                    {state.verifyUrl && (
+                        <div className="flex flex-col gap-2 p-4 bg-brand-muted border-2 border-brand-border rounded-brand">
+                            <span className="font-brand-mono text-xs uppercase tracking-widest text-brand-subtle">
+                                Development Quick Link
+                            </span>
+                            <a
+                                href={state.verifyUrl}
+                                className="inline-flex items-center justify-center font-brand-mono font-semibold text-xs uppercase tracking-widest bg-brand-ink text-brand-surface py-2.5 px-4 rounded-brand hover:bg-brand-accent transition-colors"
+                            >
+                                Verify Email Now →
+                            </a>
+                        </div>
+                    )}
                     <div className="font-brand-mono text-xs text-brand-subtle">
                         <Link
                             href="/login"
