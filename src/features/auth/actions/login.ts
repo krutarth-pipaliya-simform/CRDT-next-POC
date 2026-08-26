@@ -2,6 +2,7 @@
 
 import { signIn } from "@/features/auth/lib/auth";
 import { loginSchema } from "@/schemas/auth";
+import { DEFAULT_LOGIN_REDIRECT } from "@/lib/routes";
 import { AuthError } from "next-auth";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 
@@ -13,12 +14,14 @@ export async function loginAction(state: unknown, formData: FormData) {
     }
 
     const { email, password } = validated.data;
+    const callbackUrl =
+        (formData.get("callbackUrl") as string) || DEFAULT_LOGIN_REDIRECT;
 
     try {
         await signIn("credentials", {
             email,
             password,
-            redirectTo: "/",
+            redirectTo: callbackUrl,
         });
 
         return { success: true };

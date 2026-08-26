@@ -9,13 +9,19 @@ import { Separator } from "@/components/ui/separator";
 import { Alert } from "@/components/ui/alert";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
+import { useSearchParams } from "next/navigation";
+import { DEFAULT_LOGIN_REDIRECT } from "@/lib/routes";
 
 export function LoginForm() {
+    const searchParams = useSearchParams();
+    const callbackUrl =
+        searchParams.get("callbackUrl") || DEFAULT_LOGIN_REDIRECT;
     const [state, formAction] = useActionState(loginAction, null);
     const [isPending, startTransition] = useTransition();
     const [resendStatus, setResendStatus] = useState<{
         type: "success" | "error";
         message: string;
+        verifyUrl?: string;
     } | null>(null);
 
     const handleResend = () => {
@@ -28,6 +34,7 @@ export function LoginForm() {
                     setResendStatus({
                         type: "success",
                         message: result.message!,
+                        verifyUrl: result.verifyUrl,
                     });
                 } else {
                     setResendStatus({ type: "error", message: result.error! });
@@ -48,6 +55,7 @@ export function LoginForm() {
             </div>
 
             <form action={formAction} className="flex flex-col gap-6">
+                <input type="hidden" name="callbackUrl" value={callbackUrl} />
                 <Input
                     id="email"
                     name="email"
@@ -75,15 +83,30 @@ export function LoginForm() {
                             Your email is not verified.
                         </Alert>
                         {resendStatus && (
-                            <Alert
-                                intent={
-                                    resendStatus.type === "success"
-                                        ? "success"
-                                        : "danger"
-                                }
-                            >
-                                {resendStatus.message}
-                            </Alert>
+                            <div className="flex flex-col gap-2">
+                                <Alert
+                                    intent={
+                                        resendStatus.type === "success"
+                                            ? "success"
+                                            : "danger"
+                                    }
+                                >
+                                    {resendStatus.message}
+                                </Alert>
+                                {resendStatus.verifyUrl && (
+                                    <div className="flex flex-col gap-2 p-3 bg-brand-muted border-2 border-brand-border rounded-brand">
+                                        <span className="font-brand-mono text-[10px] uppercase tracking-widest text-brand-subtle">
+                                            Development Quick Link
+                                        </span>
+                                        <a
+                                            href={resendStatus.verifyUrl}
+                                            className="inline-flex items-center justify-center font-brand-mono font-semibold text-xs uppercase tracking-widest bg-brand-ink text-brand-surface py-2 px-3 rounded-brand hover:bg-brand-accent transition-colors"
+                                        >
+                                            Verify Email Now →
+                                        </a>
+                                    </div>
+                                )}
+                            </div>
                         )}
                         <Button
                             type="button"
@@ -116,7 +139,9 @@ export function LoginForm() {
                         type="button"
                         variant="secondary"
                         className="w-full"
-                        onClick={() => signIn("google", { redirectTo: "/" })}
+                        onClick={() =>
+                            signIn("google", { redirectTo: callbackUrl })
+                        }
                     >
                         <span className="flex items-center justify-center gap-2">
                             <svg
@@ -148,7 +173,9 @@ export function LoginForm() {
                         type="button"
                         variant="secondary"
                         className="w-full"
-                        onClick={() => signIn("github", { redirectTo: "/" })}
+                        onClick={() =>
+                            signIn("github", { redirectTo: callbackUrl })
+                        }
                     >
                         <span className="flex items-center justify-center gap-2">
                             <svg

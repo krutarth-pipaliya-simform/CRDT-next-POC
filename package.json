@@ -4,12 +4,13 @@
     "private": true,
     "scripts": {
         "dev": "next dev",
-        "build": "next build",
+        "build": "prisma generate && next build",
         "start": "next start",
         "lint": "eslint",
         "format": "prettier --write .",
         "type-check": "tsc --noEmit",
         "prepare": "husky",
+        "postinstall": "prisma generate",
         "test:e2e": "playwright test"
     },
     "dependencies": {

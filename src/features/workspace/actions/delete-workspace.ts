@@ -1,0 +1,31 @@
+"use server";
+
+import { auth } from "@/features/auth/lib/auth";
+import { rawDb } from "@/lib/db";
+import { getWorkspaceRole } from "@/features/workspace/lib/rbac";
+import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
+
+export async function deleteWorkspaceAction(workspaceId: string) {
+    const session = await auth();
+    if (!session?.user?.id) {
+        return { error: "Unauthorized" };
+    }
+
+    const role = await getWorkspaceRole(workspaceId);
+    if (role !== "ADMIN") {
+        return { error: "Forbidden: Only admins can delete a workspace" };
+    }
+
+    try {
+        await rawDb.workspace.delete({
+            where: { id: workspaceId },
+        });
+
+        revalidatePath("/dashboard");
+    } catch {
+        return { error: "Failed to delete workspace" };
+    }
+
+    redirect("/dashboard");
+}

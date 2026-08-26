@@ -19,8 +19,8 @@ An enterprise-grade collaborative SaaS workspace built with Next.js 16 and React
 1. **Design System & Component Library**
     - Built a robust, centralized design system utilizing Tailwind v4 `@theme` block in `globals.css`.
     - **Strict Styling Convention**: Usage of raw Tailwind colors (e.g. `bg-blue-500`) is prohibited. All UI must be styled using semantic brand tokens (e.g. `bg-brand-accent`). New colors must be added to the design system first.
-    - Kitchen-sink component showcase available at `/design-system`.
-    - Base primitives (Button, Input, FormField, Card, Badge, Alert, etc.) established in `src/components/ui/`.
+    - Base primitives (Button, LinkButton, Input, FormField, Card, Badge, Alert, Dialog, NavTabs, etc.) established in `src/components/ui/`.
+    - **Reusable Navigation Primitive (`NavTabs`)**: Extracted a unified, accessible, and fully configurable navigation tabs component (`src/components/ui/nav-tabs.tsx`) serving as the single source of truth for tabbed routing, workspace sections, settings sub-navigation, and dashboard workspace filter bars with automatic `usePathname()` route matching, explicit `activeValue` support, and WAI-ARIA compliance.
 
 2. **Authentication Flow (Frontend & Backend)**
     - Custom `login` and `register` pages matching the "Machined Precision" design specification.
@@ -45,6 +45,18 @@ An enterprise-grade collaborative SaaS workspace built with Next.js 16 and React
     - Relocated the authenticated Workspace Selector to `/dashboard`.
     - Enhanced the global navigation bar with a responsive `UserDropdown` component for quick access to Profile Settings and Logout.
     - Built a reusable `LinkButton` component in the design system to ensure all links styled as buttons adhere to the project's aesthetic constraints.
+
+6. **Workspace Management & Collaboration (FR-5 to FR-8)**
+    - **Workspace Lifecycle (FR-5)**: Full CRUD support to create, update, and permanently delete workspaces via Server Actions and responsive UI.
+    - **Workspace Membership & RBAC (FR-6)**: Automatic `ADMIN` role assignment for workspace creators, with strict Server Action, data layer, query, and layout RBAC verification.
+    - **Member Removal & Real-Time Access Revocation (FR-6)**: Workspace Admins can remove existing members from the workspace with a confirmation step, guarded against self-removal. When a user is removed from a private workspace, their access is immediately revoked across all routes (`/[workspaceId]`, `/documents`, etc.), redirecting to the 403 Access Denied page without relying on stale client caches.
+    - **Workspace Visibility Settings**: Workspaces can be toggled between **Private** (members only) and **Public** (open access).
+    - **Public Workspace Discovery, Search, Pagination & Self-Join**: Public workspaces are discoverable by all users on `/dashboard?tab=public` with real-time keyword search and URL-synchronized pagination. Any authenticated user can view public workspaces as a guest or join with one click, immediately gaining `MEMBER` status and having the workspace pinned to their **"My Workspaces"** dashboard and switcher.
+    - **Team Invitations (FR-7)**: Secure invite link generation with tokenized URLs (`/invite/[token]`) for onboarding team members with the `MEMBER` role.
+    - **Invitation Expiration & Single-Use (FR-8)**: 24-hour expiration on invitation links with single-use enforcement in database transactions.
+    - **Workspace Navigation & Switcher**: Comprehensive top navigation inside workspaces (`WorkspaceNav`) featuring active tab indicators (Overview, Documents, Tasks, Chat, Analytics, Settings) and quick workspace switcher dropdown.
+    - **Accessible Dialog Primitive**: Native HTML `<dialog>` modal component built with semantic brand tokens and full keyboard accessibility.
+    - **E2E Test Suite**: Comprehensive Playwright test coverage (`e2e/workspace.spec.ts`) validating creation, settings management, deletion confirmation, member removal, immediate private workspace access revocation, visibility toggling (private/public), public workspace search & pagination, self-joining, and invitation expiration.
 
 ## Getting Started
 

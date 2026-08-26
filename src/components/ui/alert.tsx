@@ -8,6 +8,7 @@ export interface AlertProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const intentClasses: Record<Intent, string> = {
     default: "border-brand-ink bg-brand-muted text-brand-ink",
+    muted: "border-brand-border bg-brand-muted text-brand-subtle",
     danger: "border-brand-danger bg-brand-danger/5 text-brand-danger",
     success: "border-brand-success bg-brand-success/5 text-brand-success",
     warning: "border-brand-warning bg-brand-warning/5 text-brand-warning",

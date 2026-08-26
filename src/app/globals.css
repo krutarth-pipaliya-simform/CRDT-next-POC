@@ -23,6 +23,7 @@
     /* Shadows — hard, no blur */
     --shadow-brand-subtle: 2px 2px 0px #1a1a1a;
     --shadow-brand-card: 4px 4px 0px #1a1a1a;
+    --shadow-brand-hover: 6px 6px 0px #1a1a1a;
 }
 
 /* ─── Base Reset ────────────────────────────────────────── */

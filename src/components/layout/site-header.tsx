@@ -19,21 +19,10 @@ export async function SiteHeader() {
         }
     }
 
-    const testWs = "test-workspace-123";
-
     return (
         <nav
-            style={{
-                padding: "1rem",
-                borderBottom: "1px solid var(--color-brand-border)",
-                marginBottom: "1rem",
-                display: "flex",
-                gap: "1rem",
-                backgroundColor: "var(--color-brand-surface)",
-                color: "var(--color-brand-ink)",
-                alignItems: "center",
-                flexWrap: "wrap",
-            }}
+            aria-label="Main site navigation"
+            className="p-4 border-b border-brand-border mb-4 flex items-center gap-4 bg-brand-surface text-brand-ink flex-wrap"
         >
             <Link href="/" className="font-bold text-xl">
                 App Logo
@@ -41,13 +30,12 @@ export async function SiteHeader() {
 
             {session?.user ? (
                 <>
-                    <Link href="/dashboard">Dashboard</Link>
-                    <Link href={`/${testWs}`}>Workspace Overview</Link>
-                    <Link href={`/${testWs}/documents`}>Documents</Link>
-                    <Link href={`/${testWs}/tasks`}>Tasks</Link>
-                    <Link href={`/${testWs}/chat`}>Chat</Link>
-                    <Link href={`/${testWs}/analytics`}>Analytics</Link>
-                    <Link href={`/${testWs}/settings`}>Settings</Link>
+                    <Link
+                        href="/dashboard"
+                        className="text-sm font-medium text-brand-ink hover:text-brand-accent transition-colors"
+                    >
+                        Dashboard
+                    </Link>
                     <div style={{ flexGrow: 1 }}></div>
                     <UserDropdown user={navUser!} />
                 </>
