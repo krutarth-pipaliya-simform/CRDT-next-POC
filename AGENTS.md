@@ -37,6 +37,23 @@ The file `docs/architecture-review.md` is the **authoritative technical specific
 
 ---
 
+### Reusable Components & DRY Architecture (Binding)
+
+- **Reuse Before Create**: Check existing UI primitives in `src/components/ui/` and layout components in `src/components/layout/` before creating new components.
+- **Extend Backward-Compatibly**: If an existing component is missing a capability, extend its props in a backward-compatible manner rather than duplicating similar UI or logic.
+- **Single Source of Truth**: Shared navigation, tab bars, forms, dialogs, and headers must consume centralized primitives (such as `<NavTabs>`) across all feature pages.
+
+---
+
+### Real-Time Server-Side Authorization & Cache Invalidation (Binding)
+
+- **Strict Server-Side RBAC**: Authorization must always be validated dynamically on the server on every request. Never rely on stale client router cache.
+- **Force Dynamic on Protected Layouts**: Workspace layouts and protected routes must specify `export const dynamic = "force-dynamic"` and `export const revalidate = 0`.
+- **Query Authorization Guards**: Database queries (such as `getWorkspace`) must independently enforce caller permissions via `getWorkspaceRole` so unauthorized data can never leak.
+- **Layout Invalidation on Membership Changes**: All membership and visibility mutations must call `revalidatePath` with `"layout"` across affected route hierarchies (`revalidatePath("/[workspaceId]", "layout")`, `revalidatePath("/dashboard", "layout")`).
+
+---
+
 ### Workflow Rules
 
 - **Always Read Skills**: Before executing complex tool workflows (like Git operations), you MUST check the `Available skills` list and read the corresponding `SKILL.md` file. You are bound by the instructions within those skills.
