@@ -19,8 +19,6 @@ export async function SiteHeader() {
         }
     }
 
-    const testWs = "test-workspace-123";
-
     return (
         <nav
             style={{
@@ -41,13 +39,12 @@ export async function SiteHeader() {
 
             {session?.user ? (
                 <>
-                    <Link href="/dashboard">Dashboard</Link>
-                    <Link href={`/${testWs}`}>Workspace Overview</Link>
-                    <Link href={`/${testWs}/documents`}>Documents</Link>
-                    <Link href={`/${testWs}/tasks`}>Tasks</Link>
-                    <Link href={`/${testWs}/chat`}>Chat</Link>
-                    <Link href={`/${testWs}/analytics`}>Analytics</Link>
-                    <Link href={`/${testWs}/settings`}>Settings</Link>
+                    <Link
+                        href="/dashboard"
+                        className="text-sm font-medium text-brand-ink hover:text-brand-accent transition-colors"
+                    >
+                        Dashboard
+                    </Link>
                     <div style={{ flexGrow: 1 }}></div>
                     <UserDropdown user={navUser!} />
                 </>

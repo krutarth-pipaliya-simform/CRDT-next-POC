@@ -1,5 +1,5 @@
 import { auth } from "@/features/auth/lib/auth";
-import { db } from "@/lib/db";
+import { rawDb } from "@/lib/db";
 import { Role } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { cache } from "react";
@@ -10,14 +10,50 @@ export const getWorkspaceRole = cache(async (workspaceId: string) => {
         return null;
     }
 
-    const member = await db.workspaceMember.findFirst({
-        where: {
-            workspaceId,
-            userId: session.user.id,
-        },
-    });
+    const [member, workspace] = await Promise.all([
+        rawDb.workspaceMember.findFirst({
+            where: {
+                workspaceId,
+                userId: session.user.id,
+            },
+        }),
+        rawDb.workspace.findUnique({
+            where: { id: workspaceId },
+            select: { visibility: true },
+        }),
+    ]);
 
-    return member?.role || null;
+    if (member?.role) {
+        return member.role;
+    }
+
+    // If not an explicit member, check workspace visibility policy
+    if (workspace?.visibility === "PUBLIC") {
+        return Role.GUEST;
+    }
+
+    if (workspace?.visibility === "ORGANIZATION" && session.user.email) {
+        const parts = session.user.email.split("@");
+        const userDomain = parts.length > 1 ? parts[1] : null;
+        if (userDomain) {
+            const orgMatch = await rawDb.workspaceMember.findFirst({
+                where: {
+                    workspaceId,
+                    user: {
+                        email: {
+                            contains: `@${userDomain}`,
+                            mode: "insensitive",
+                        },
+                    },
+                },
+            });
+            if (orgMatch) {
+                return Role.GUEST;
+            }
+        }
+    }
+
+    return null;
 });
 
 export async function verifyWorkspaceRole(
