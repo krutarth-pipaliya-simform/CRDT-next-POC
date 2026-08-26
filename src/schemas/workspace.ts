@@ -27,5 +27,17 @@ export type WorkspaceVisibility =
 
 export type WorkspaceRole = "ADMIN" | "MEMBER" | "GUEST";
 
+export const leaveWorkspaceSchema = z.object({
+    workspaceId: z.string().min(1, "Workspace ID is required"),
+    transferToMemberId: z.string().optional(),
+});
+
+export const transferOwnershipSchema = z.object({
+    workspaceId: z.string().min(1, "Workspace ID is required"),
+    targetMemberId: z.string().min(1, "Target member ID is required"),
+});
+
 export type CreateWorkspaceInput = z.infer<typeof createWorkspaceSchema>;
 export type UpdateWorkspaceInput = z.infer<typeof updateWorkspaceSchema>;
+export type LeaveWorkspaceInput = z.infer<typeof leaveWorkspaceSchema>;
+export type TransferOwnershipInput = z.infer<typeof transferOwnershipSchema>;

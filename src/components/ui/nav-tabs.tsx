@@ -131,7 +131,9 @@ export function NavTabs({
             aria-label={ariaLabel}
             className={cn(
                 "flex items-center border-b-2 border-brand-muted",
-                scrollable ? "overflow-x-auto no-scrollbar gap-1" : "gap-2",
+                scrollable
+                    ? "overflow-x-auto overflow-y-hidden no-scrollbar gap-1"
+                    : "gap-2",
                 className,
             )}
         >

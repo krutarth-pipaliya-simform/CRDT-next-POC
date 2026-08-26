@@ -756,4 +756,262 @@ test.describe("Workspace Management", () => {
             where: { id: adminUser.id },
         });
     });
+
+    test("Leave Workspace: Non-admin member should be able to leave workspace at any time", async ({
+        page,
+    }) => {
+        const memberEmail = `member_leave_${Date.now()}@example.com`;
+        const hashedPassword = await bcrypt.hash("password123", 10);
+        const memberUser = await rawDb.user.create({
+            data: {
+                name: "Departing Member",
+                email: memberEmail,
+                password: hashedPassword,
+                emailVerified: new Date(),
+                role: "MEMBER",
+            },
+        });
+
+        const wsName = `Member Leave Workspace ${Date.now()}`;
+        const ws = await rawDb.workspace.create({
+            data: {
+                name: wsName,
+                visibility: "PRIVATE",
+                members: {
+                    create: [
+                        { userId: testUserId, role: "ADMIN" },
+                        { userId: memberUser.id, role: "MEMBER" },
+                    ],
+                },
+            },
+        });
+
+        // 1. Member logs in
+        await page.goto("/login");
+        await page.getByLabel("Email").fill(memberEmail);
+        await page.getByLabel("Password").fill("password123");
+        await page
+            .getByRole("button", { name: "Sign In", exact: true })
+            .click();
+        await expect(
+            page.getByRole("heading", { name: "Your Workspaces" }),
+        ).toBeVisible({
+            timeout: 15000,
+        });
+
+        // 2. Member visits workspace
+        await page.goto(`/${ws.id}`);
+        await expect(page.getByRole("heading", { name: wsName })).toBeVisible();
+
+        // 3. Member clicks Leave button in header
+        await page
+            .getByRole("button", { name: `Leave ${wsName}` })
+            .first()
+            .click();
+
+        // 4. Confirmation dialog appears
+        await expect(
+            page.getByRole("heading", { name: "Leave Workspace", exact: true }),
+        ).toBeVisible();
+        await expect(
+            page.getByText(`Are you sure you want to leave ${wsName}?`),
+        ).toBeVisible();
+
+        // 5. Confirm leaving
+        await page
+            .locator("dialog[open]")
+            .getByRole("button", { name: "Leave Workspace" })
+            .click();
+
+        // 6. Redirected back to dashboard
+        await expect(page).toHaveURL("/dashboard");
+        await expect(page.getByText(wsName)).not.toBeVisible();
+
+        // 7. Direct navigation to private workspace redirects to /unauthorized
+        await page.goto(`/${ws.id}`);
+        await expect(page).toHaveURL("/unauthorized");
+
+        // 8. Verify DB membership removed
+        const memberRecord = await rawDb.workspaceMember.findFirst({
+            where: { workspaceId: ws.id, userId: memberUser.id },
+        });
+        expect(memberRecord).toBeNull();
+
+        // Clean up
+        await rawDb.workspace.deleteMany({ where: { id: ws.id } });
+        await rawDb.user.deleteMany({ where: { id: memberUser.id } });
+    });
+
+    test("Leave Workspace: Admin should be prevented from leaving when they are the only member", async ({
+        page,
+    }) => {
+        const wsName = `Sole Admin Workspace ${Date.now()}`;
+        const soleWs = await rawDb.workspace.create({
+            data: {
+                name: wsName,
+                members: {
+                    create: {
+                        userId: testUserId,
+                        role: "ADMIN",
+                    },
+                },
+            },
+        });
+
+        await loginAsTestUser(page);
+        await page.goto(`/${soleWs.id}/settings`);
+
+        // Click Leave Workspace button in Danger Zone
+        await page
+            .locator("section")
+            .filter({ hasText: "Danger Zone" })
+            .getByRole("button", { name: `Leave ${wsName}` })
+            .click();
+
+        // Dialog should show sole member warning
+        await expect(
+            page
+                .locator("dialog[open]")
+                .getByRole("heading", { name: "Leave Workspace", exact: true }),
+        ).toBeVisible();
+        await expect(page.getByText("Cannot Leave Workspace")).toBeVisible();
+        await expect(
+            page.getByText(
+                "You are currently the only member in this workspace.",
+            ),
+        ).toBeVisible();
+
+        // Action button to confirm leave should not be enabled/present for sole admin
+        await expect(
+            page.getByRole("button", { name: "Transfer & Leave" }),
+        ).not.toBeVisible();
+
+        // Close dialog
+        await page
+            .locator("dialog[open]")
+            .getByRole("button", { name: "Close", exact: true })
+            .click();
+        await expect(page.locator("dialog[open]")).not.toBeVisible();
+
+        // Verify admin is still in workspace
+        const adminMember = await rawDb.workspaceMember.findFirst({
+            where: { workspaceId: soleWs.id, userId: testUserId },
+        });
+        expect(adminMember).not.toBeNull();
+
+        // Clean up
+        await rawDb.workspace.deleteMany({ where: { id: soleWs.id } });
+    });
+
+    test("Leave Workspace: Admin must transfer ownership before leaving; new admin appointed and original admin removed", async ({
+        page,
+    }) => {
+        const successorEmail = `successor_${Date.now()}@example.com`;
+        const hashedPassword = await bcrypt.hash("password123", 10);
+        const successorUser = await rawDb.user.create({
+            data: {
+                name: "Successor Member",
+                email: successorEmail,
+                password: hashedPassword,
+                emailVerified: new Date(),
+                role: "MEMBER",
+            },
+        });
+
+        const wsName = `Transfer Org ${Date.now()}`;
+        const ws = await rawDb.workspace.create({
+            data: {
+                name: wsName,
+                members: {
+                    create: [
+                        { userId: testUserId, role: "ADMIN" },
+                        { userId: successorUser.id, role: "MEMBER" },
+                    ],
+                },
+            },
+        });
+
+        // 1. Admin logs in and visits settings
+        await loginAsTestUser(page);
+        await page.goto(`/${ws.id}/settings`);
+
+        // 2. Admin clicks Leave Workspace in Danger Zone
+        await page
+            .locator("section")
+            .filter({ hasText: "Danger Zone" })
+            .getByRole("button", { name: `Leave ${wsName}` })
+            .click();
+
+        // 3. Dialog displays "Transfer Ownership & Leave"
+        await expect(
+            page.getByRole("heading", { name: "Transfer Ownership & Leave" }),
+        ).toBeVisible();
+        await expect(
+            page.getByText(
+                "As the workspace admin, you must transfer ownership",
+            ),
+        ).toBeVisible();
+
+        // 4. Select successor member
+        await expect(page.getByText("Successor Member")).toBeVisible();
+        await page
+            .locator("dialog[open]")
+            .getByRole("button", { name: /Successor Member/ })
+            .click();
+
+        // 5. Submit Transfer & Leave
+        await page
+            .locator("dialog[open]")
+            .getByRole("button", { name: "Transfer & Leave" })
+            .click();
+
+        // 6. Admin is redirected to dashboard and workspace is no longer in their dashboard
+        await expect(page).toHaveURL("/dashboard");
+        await expect(page.getByText(wsName)).not.toBeVisible();
+
+        // 7. Verify in database: testUserId is removed, successorUser is promoted to ADMIN
+        const originalAdminMember = await rawDb.workspaceMember.findFirst({
+            where: { workspaceId: ws.id, userId: testUserId },
+        });
+        expect(originalAdminMember).toBeNull();
+
+        const promotedMember = await rawDb.workspaceMember.findFirst({
+            where: { workspaceId: ws.id, userId: successorUser.id },
+        });
+        expect(promotedMember?.role).toBe("ADMIN");
+
+        // 8. Successor logs in and verifies they have Admin privileges
+        const successorContext = await page.context().browser()!.newContext();
+        const successorPage = await successorContext.newPage();
+
+        await successorPage.goto("/login");
+        await successorPage.getByLabel("Email").fill(successorEmail);
+        await successorPage.getByLabel("Password").fill("password123");
+        await successorPage
+            .getByRole("button", { name: "Sign In", exact: true })
+            .click();
+        await expect(
+            successorPage.getByRole("heading", { name: "Your Workspaces" }),
+        ).toBeVisible({
+            timeout: 15000,
+        });
+
+        // Successor sees workspace on dashboard with ADMIN badge
+        await expect(successorPage.getByText(wsName)).toBeVisible();
+        await expect(
+            successorPage.getByText("ADMIN", { exact: true }),
+        ).toBeVisible();
+
+        // Successor can access workspace settings
+        await successorPage.goto(`/${ws.id}/settings`);
+        await expect(
+            successorPage.getByRole("heading", { name: "General Settings" }),
+        ).toBeVisible();
+
+        await successorContext.close();
+
+        // Clean up
+        await rawDb.workspace.deleteMany({ where: { id: ws.id } });
+        await rawDb.user.deleteMany({ where: { id: successorUser.id } });
+    });
 });
