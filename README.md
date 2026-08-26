@@ -50,14 +50,13 @@ An enterprise-grade collaborative SaaS workspace built with Next.js 16 and React
     - **Workspace Lifecycle (FR-5)**: Full CRUD support to create, update, and permanently delete workspaces via Server Actions and responsive UI.
     - **Workspace Membership & RBAC (FR-6)**: Automatic `ADMIN` role assignment for workspace creators, with strict Server Action and layout RBAC verification.
     - **Member Removal (FR-6)**: Workspace Admins can remove existing members from the workspace with a confirmation step, guarded against self-removal.
-    - **Workspace Visibility Settings**: Workspaces can be toggled between **Private** (members only), **Organization** (domain-level discovery), and **Public** (open access).
+    - **Workspace Visibility Settings**: Workspaces can be toggled between **Private** (members only) and **Public** (open access).
     - **Public Workspace Discovery, Search, Pagination & Self-Join**: Public workspaces are discoverable by all users on `/dashboard?tab=public` with real-time keyword search and URL-synchronized pagination. Any authenticated user can join a public workspace with one click, immediately gaining `MEMBER` status and having the workspace pinned to their **"My Workspaces"** dashboard and switcher.
-    - **Organization Workspaces & Join Request Flow**: Organization workspaces are automatically isolated to matching email domains. Non-member organization users can submit a "Request to Join", and Workspace Admins can approve or reject these requests with full member provisioning.
     - **Team Invitations (FR-7)**: Secure invite link generation with tokenized URLs (`/invite/[token]`) for onboarding team members with the `MEMBER` role.
     - **Invitation Expiration & Single-Use (FR-8)**: 24-hour expiration on invitation links with single-use enforcement in database transactions.
     - **Workspace Navigation & Switcher**: Comprehensive top navigation inside workspaces (`WorkspaceNav`) featuring active tab indicators (Overview, Documents, Tasks, Chat, Analytics, Settings) and quick workspace switcher dropdown.
     - **Accessible Dialog Primitive**: Native HTML `<dialog>` modal component built with semantic brand tokens and full keyboard accessibility.
-    - **E2E Test Suite**: Comprehensive Playwright test coverage (`e2e/workspace.spec.ts`) validating creation, settings management, deletion confirmation, member removal, visibility toggling, public workspace search & pagination, organization join request workflows, and invitation expiration.
+    - **E2E Test Suite**: Comprehensive Playwright test coverage (`e2e/workspace.spec.ts`) validating creation, settings management, deletion confirmation, member removal, visibility toggling (private/public), public workspace search & pagination, self-joining, and invitation expiration.
 
 ## Getting Started
 

@@ -1,8 +1,6 @@
 import { getWorkspace } from "@/features/workspace/queries/get-workspace";
-import { getWorkspaceJoinRequests } from "@/features/workspace/queries/get-join-requests";
 import { MembersList } from "@/features/workspace/components/members-list";
 import { InviteSection } from "@/features/workspace/components/invite-section";
-import { JoinRequestsList } from "@/features/workspace/components/join-requests-list";
 import { Separator } from "@/components/ui/separator";
 import { notFound } from "next/navigation";
 
@@ -23,8 +21,6 @@ export default async function MembersSettingsPage({
         notFound();
     }
 
-    const joinRequests = await getWorkspaceJoinRequests(workspaceId);
-
     return (
         <div className="flex flex-col gap-10">
             <section className="flex flex-col gap-4">
@@ -42,29 +38,6 @@ export default async function MembersSettingsPage({
                     members={workspace.members}
                     currentUserId={session?.user?.id}
                     currentUserRole={role || undefined}
-                />
-            </section>
-
-            <Separator />
-
-            <section className="flex flex-col gap-4">
-                <div>
-                    <h3 className="text-lg font-medium text-brand-ink">
-                        Join Requests (
-                        {
-                            joinRequests.filter((r) => r.status === "PENDING")
-                                .length
-                        }{" "}
-                        Pending)
-                    </h3>
-                    <p className="text-xs font-brand-mono text-brand-subtle">
-                        Organization members who have requested access to this
-                        workspace.
-                    </p>
-                </div>
-                <JoinRequestsList
-                    workspaceId={workspaceId}
-                    requests={joinRequests}
                 />
             </section>
 

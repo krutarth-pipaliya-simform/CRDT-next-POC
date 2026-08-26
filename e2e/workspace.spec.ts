@@ -328,7 +328,7 @@ test.describe("Workspace Management", () => {
         });
     });
 
-    test("FR-5: should toggle workspace visibility between private, organization, and public", async ({
+    test("FR-5: should toggle workspace visibility between private and public", async ({
         page,
     }) => {
         const ws = await rawDb.workspace.create({
@@ -457,19 +457,18 @@ test.describe("Workspace Management", () => {
         await page.goto("/dashboard?tab=my");
         await expect(page.getByText(publicWsName)).not.toBeVisible();
 
-        // Navigate to Discover Public tab
-        await page.goto("/dashboard?tab=public");
+        // Navigate to Discover Public tab filtered by the specific workspace name
+        await page.goto(
+            `/dashboard?tab=public&query=${encodeURIComponent(publicWsName)}`,
+        );
         await expect(page.getByText(publicWsName)).toBeVisible();
 
         // Click "Join Workspace" button
-        await page
-            .getByRole("button", { name: "Join Workspace" })
-            .first()
-            .click();
+        await page.getByRole("button", { name: "Join Workspace" }).click();
 
         // Button should transition to "Open Workspace →"
         await expect(
-            page.getByRole("link", { name: "Open Workspace →" }).first(),
+            page.getByRole("link", { name: "Open Workspace →" }),
         ).toBeVisible();
 
         // Navigate to My Workspaces tab -> public workspace must now be listed!
@@ -482,136 +481,6 @@ test.describe("Workspace Management", () => {
         });
         await rawDb.user.deleteMany({
             where: { id: creator.id },
-        });
-    });
-
-    test("should allow organization users to request to join and admin to approve", async ({
-        page,
-    }) => {
-        const orgDomain = `corp${Date.now()}.com`;
-        const hashedPassword = await bcrypt.hash("password123", 10);
-
-        // 1. Create org admin user
-        const orgAdmin = await rawDb.user.create({
-            data: {
-                name: "Org Admin",
-                email: `admin@${orgDomain}`,
-                password: hashedPassword,
-                emailVerified: new Date(),
-            },
-        });
-
-        // 2. Create org workspace
-        const orgWs = await rawDb.workspace.create({
-            data: {
-                name: `Acme Engineering ${Date.now()}`,
-                visibility: "ORGANIZATION",
-                members: {
-                    create: {
-                        userId: orgAdmin.id,
-                        role: "ADMIN",
-                    },
-                },
-            },
-        });
-
-        // 3. Create org employee user (same domain)
-        const orgWorker = await rawDb.user.create({
-            data: {
-                name: "Org Worker",
-                email: `worker@${orgDomain}`,
-                password: hashedPassword,
-                emailVerified: new Date(),
-            },
-        });
-
-        // 4. Create external stranger user (different domain)
-        const stranger = await rawDb.user.create({
-            data: {
-                name: "External Stranger",
-                email: `stranger_${Date.now()}@otherdomain.com`,
-                password: hashedPassword,
-                emailVerified: new Date(),
-            },
-        });
-
-        // A. Stranger logs in and checks org tab -> should NOT see Acme Engineering
-        const strangerContext = await page.context().browser()!.newContext();
-        const strangerPage = await strangerContext.newPage();
-        await strangerPage.goto("/login");
-        await strangerPage.getByLabel("Email").fill(stranger.email!);
-        await strangerPage.getByLabel("Password").fill("password123");
-        await strangerPage
-            .getByRole("button", { name: "Sign In", exact: true })
-            .click();
-        await expect(
-            strangerPage.getByRole("heading", { name: "Your Workspaces" }),
-        ).toBeVisible({ timeout: 15000 });
-        await strangerPage.goto("/dashboard?tab=org");
-        await expect(strangerPage.getByText(orgWs.name)).not.toBeVisible();
-        await strangerContext.close();
-
-        // B. Worker logs in and checks org tab -> SHOULD see Acme Engineering and Request to Join
-        const workerContext = await page.context().browser()!.newContext();
-        const workerPage = await workerContext.newPage();
-        await workerPage.goto("/login");
-        await workerPage.getByLabel("Email").fill(orgWorker.email!);
-        await workerPage.getByLabel("Password").fill("password123");
-        await workerPage
-            .getByRole("button", { name: "Sign In", exact: true })
-            .click();
-        await expect(
-            workerPage.getByRole("heading", { name: "Your Workspaces" }),
-        ).toBeVisible({ timeout: 15000 });
-        await workerPage.goto("/dashboard?tab=org");
-        await expect(workerPage.getByText(orgWs.name)).toBeVisible();
-
-        // Click Request to Join
-        await workerPage
-            .getByRole("button", { name: "Request to Join" })
-            .click();
-        await expect(workerPage.getByText("Request Pending")).toBeVisible();
-        await workerContext.close();
-
-        // C. Admin logs in and approves the join request
-        const adminContext = await page.context().browser()!.newContext();
-        const adminPage = await adminContext.newPage();
-        await adminPage.goto("/login");
-        await adminPage.getByLabel("Email").fill(orgAdmin.email!);
-        await adminPage.getByLabel("Password").fill("password123");
-        await adminPage
-            .getByRole("button", { name: "Sign In", exact: true })
-            .click();
-        await expect(
-            adminPage.getByRole("heading", { name: "Your Workspaces" }),
-        ).toBeVisible({ timeout: 15000 });
-        await adminPage.goto(`/${orgWs.id}/settings/members`);
-
-        await expect(adminPage.getByText("Org Worker")).toBeVisible();
-        await adminPage
-            .getByRole("button", { name: "Approve Org Worker" })
-            .click();
-        await expect(adminPage.getByText("APPROVED")).toBeVisible();
-        await adminContext.close();
-
-        // D. Worker logs in -> Sees workspace in My Workspaces and can open it
-        const workerContext2 = await page.context().browser()!.newContext();
-        const workerPage2 = await workerContext2.newPage();
-        await workerPage2.goto("/login");
-        await workerPage2.getByLabel("Email").fill(orgWorker.email!);
-        await workerPage2.getByLabel("Password").fill("password123");
-        await workerPage2
-            .getByRole("button", { name: "Sign In", exact: true })
-            .click();
-        await expect(
-            workerPage2.getByRole("heading", { name: "Your Workspaces" }),
-        ).toBeVisible({ timeout: 15000 });
-        await expect(workerPage2.getByText(orgWs.name)).toBeVisible();
-        await workerContext2.close();
-
-        // Clean up
-        await rawDb.user.deleteMany({
-            where: { id: { in: [orgAdmin.id, orgWorker.id, stranger.id] } },
         });
     });
 });

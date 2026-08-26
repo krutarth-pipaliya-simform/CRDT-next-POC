@@ -30,7 +30,6 @@ model User {
   sessions      Session[]
   workspaces    WorkspaceMember[]
   invitationsCreated WorkspaceInvitation[]
-  joinRequests  WorkspaceJoinRequest[]
 }
 
 model Account {
@@ -71,13 +70,6 @@ model VerificationToken {
 enum WorkspaceVisibility {
   PUBLIC
   PRIVATE
-  ORGANIZATION
-}
-
-enum JoinRequestStatus {
-  PENDING
-  APPROVED
-  REJECTED
 }
 
 // --- Domain Models ---
@@ -91,7 +83,6 @@ model Workspace {
   documents   Document[]
   tasks       Task[]
   invitations WorkspaceInvitation[]
-  joinRequests WorkspaceJoinRequest[]
 }
 
 model WorkspaceInvitation {
@@ -108,22 +99,6 @@ model WorkspaceInvitation {
 
   @@index([token])
   @@index([workspaceId])
-}
-
-model WorkspaceJoinRequest {
-  id          String            @id @default(cuid())
-  workspaceId String
-  userId      String
-  status      JoinRequestStatus @default(PENDING)
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-
-  workspace   Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([workspaceId, userId])
-  @@index([workspaceId])
-  @@index([userId])
 }
 
 model WorkspaceMember {

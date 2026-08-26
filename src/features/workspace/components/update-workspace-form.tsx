@@ -33,17 +33,10 @@ export function UpdateWorkspaceForm({
             badge: "Restricted",
         },
         {
-            value: WorkspaceVisibility.ORGANIZATION,
-            title: "Organization",
-            description:
-                "Anyone within your company or email domain can discover and join.",
-            badge: "Internal",
-        },
-        {
             value: WorkspaceVisibility.PUBLIC,
             title: "Public",
             description:
-                "Anyone with the link can view documents and activity in this workspace.",
+                "Anyone can discover this workspace, join it, and collaborate.",
             badge: "Open",
         },
     ];

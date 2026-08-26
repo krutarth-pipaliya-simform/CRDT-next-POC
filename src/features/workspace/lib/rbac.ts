@@ -32,27 +32,6 @@ export const getWorkspaceRole = cache(async (workspaceId: string) => {
         return Role.GUEST;
     }
 
-    if (workspace?.visibility === "ORGANIZATION" && session.user.email) {
-        const parts = session.user.email.split("@");
-        const userDomain = parts.length > 1 ? parts[1] : null;
-        if (userDomain) {
-            const orgMatch = await rawDb.workspaceMember.findFirst({
-                where: {
-                    workspaceId,
-                    user: {
-                        email: {
-                            contains: `@${userDomain}`,
-                            mode: "insensitive",
-                        },
-                    },
-                },
-            });
-            if (orgMatch) {
-                return Role.GUEST;
-            }
-        }
-    }
-
     return null;
 });
 

@@ -1,11 +1,9 @@
 import { getWorkspacesForUser } from "@/features/workspace/queries/get-workspaces";
 import { getPublicWorkspaces } from "@/features/workspace/queries/get-public-workspaces";
-import { getOrganizationWorkspaces } from "@/features/workspace/queries/get-org-workspaces";
 import { WorkspaceCard } from "@/features/workspace/components/workspace-card";
 import { CreateWorkspaceDialog } from "@/features/workspace/components/create-workspace-dialog";
 import { WorkspaceSearchBar } from "@/features/workspace/components/workspace-search-bar";
 import { PaginationControls } from "@/features/workspace/components/pagination-controls";
-import { JoinRequestButton } from "@/features/workspace/components/join-request-button";
 import { JoinPublicButton } from "@/features/workspace/components/join-public-button";
 import { auth } from "@/features/auth/lib/auth";
 import Link from "next/link";
@@ -32,28 +30,17 @@ export default async function DashboardPage({
     const currentUserId = session?.user?.id || "";
 
     // Fetch data based on active tab
-    const [myWorkspaces, publicData, orgData] = await Promise.all([
+    const [myWorkspaces, publicData] = await Promise.all([
         getWorkspacesForUser(currentUserId),
         getPublicWorkspaces({
             query: searchQuery,
             page: currentPage,
             pageSize: 6,
         }),
-        getOrganizationWorkspaces({
-            query: searchQuery,
-            page: currentPage,
-            pageSize: 6,
-            userId: currentUserId,
-            userEmail: session?.user?.email ?? undefined,
-        }),
     ]);
 
     const tabs = [
         { id: "my", label: `My Workspaces (${myWorkspaces.length})` },
-        {
-            id: "org",
-            label: `Organization Workspaces (${orgData.totalCount})`,
-        },
         { id: "public", label: `Discover Public (${publicData.totalCount})` },
     ];
 
@@ -121,104 +108,7 @@ export default async function DashboardPage({
                 </div>
             )}
 
-            {/* Tab 2: Organization Workspaces */}
-            {activeTab === "org" && (
-                <div>
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                        <WorkspaceSearchBar
-                            tabName="org"
-                            initialQuery={searchQuery}
-                            placeholder="Search organization workspaces..."
-                        />
-                        {orgData.userDomain && (
-                            <span className="font-brand-mono text-xs text-brand-subtle">
-                                Domain:{" "}
-                                <strong className="text-brand-ink">
-                                    @{orgData.userDomain}
-                                </strong>
-                            </span>
-                        )}
-                    </div>
-
-                    {orgData.workspaces.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-20 px-4 text-center border-2 border-dashed border-brand-border rounded-brand bg-brand-surface">
-                            <h3 className="text-lg font-medium text-brand-ink mb-2">
-                                {searchQuery
-                                    ? `No organization workspaces match "${searchQuery}"`
-                                    : "No organization workspaces found"}
-                            </h3>
-                            <p className="text-xs font-brand-mono text-brand-subtle max-w-sm">
-                                Workspaces marked with Organization visibility
-                                in your company domain will appear here.
-                            </p>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {orgData.workspaces.map((ws) => {
-                                const isMember = ws.members.some(
-                                    (m) => m.userId === currentUserId,
-                                );
-                                const userRequest = ws.joinRequests?.[0];
-
-                                return (
-                                    <Card
-                                        key={ws.id}
-                                        elevated
-                                        className="h-full flex flex-col justify-between"
-                                    >
-                                        <div>
-                                            <CardHeader className="flex flex-row items-center justify-between pb-2 mb-2 border-b border-brand-muted">
-                                                <CardTitle className="text-base font-semibold text-brand-ink truncate">
-                                                    {ws.name}
-                                                </CardTitle>
-                                                <Badge intent="muted">
-                                                    Organization
-                                                </Badge>
-                                            </CardHeader>
-                                            <CardBody className="flex flex-col gap-2">
-                                                <div className="flex items-center gap-2 font-brand-mono text-xs text-brand-subtle">
-                                                    <span>
-                                                        {ws._count.members}{" "}
-                                                        members
-                                                    </span>
-                                                </div>
-                                            </CardBody>
-                                        </div>
-
-                                        <div className="pt-4 mt-auto border-t border-brand-muted flex items-center justify-between">
-                                            {isMember ? (
-                                                <Link
-                                                    href={`/${ws.id}`}
-                                                    className="font-brand-mono text-xs text-brand-accent uppercase tracking-widest hover:underline"
-                                                >
-                                                    Open Workspace →
-                                                </Link>
-                                            ) : (
-                                                <JoinRequestButton
-                                                    workspaceId={ws.id}
-                                                    isMember={isMember}
-                                                    initialStatus={
-                                                        userRequest?.status
-                                                    }
-                                                />
-                                            )}
-                                        </div>
-                                    </Card>
-                                );
-                            })}
-                        </div>
-                    )}
-
-                    <PaginationControls
-                        currentPage={orgData.currentPage}
-                        totalPages={orgData.totalPages}
-                        totalCount={orgData.totalCount}
-                        tabName="org"
-                    />
-                </div>
-            )}
-
-            {/* Tab 3: Discover Public Workspaces */}
+            {/* Tab 2: Discover Public Workspaces */}
             {activeTab === "public" && (
                 <div>
                     <WorkspaceSearchBar
