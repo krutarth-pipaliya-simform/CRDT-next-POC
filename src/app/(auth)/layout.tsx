@@ -1,11 +1,11 @@
-import * as React from "react";
+import type { ReactNode } from "react";
 import Link from "next/link";
 
-export default function AuthLayout({
-    children,
-}: {
-    children: React.ReactNode;
-}) {
+export interface AuthLayoutProps {
+    children: ReactNode;
+}
+
+export default function AuthLayout({ children }: AuthLayoutProps) {
     return (
         <main className="min-h-screen w-full flex bg-brand-surface font-brand-sans">
             {/* Left Column - Form Area */}

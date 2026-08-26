@@ -1,15 +1,16 @@
-import { getWorkspacesForUser } from "@/features/workspace/queries/get-workspaces";
-import { getPublicWorkspaces } from "@/features/workspace/queries/get-public-workspaces";
-import { WorkspaceCard } from "@/features/workspace/components/workspace-card";
-import { CreateWorkspaceDialog } from "@/features/workspace/components/create-workspace-dialog";
-import { WorkspaceSearchBar } from "@/features/workspace/components/workspace-search-bar";
-import { PaginationControls } from "@/features/workspace/components/pagination-controls";
-import { JoinPublicButton } from "@/features/workspace/components/join-public-button";
-import { auth } from "@/features/auth/lib/auth";
 import Link from "next/link";
-import { Card, CardHeader, CardTitle, CardBody } from "@/components/ui/card";
+
 import { Badge } from "@/components/ui/badge";
+import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { NavTabs, type NavTabItem } from "@/components/ui/nav-tabs";
+import { auth } from "@/features/auth/lib/auth";
+import { CreateWorkspaceDialog } from "@/features/workspace/components/create-workspace-dialog";
+import { JoinPublicButton } from "@/features/workspace/components/join-public-button";
+import { PaginationControls } from "@/features/workspace/components/pagination-controls";
+import { WorkspaceCard } from "@/features/workspace/components/workspace-card";
+import { WorkspaceSearchBar } from "@/features/workspace/components/workspace-search-bar";
+import { getPublicWorkspaces } from "@/features/workspace/queries/get-public-workspaces";
+import { getWorkspacesForUser } from "@/features/workspace/queries/get-workspaces";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;

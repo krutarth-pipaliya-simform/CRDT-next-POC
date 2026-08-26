@@ -1,9 +1,10 @@
-import { auth } from "@/features/auth/lib/auth";
-import { rawDb } from "@/lib/db";
 import { redirect } from "next/navigation";
-import { ProfileForm } from "@/features/profile/components/profile-form";
+
+import { auth } from "@/features/auth/lib/auth";
 import { PasswordForm } from "@/features/profile/components/password-form";
+import { ProfileForm } from "@/features/profile/components/profile-form";
 import { ProfilePicture } from "@/features/profile/components/profile-picture";
+import { rawDb } from "@/lib/db";
 
 export default async function ProfilePage() {
     const session = await auth();

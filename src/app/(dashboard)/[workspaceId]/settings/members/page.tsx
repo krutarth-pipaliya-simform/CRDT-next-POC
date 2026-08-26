@@ -1,11 +1,11 @@
-import { getWorkspace } from "@/features/workspace/queries/get-workspace";
-import { MembersList } from "@/features/workspace/components/members-list";
-import { InviteSection } from "@/features/workspace/components/invite-section";
-import { Separator } from "@/components/ui/separator";
 import { notFound } from "next/navigation";
 
+import { Separator } from "@/components/ui/separator";
 import { auth } from "@/features/auth/lib/auth";
+import { InviteSection } from "@/features/workspace/components/invite-section";
+import { MembersList } from "@/features/workspace/components/members-list";
 import { getWorkspaceRole } from "@/features/workspace/lib/rbac";
+import { getWorkspace } from "@/features/workspace/queries/get-workspace";
 
 export default async function MembersSettingsPage({
     params,

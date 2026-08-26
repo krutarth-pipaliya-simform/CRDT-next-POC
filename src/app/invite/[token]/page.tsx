@@ -1,9 +1,10 @@
-import { getInvitationByToken } from "@/features/workspace/queries/get-invitation";
-import { JoinWorkspaceButton } from "@/features/workspace/components/join-workspace-button";
-import { auth } from "@/features/auth/lib/auth";
-import { redirect } from "next/navigation";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+
 import { LinkButton } from "@/components/ui/link-button";
+import { auth } from "@/features/auth/lib/auth";
+import { JoinWorkspaceButton } from "@/features/workspace/components/join-workspace-button";
+import { getInvitationByToken } from "@/features/workspace/queries/get-invitation";
 
 export default async function InvitePage({
     params,

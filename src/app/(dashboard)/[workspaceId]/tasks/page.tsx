@@ -1,6 +1,7 @@
-import { getWorkspace } from "@/features/workspace/queries/get-workspace";
-import { verifyWorkspaceRole } from "@/features/workspace/lib/rbac";
 import { notFound } from "next/navigation";
+
+import { verifyWorkspaceRole } from "@/features/workspace/lib/rbac";
+import { getWorkspace } from "@/features/workspace/queries/get-workspace";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
