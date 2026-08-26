@@ -5,6 +5,9 @@ import { getWorkspacesForUser } from "@/features/workspace/queries/get-workspace
 import { WorkspaceNav } from "@/components/layout/workspace-nav";
 import { notFound } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function WorkspaceLayout({
     children,
     params,

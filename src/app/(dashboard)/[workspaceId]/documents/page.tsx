@@ -1,5 +1,9 @@
 import { getWorkspace } from "@/features/workspace/queries/get-workspace";
+import { verifyWorkspaceRole } from "@/features/workspace/lib/rbac";
 import { notFound } from "next/navigation";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function DocumentsPage({
     params,
@@ -7,6 +11,7 @@ export default async function DocumentsPage({
     params: Promise<{ workspaceId: string }>;
 }) {
     const { workspaceId } = await params;
+    await verifyWorkspaceRole(workspaceId, ["ADMIN", "MEMBER", "GUEST"]);
     const workspace = await getWorkspace(workspaceId);
 
     if (!workspace) {

@@ -1,7 +1,13 @@
 import "server-only";
 import { rawDb } from "@/lib/db";
+import { getWorkspaceRole } from "@/features/workspace/lib/rbac";
 
 export async function getWorkspace(workspaceId: string) {
+    const role = await getWorkspaceRole(workspaceId);
+    if (!role) {
+        return null;
+    }
+
     return rawDb.workspace.findUnique({
         where: { id: workspaceId },
         include: {

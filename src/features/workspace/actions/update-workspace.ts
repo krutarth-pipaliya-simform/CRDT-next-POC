@@ -41,8 +41,8 @@ export async function updateWorkspaceAction(
         });
 
         revalidatePath(`/${workspaceId}/settings`);
-        revalidatePath(`/${workspaceId}`);
-        revalidatePath("/dashboard");
+        revalidatePath(`/${workspaceId}`, "layout");
+        revalidatePath("/dashboard", "layout");
 
         return { success: true };
     } catch {

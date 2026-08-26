@@ -1,6 +1,9 @@
 import { verifyWorkspaceRole } from "@/features/workspace/lib/rbac";
 import { SettingsNav } from "@/features/workspace/components/settings-nav";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function SettingsLayout({
     children,
     params,

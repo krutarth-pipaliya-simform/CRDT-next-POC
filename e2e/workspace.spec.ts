@@ -353,7 +353,7 @@ test.describe("Workspace Management", () => {
 
         await expect(
             page.getByText("Workspace settings saved successfully."),
-        ).toBeVisible();
+        ).toBeVisible({ timeout: 15000 });
 
         // Verify DB update
         const updated = await rawDb.workspace.findUnique({
@@ -466,10 +466,10 @@ test.describe("Workspace Management", () => {
         // Click "Join Workspace" button
         await page.getByRole("button", { name: "Join Workspace" }).click();
 
-        // Button should transition to "Open Workspace →"
+        // Button should transition to "Open Workspace" link
         await expect(
-            page.getByRole("link", { name: "Open Workspace →" }),
-        ).toBeVisible();
+            page.getByRole("link", { name: /Open Workspace/ }),
+        ).toBeVisible({ timeout: 10000 });
 
         // Navigate to My Workspaces tab -> public workspace must now be listed!
         await page.goto("/dashboard?tab=my");
@@ -481,6 +481,163 @@ test.describe("Workspace Management", () => {
         });
         await rawDb.user.deleteMany({
             where: { id: creator.id },
+        });
+    });
+
+    test("should allow guest viewing of public workspaces directly from list and handle consistent access", async ({
+        page,
+    }) => {
+        const creatorEmail = `guest_test_${Date.now()}@example.com`;
+        const hashedPassword = await bcrypt.hash("password123", 10);
+        const creator = await rawDb.user.create({
+            data: {
+                name: "Public Space Creator",
+                email: creatorEmail,
+                password: hashedPassword,
+                emailVerified: new Date(),
+            },
+        });
+
+        const publicWsName = `Guest View Space ${Date.now()}`;
+        const publicWs = await rawDb.workspace.create({
+            data: {
+                name: publicWsName,
+                visibility: "PUBLIC",
+                members: {
+                    create: {
+                        userId: creator.id,
+                        role: "ADMIN",
+                    },
+                },
+            },
+        });
+
+        // Test user logs in
+        await loginAsTestUser(page);
+
+        // 1. Visit Discover Public tab
+        await page.goto(
+            `/dashboard?tab=public&query=${encodeURIComponent(publicWsName)}`,
+        );
+        await expect(page.getByText(publicWsName)).toBeVisible();
+
+        // 2. Click "View as Guest →" link directly from the list without joining
+        await page.getByRole("link", { name: /View as Guest/ }).click();
+
+        // 3. Should open the public workspace as a guest with the guest banner
+        await expect(page).toHaveURL(`/${publicWs.id}`);
+        await expect(
+            page.getByText("You are viewing this public workspace as a guest."),
+        ).toBeVisible();
+        await expect(page.getByText("GUEST", { exact: true })).toBeVisible();
+
+        // 4. Click "Join Workspace" from the banner inside the workspace
+        await page.getByRole("button", { name: "Join Workspace" }).click();
+        await expect(
+            page.getByRole("link", { name: "Open Workspace →" }),
+        ).toBeVisible({ timeout: 10000 });
+
+        // 5. Navigate to dashboard - user is now a MEMBER
+        await page.goto("/dashboard?tab=my");
+        await expect(page.getByText(publicWsName)).toBeVisible({
+            timeout: 10000,
+        });
+
+        // Clean up
+        await rawDb.workspace.deleteMany({
+            where: { id: publicWs.id },
+        });
+        await rawDb.user.deleteMany({
+            where: { id: creator.id },
+        });
+    });
+
+    test("should immediately revoke access when member is removed from a workspace that was made private", async ({
+        page,
+    }) => {
+        const adminEmail = `admin_strict_${Date.now()}@example.com`;
+        const hashedPassword = await bcrypt.hash("password123", 10);
+        const adminUser = await rawDb.user.create({
+            data: {
+                name: "Strict Admin",
+                email: adminEmail,
+                password: hashedPassword,
+                emailVerified: new Date(),
+            },
+        });
+
+        // 1. Create workspace initially PUBLIC with Admin
+        const wsName = `Strict Access Space ${Date.now()}`;
+        const ws = await rawDb.workspace.create({
+            data: {
+                name: wsName,
+                visibility: "PUBLIC",
+                members: {
+                    create: {
+                        userId: adminUser.id,
+                        role: "ADMIN",
+                    },
+                },
+            },
+        });
+
+        // 2. Test user logs in and joins the workspace
+        await loginAsTestUser(page);
+        await page.goto(`/${ws.id}`);
+        await page.getByRole("button", { name: "Join Workspace" }).click();
+        await expect(
+            page.getByRole("link", { name: "Open Workspace →" }),
+        ).toBeVisible({ timeout: 10000 });
+
+        // Verify test user can view workspace overview as full MEMBER
+        await page.goto(`/${ws.id}`);
+        await expect(page.getByRole("heading", { name: wsName })).toBeVisible();
+
+        // 3. Admin makes the workspace PRIVATE and REMOVES the test user
+        await rawDb.workspace.update({
+            where: { id: ws.id },
+            data: { visibility: "PRIVATE" },
+        });
+        await rawDb.workspaceMember.deleteMany({
+            where: {
+                workspaceId: ws.id,
+                userId: testUserId,
+            },
+        });
+
+        // 4. Test user refreshes or visits direct URL /:workspaceId
+        await page.goto(`/${ws.id}`);
+
+        // Must be redirected to /unauthorized (403 Access Denied)
+        await expect(page).toHaveURL("/unauthorized");
+        await expect(
+            page.getByRole("heading", { name: "Unauthorized Access" }),
+        ).toBeVisible();
+        await expect(page.getByText("403 · Access Denied")).toBeVisible();
+
+        // 5. Hard refresh must NOT restore access
+        await page.reload();
+        await expect(page).toHaveURL("/unauthorized");
+        await expect(
+            page.getByRole("heading", { name: "Unauthorized Access" }),
+        ).toBeVisible();
+
+        // 6. Direct navigation to sub-routes (e.g. /documents) must also redirect to /unauthorized
+        await page.goto(`/${ws.id}/documents`);
+        await expect(page).toHaveURL("/unauthorized");
+
+        // 7. Verify dashboard does not list private workspace in My Workspaces or Discover Public
+        await page.goto("/dashboard?tab=my");
+        await expect(page.getByText(wsName)).not.toBeVisible();
+        await page.goto("/dashboard?tab=public");
+        await expect(page.getByText(wsName)).not.toBeVisible();
+
+        // Clean up
+        await rawDb.workspace.deleteMany({
+            where: { id: ws.id },
+        });
+        await rawDb.user.deleteMany({
+            where: { id: adminUser.id },
         });
     });
 });

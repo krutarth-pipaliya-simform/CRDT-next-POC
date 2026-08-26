@@ -2,8 +2,11 @@ import { getWorkspace } from "@/features/workspace/queries/get-workspace";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Card, CardHeader, CardTitle, CardBody } from "@/components/ui/card";
-import { getWorkspaceRole } from "@/features/workspace/lib/rbac";
+import { verifyWorkspaceRole } from "@/features/workspace/lib/rbac";
 import { JoinPublicButton } from "@/features/workspace/components/join-public-button";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function WorkspacePage({
     params,
@@ -11,8 +14,12 @@ export default async function WorkspacePage({
     params: Promise<{ workspaceId: string }>;
 }) {
     const { workspaceId } = await params;
+    const role = await verifyWorkspaceRole(workspaceId, [
+        "ADMIN",
+        "MEMBER",
+        "GUEST",
+    ]);
     const workspace = await getWorkspace(workspaceId);
-    const role = await getWorkspaceRole(workspaceId);
 
     if (!workspace) {
         notFound();
@@ -103,7 +110,8 @@ export default async function WorkspacePage({
                     >
                         <Card
                             elevated
-                            className="h-full flex flex-col justify-between transition-transform group-hover:-translate-y-0.5 group-hover:border-brand-accent"
+                            interactive
+                            className="h-full flex flex-col justify-between"
                         >
                             <div>
                                 <CardHeader className="flex flex-row items-center justify-between pb-2 mb-2 border-b border-brand-muted">

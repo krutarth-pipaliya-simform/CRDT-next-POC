@@ -42,8 +42,8 @@ export async function removeMemberAction(
 
         revalidatePath(`/${workspaceId}/settings/members`);
         revalidatePath(`/${workspaceId}/settings`);
-        revalidatePath(`/${workspaceId}`);
-        revalidatePath("/dashboard");
+        revalidatePath(`/${workspaceId}`, "layout");
+        revalidatePath("/dashboard", "layout");
 
         return { success: true };
     } catch {
