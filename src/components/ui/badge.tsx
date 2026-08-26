@@ -7,7 +7,8 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
 }
 
 const intentClasses: Record<Intent, string> = {
-    default: "bg-brand-muted text-brand-ink border-brand-ink",
+    default: "bg-brand-ink text-brand-surface border-brand-ink",
+    muted: "bg-brand-muted text-brand-subtle border-brand-border",
     danger: "bg-brand-danger/10 text-brand-danger border-brand-danger",
     success: "bg-brand-success/10 text-brand-success border-brand-success",
     warning: "bg-brand-warning/10 text-brand-warning border-brand-warning",
