@@ -20,3 +20,6 @@ export const updatePasswordSchema = z
         message: "Passwords do not match",
         path: ["confirmPassword"],
     });
+
+export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
+export type UpdatePasswordInput = z.infer<typeof updatePasswordSchema>;

@@ -1,14 +1,19 @@
 "use client";
 
 import { useActionState } from "react";
-import { updateProfile } from "../actions/update-profile";
+
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
-import { Alert } from "@/components/ui/alert";
-import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
+import { updateProfile } from "@/features/profile/actions/update-profile";
 
-export function ProfileForm({ initialName }: { initialName?: string }) {
+export interface ProfileFormProps {
+    initialName?: string;
+}
+
+export function ProfileForm({ initialName }: ProfileFormProps) {
     const [state, action] = useActionState(updateProfile, null);
 
     return (

@@ -1,16 +1,17 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
-import {
-    uploadProfilePicture,
-    removeProfilePicture,
-} from "../actions/upload-image";
-import { Button } from "@/components/ui/button";
-import { Alert } from "@/components/ui/alert";
-import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
+import { useActionState, useRef, useState, type ChangeEvent } from "react";
 import Image from "next/image";
 
-interface ProfilePictureProps {
+import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+    removeProfilePicture,
+    uploadProfilePicture,
+} from "@/features/profile/actions/upload-image";
+
+export interface ProfilePictureProps {
     initialImageUrl?: string | null;
     initials: string;
 }
@@ -30,7 +31,7 @@ export function ProfilePicture({
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
             const url = URL.createObjectURL(file);
