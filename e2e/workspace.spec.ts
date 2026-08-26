@@ -316,13 +316,128 @@ test.describe("Workspace Management", () => {
             .getByRole("button", { name: "Remove Invitee To Remove" })
             .click();
 
-        // Click Confirm Remove button
+        // Dialog should be open with Confirm Remove button
+        await expect(
+            page.getByRole("heading", { name: "Remove Member" }),
+        ).toBeVisible();
         await page.getByRole("button", { name: "Confirm Remove" }).click();
 
         // Member should be removed from the list
-        await expect(page.getByText("Invitee To Remove")).not.toBeVisible();
+        await expect(
+            page.locator("li").filter({ hasText: "Invitee To Remove" }),
+        ).not.toBeVisible();
 
         // Clean up user
+        await rawDb.user.deleteMany({
+            where: { id: inviteeUser.id },
+        });
+    });
+
+    test("FR-6: Member row maintains stable layout without shift when toggling remove confirmation", async ({
+        page,
+    }) => {
+        const hashedPassword = await bcrypt.hash("password123", 10);
+        const inviteeUser = await rawDb.user.create({
+            data: {
+                name: "Layout Stability Member",
+                email: `stable_${Date.now()}@example.com`,
+                password: hashedPassword,
+                emailVerified: new Date(),
+                role: "MEMBER",
+            },
+        });
+
+        const ws = await rawDb.workspace.create({
+            data: {
+                name: `Stability Test Workspace ${Date.now()}`,
+                members: {
+                    create: [
+                        { userId: testUserId, role: "ADMIN" },
+                        { userId: inviteeUser.id, role: "MEMBER" },
+                    ],
+                },
+            },
+        });
+
+        await loginAsTestUser(page);
+        await page.goto(`/${ws.id}/settings/members`);
+
+        const memberItem = page
+            .locator("li")
+            .filter({ hasText: "Layout Stability Member" });
+        const adminItem = page
+            .locator("li")
+            .filter({ hasText: "Workspace Admin" });
+        await expect(memberItem).toBeVisible();
+        await expect(adminItem).toBeVisible();
+
+        const badge = memberItem.getByText("MEMBER", { exact: true });
+        const adminBadge = adminItem.getByText("ADMIN", { exact: true });
+        const nameSpan = memberItem.locator("span.text-sm.truncate");
+
+        const initialBadgeBox = await badge.boundingBox();
+        const adminBadgeBox = await adminBadge.boundingBox();
+        const initialNameBox = await nameSpan.boundingBox();
+        const initialRowBox = await memberItem.boundingBox();
+
+        expect(initialBadgeBox).not.toBeNull();
+        expect(adminBadgeBox).not.toBeNull();
+        expect(initialNameBox).not.toBeNull();
+        expect(initialRowBox).not.toBeNull();
+
+        // Both ADMIN and MEMBER tags are aligned at the end of the line (right edge)
+        expect(Math.round(initialBadgeBox!.x + initialBadgeBox!.width)).toBe(
+            Math.round(adminBadgeBox!.x + adminBadgeBox!.width),
+        );
+
+        // Click Remove to open confirmation dialog
+        await memberItem
+            .getByRole("button", {
+                name: "Remove Layout Stability Member",
+            })
+            .click();
+
+        await expect(
+            page.getByRole("heading", { name: "Remove Member" }),
+        ).toBeVisible();
+        await expect(
+            page.getByRole("button", { name: "Confirm Remove" }),
+        ).toBeVisible();
+        await expect(
+            page.getByRole("button", { name: "Cancel" }),
+        ).toBeVisible();
+
+        const confirmingBadgeBox = await badge.boundingBox();
+        const confirmingNameBox = await nameSpan.boundingBox();
+        const confirmingRowBox = await memberItem.boundingBox();
+
+        // Row coordinates and dimensions are strictly identical while dialog is open
+        expect(confirmingBadgeBox?.x).toBe(initialBadgeBox?.x);
+        expect(confirmingBadgeBox?.y).toBe(initialBadgeBox?.y);
+        expect(confirmingNameBox?.x).toBe(initialNameBox?.x);
+        expect(confirmingNameBox?.y).toBe(initialNameBox?.y);
+        expect(confirmingRowBox?.width).toBe(initialRowBox?.width);
+        expect(confirmingRowBox?.height).toBe(initialRowBox?.height);
+
+        // Click Cancel to dismiss dialog
+        await page.getByRole("button", { name: "Cancel" }).click();
+
+        await expect(
+            page.getByRole("heading", { name: "Remove Member" }),
+        ).not.toBeVisible();
+
+        const revertedBadgeBox = await badge.boundingBox();
+        const revertedNameBox = await nameSpan.boundingBox();
+
+        expect(revertedBadgeBox?.x).toBe(initialBadgeBox?.x);
+        expect(revertedBadgeBox?.y).toBe(initialBadgeBox?.y);
+        expect(revertedNameBox?.x).toBe(initialNameBox?.x);
+        expect(revertedNameBox?.y).toBe(initialNameBox?.y);
+
+        // Clean up
+        await rawDb.workspace.deleteMany({
+            where: { id: ws.id },
+        });
         await rawDb.user.deleteMany({
             where: { id: inviteeUser.id },
         });

@@ -38,31 +38,24 @@ export function MembersList({
             {members.map((member) => (
                 <li
                     key={member.id}
-                    className="flex items-center justify-between p-4 bg-brand-surface hover:bg-brand-muted/30 transition-colors"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-brand-surface hover:bg-brand-muted/30 transition-colors"
                 >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
                         <div className="w-8 h-8 rounded-full bg-brand-ink text-brand-surface font-brand-mono text-xs font-semibold flex items-center justify-center uppercase shrink-0">
                             {member.user.name?.[0] ||
                                 member.user.email?.[0] ||
                                 "U"}
                         </div>
-                        <div className="flex flex-col">
-                            <span className="text-sm font-medium text-brand-ink">
+                        <div className="flex flex-col min-w-0">
+                            <span className="text-sm font-medium text-brand-ink truncate">
                                 {member.user.name || "Unnamed Member"}
                             </span>
-                            <span className="text-xs font-brand-mono text-brand-subtle">
+                            <span className="text-xs font-brand-mono text-brand-subtle truncate">
                                 {member.user.email}
                             </span>
                         </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <Badge
-                            intent={
-                                member.role === "ADMIN" ? "default" : "muted"
-                            }
-                        >
-                            {member.role}
-                        </Badge>
+                    <div className="flex items-center gap-3 shrink-0">
                         {currentUserRole === "ADMIN" &&
                             member.user.id !== currentUserId && (
                                 <RemoveMemberButton
@@ -75,6 +68,13 @@ export function MembersList({
                                     }
                                 />
                             )}
+                        <Badge
+                            intent={
+                                member.role === "ADMIN" ? "default" : "muted"
+                            }
+                        >
+                            {member.role}
+                        </Badge>
                     </div>
                 </li>
             ))}
