@@ -1,26 +1,93 @@
 @import "tailwindcss";
 
+/* ─── Brand Tokens ─────────────────────────────────────── */
+@theme {
+    /* Colors */
+    --color-brand-ink: #1a1a1a;
+    --color-brand-accent: #2948ff;
+    --color-brand-surface: #fbfbfb;
+    --color-brand-muted: #f0f0f0;
+    --color-brand-subtle: #555555;
+    --color-brand-danger: #e53e3e;
+    --color-brand-success: #16a34a;
+    --color-brand-warning: #d97706;
+    --color-brand-border: #e8e8e8;
+
+    /* Typography */
+    --font-brand-sans: var(--font-geist-sans);
+    --font-brand-mono: var(--font-geist-mono);
+
+    /* Radius — 0px is the Machined Precision signature */
+    --radius-brand: 0px;
+
+    /* Shadows — hard, no blur */
+    --shadow-brand-subtle: 2px 2px 0px #1a1a1a;
+    --shadow-brand-card: 4px 4px 0px #1a1a1a;
+    --shadow-brand-hover: 6px 6px 0px #1a1a1a;
+}
+
+/* ─── Base Reset ────────────────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+    color-scheme: light;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+    background-color: var(--color-brand-surface);
+    color: var(--color-brand-ink);
+    font-family: var(--font-brand-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Global Selection Color */
+::selection {
+    background-color: var(--color-brand-accent);
+    color: var(--color-brand-surface);
+}
+
+/* ─── Animations ────────────────────────────────────────── */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes drawLine {
+    from {
+        width: 0;
+    }
+    to {
+        width: 100%;
+    }
+}
+
+@utility animate-fade-in-up {
+    animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    opacity: 0;
+}
+
+@utility animate-draw-line {
+    animation: drawLine 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.delay-100 {
+    animation-delay: 100ms;
+}
+.delay-200 {
+    animation-delay: 200ms;
+}
+.delay-300 {
+    animation-delay: 300ms;
+}
+.delay-400 {
+    animation-delay: 400ms;
+}
+.delay-500 {
+    animation-delay: 500ms;
+}
+.delay-600 {
+    animation-delay: 600ms;
 }

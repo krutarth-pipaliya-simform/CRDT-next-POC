@@ -1,0 +1,50 @@
+import { auth } from "@/features/auth/lib/auth";
+import { rawDb } from "@/lib/db";
+import { redirect } from "next/navigation";
+import { ProfileForm } from "@/features/profile/components/profile-form";
+import { PasswordForm } from "@/features/profile/components/password-form";
+import { ProfilePicture } from "@/features/profile/components/profile-picture";
+
+export default async function ProfilePage() {
+    const session = await auth();
+    if (!session?.user?.id) {
+        redirect("/login");
+    }
+
+    const user = await rawDb.user.findUnique({
+        where: { id: session.user.id },
+    });
+
+    if (!user) {
+        redirect("/login");
+    }
+
+    // Determine initials
+    const initials = user.name
+        ? user.name
+              .split(" ")
+              .map((n) => n[0])
+              .join("")
+              .substring(0, 2)
+              .toUpperCase()
+        : user.email?.substring(0, 2).toUpperCase() || "U";
+
+    return (
+        <div className="max-w-4xl mx-auto space-y-8 p-6">
+            <div>
+                <h1 className="text-3xl font-brand-mono font-bold text-brand-ink uppercase tracking-tight">
+                    Account Settings
+                </h1>
+                <p className="text-brand-ink/70 mt-2 font-brand-sans">
+                    Manage your personal information and account preferences.
+                </p>
+            </div>
+
+            <ProfilePicture initialImageUrl={user.image} initials={initials} />
+
+            <ProfileForm initialName={user.name || ""} />
+
+            <PasswordForm />
+        </div>
+    );
+}

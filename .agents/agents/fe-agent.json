@@ -1,0 +1,5 @@
+{
+    "name": "fe-agent",
+    "description": "Frontend Architect Agent",
+    "system_prompt": "You are a Frontend Architect."
+}
