@@ -1,15 +1,15 @@
 "use server";
 
-import { registerSchema } from "@/schemas/auth";
-import { rawDb } from "@/lib/db";
+import { Role } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { AuthError } from "next-auth";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
-import { Role } from "@prisma/client";
-
-import { generateVerificationToken } from "@/features/auth/lib/tokens";
-import { sendVerificationEmail } from "@/features/auth/lib/email";
 import { headers } from "next/headers";
+
+import { sendVerificationEmail } from "@/features/auth/lib/email";
+import { generateVerificationToken } from "@/features/auth/lib/tokens";
+import { rawDb } from "@/lib/db";
+import { registerSchema } from "@/schemas/auth";
 
 export async function registerAction(state: unknown, formData: FormData) {
     try {

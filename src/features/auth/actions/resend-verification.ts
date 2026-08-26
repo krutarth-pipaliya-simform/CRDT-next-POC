@@ -1,9 +1,10 @@
 "use server";
 
-import { generateVerificationToken } from "@/features/auth/lib/tokens";
-import { sendVerificationEmail } from "@/features/auth/lib/email";
-import { rawDb } from "@/lib/db";
 import { headers } from "next/headers";
+
+import { sendVerificationEmail } from "@/features/auth/lib/email";
+import { generateVerificationToken } from "@/features/auth/lib/tokens";
+import { rawDb } from "@/lib/db";
 
 export async function resendVerificationAction(email: string) {
     try {

@@ -1,10 +1,11 @@
 "use server";
 
-import { signIn } from "@/features/auth/lib/auth";
-import { loginSchema } from "@/schemas/auth";
-import { DEFAULT_LOGIN_REDIRECT } from "@/lib/routes";
 import { AuthError } from "next-auth";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
+
+import { signIn } from "@/features/auth/lib/auth";
+import { DEFAULT_LOGIN_REDIRECT } from "@/lib/routes";
+import { loginSchema } from "@/schemas/auth";
 
 export async function loginAction(state: unknown, formData: FormData) {
     const data = Object.fromEntries(formData.entries());
