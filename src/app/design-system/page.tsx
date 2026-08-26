@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { Alert } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FormField } from "@/components/ui/form-field";
+import { NavTabs } from "@/components/ui/nav-tabs";
 
 export default function ComponentsKitchenSink() {
     return (
@@ -101,6 +102,67 @@ export default function ComponentsKitchenSink() {
                     </div>
                 </section>
 
+                {/* Navigation Tabs */}
+                <section className="space-y-6">
+                    <h2 className="text-2xl font-semibold border-b-2 border-brand-muted pb-2">
+                        Navigation Tabs (NavTabs)
+                    </h2>
+                    <p className="text-sm text-brand-subtle mb-4">
+                        Single source of truth for tabbed routing, workspace
+                        sections, settings, and filter bars.
+                    </p>
+                    <div className="space-y-6">
+                        <div>
+                            <span className="font-brand-mono text-xs text-brand-subtle block mb-2">
+                                Standard Link Tabs (Active: Overview)
+                            </span>
+                            <NavTabs
+                                ariaLabel="Design system demo tabs"
+                                items={[
+                                    {
+                                        label: "Overview",
+                                        href: "#overview",
+                                        active: true,
+                                    },
+                                    { label: "Documents", href: "#documents" },
+                                    { label: "Tasks", href: "#tasks" },
+                                    { label: "Chat", href: "#chat" },
+                                    { label: "Settings", href: "#settings" },
+                                ]}
+                            />
+                        </div>
+                        <div>
+                            <span className="font-brand-mono text-xs text-brand-subtle block mb-2">
+                                With Badges & Small Size Variant
+                            </span>
+                            <NavTabs
+                                size="sm"
+                                ariaLabel="Design system badge tabs"
+                                activeValue="public"
+                                items={[
+                                    {
+                                        value: "my",
+                                        label: "My Workspaces",
+                                        badge: <Badge intent="muted">3</Badge>,
+                                    },
+                                    {
+                                        value: "public",
+                                        label: "Discover Public",
+                                        badge: (
+                                            <Badge intent="default">12</Badge>
+                                        ),
+                                    },
+                                    {
+                                        value: "archived",
+                                        label: "Archived",
+                                        disabled: true,
+                                    },
+                                ]}
+                            />
+                        </div>
+                    </div>
+                </section>
+
                 {/* Badges & Alerts */}
                 <section className="space-y-6">
                     <h2 className="text-2xl font-semibold border-b-2 border-brand-muted pb-2">
@@ -173,7 +235,7 @@ export default function ComponentsKitchenSink() {
                         Layout (Cards & Separators)
                     </h2>
 
-                    <div className="grid md:grid-cols-2 gap-8">
+                    <div className="grid md:grid-cols-3 gap-6">
                         <Card>
                             <CardHeader>
                                 <CardTitle>Standard Card</CardTitle>
@@ -199,6 +261,19 @@ export default function ComponentsKitchenSink() {
                                 <Button className="w-full" variant="secondary">
                                     Take Action
                                 </Button>
+                            </CardBody>
+                        </Card>
+
+                        <Card elevated interactive>
+                            <CardHeader>
+                                <CardTitle>Interactive Card</CardTitle>
+                            </CardHeader>
+                            <CardBody>
+                                <p className="mb-4">
+                                    Hover over this card to see the accent
+                                    border, lift animation, and shadow
+                                    expansion.
+                                </p>
                             </CardBody>
                         </Card>
                     </div>

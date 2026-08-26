@@ -21,17 +21,8 @@ export async function SiteHeader() {
 
     return (
         <nav
-            style={{
-                padding: "1rem",
-                borderBottom: "1px solid var(--color-brand-border)",
-                marginBottom: "1rem",
-                display: "flex",
-                gap: "1rem",
-                backgroundColor: "var(--color-brand-surface)",
-                color: "var(--color-brand-ink)",
-                alignItems: "center",
-                flexWrap: "wrap",
-            }}
+            aria-label="Main site navigation"
+            className="p-4 border-b border-brand-border mb-4 flex items-center gap-4 bg-brand-surface text-brand-ink flex-wrap"
         >
             <Link href="/" className="font-bold text-xl">
                 App Logo

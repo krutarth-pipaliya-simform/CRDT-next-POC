@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
+import { NavTabs, type NavTabItem } from "@/components/ui/nav-tabs";
 import { cn } from "@/lib/cn";
 import { WorkspaceRole } from "@/schemas/workspace";
 
@@ -20,7 +20,6 @@ export function WorkspaceNav({
     userRole,
     workspaces = [],
 }: WorkspaceNavProps) {
-    const pathname = usePathname();
     const [switcherOpen, setSwitcherOpen] = useState(false);
     const switcherRef = useRef<HTMLDivElement>(null);
 
@@ -38,7 +37,7 @@ export function WorkspaceNav({
             document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const navItems = [
+    const navItems: NavTabItem[] = [
         { label: "Overview", href: `/${workspaceId}`, exact: true },
         { label: "Documents", href: `/${workspaceId}/documents` },
         { label: "Tasks", href: `/${workspaceId}/tasks` },
@@ -48,14 +47,6 @@ export function WorkspaceNav({
             ? [{ label: "Settings", href: `/${workspaceId}/settings` }]
             : []),
     ];
-
-    const isActive = (itemHref: string, exact?: boolean) => {
-        if (!pathname) return false;
-        if (exact) {
-            return pathname === itemHref;
-        }
-        return pathname === itemHref || pathname.startsWith(`${itemHref}/`);
-    };
 
     return (
         <div className="border-b-2 border-brand-muted bg-brand-surface mb-6">
@@ -152,28 +143,12 @@ export function WorkspaceNav({
                 </div>
 
                 {/* Workspace Navigation Tabs */}
-                <nav
-                    className="flex items-center gap-1 overflow-x-auto no-scrollbar -mb-[2px] pt-1"
-                    aria-label="Workspace sections"
-                >
-                    {navItems.map((item) => {
-                        const active = isActive(item.href, item.exact);
-                        return (
-                            <Link
-                                key={item.href}
-                                href={item.href}
-                                className={cn(
-                                    "px-4 py-3 font-brand-mono text-xs uppercase tracking-wider transition-colors whitespace-nowrap border-b-2",
-                                    active
-                                        ? "border-brand-accent text-brand-ink font-semibold"
-                                        : "border-transparent text-brand-subtle hover:text-brand-ink hover:border-brand-border",
-                                )}
-                            >
-                                {item.label}
-                            </Link>
-                        );
-                    })}
-                </nav>
+                <NavTabs
+                    ariaLabel="Workspace sections"
+                    scrollable
+                    items={navItems}
+                    className="border-b-0 pt-1"
+                />
             </div>
         </div>
     );

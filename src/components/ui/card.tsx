@@ -3,14 +3,22 @@ import { cn } from "@/lib/cn";
 
 export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
     elevated?: boolean;
+    interactive?: boolean;
 }
 
-export function Card({ className, elevated = false, ...props }: CardProps) {
+export function Card({
+    className,
+    elevated = false,
+    interactive = false,
+    ...props
+}: CardProps) {
     return (
         <div
             className={cn(
-                "bg-brand-surface border-2 border-brand-ink p-6 rounded-brand",
+                "bg-brand-surface border-2 border-brand-ink p-6 rounded-brand transition-all duration-150 ease-out",
                 elevated && "shadow-brand-card",
+                interactive &&
+                    "hover:-translate-y-1 hover:border-brand-accent hover:shadow-brand-hover",
                 className,
             )}
             {...props}

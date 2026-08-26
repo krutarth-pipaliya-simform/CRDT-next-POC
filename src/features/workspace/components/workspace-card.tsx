@@ -24,7 +24,8 @@ export function WorkspaceCard({
         <Link href={`/${workspace.id}`} className="block group">
             <Card
                 elevated
-                className="transition-transform group-hover:-translate-y-0.5 group-hover:border-brand-accent h-full flex flex-col justify-between"
+                interactive
+                className="h-full flex flex-col justify-between"
             >
                 <div>
                     <CardHeader className="flex flex-row items-start justify-between gap-4 border-b-2 border-brand-muted pb-3 mb-3">
