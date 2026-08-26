@@ -1,7 +1,8 @@
-import * as React from "react";
+import type { HTMLAttributes } from "react";
+
 import { cn } from "@/lib/cn";
 
-export interface SeparatorProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface SeparatorProps extends HTMLAttributes<HTMLDivElement> {
     label?: string;
 }
 

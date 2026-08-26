@@ -1,8 +1,9 @@
-import * as React from "react";
-import { cn } from "@/lib/cn";
-import type { Intent } from "@/components/ui/types";
+import type { HTMLAttributes } from "react";
 
-export interface AlertProps extends React.HTMLAttributes<HTMLDivElement> {
+import type { Intent } from "@/components/ui/types";
+import { cn } from "@/lib/cn";
+
+export interface AlertProps extends HTMLAttributes<HTMLDivElement> {
     intent?: Intent;
 }
 

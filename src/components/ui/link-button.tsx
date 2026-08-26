@@ -1,12 +1,13 @@
-import * as React from "react";
-import Link, { LinkProps } from "next/link";
-import { cn } from "@/lib/cn";
+import type { AnchorHTMLAttributes } from "react";
+import Link, { type LinkProps } from "next/link";
+
+import { sizeClasses, variantClasses } from "@/components/ui/button";
 import type { ButtonVariant, Size } from "@/components/ui/types";
-import { variantClasses, sizeClasses } from "@/components/ui/button";
+import { cn } from "@/lib/cn";
 
 export interface LinkButtonProps
     extends
-        Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, keyof LinkProps>,
+        Omit<AnchorHTMLAttributes<HTMLAnchorElement>, keyof LinkProps>,
         LinkProps {
     variant?: ButtonVariant;
     size?: Size;

@@ -1,15 +1,16 @@
 "use client";
 
-import * as React from "react";
+import type { MouseEvent, ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+
 import { cn } from "@/lib/cn";
 
 export interface NavTabItem {
     /**
      * Display label for the tab (text or ReactNode)
      */
-    label: React.ReactNode;
+    label: ReactNode;
     /**
      * Target URL when the tab operates as a link
      */
@@ -25,15 +26,15 @@ export interface NavTabItem {
     /**
      * Optional badge or count indicator displayed alongside the label
      */
-    badge?: React.ReactNode;
+    badge?: ReactNode;
     /**
      * Optional icon displayed before the label
      */
-    icon?: React.ReactNode;
+    icon?: ReactNode;
     /**
      * Optional click handler for the tab
      */
-    onClick?: (event: React.MouseEvent) => void;
+    onClick?: (event: MouseEvent) => void;
     /**
      * Explicit override for active state
      */

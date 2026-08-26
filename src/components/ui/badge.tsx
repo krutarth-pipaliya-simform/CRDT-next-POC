@@ -1,8 +1,9 @@
-import * as React from "react";
-import { cn } from "@/lib/cn";
-import type { Intent } from "@/components/ui/types";
+import type { HTMLAttributes } from "react";
 
-export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
+import type { Intent } from "@/components/ui/types";
+import { cn } from "@/lib/cn";
+
+export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
     intent?: Intent;
 }
 

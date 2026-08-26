@@ -1,7 +1,8 @@
-import * as React from "react";
+import type { HTMLAttributes } from "react";
+
 import { cn } from "@/lib/cn";
 
-export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface CardProps extends HTMLAttributes<HTMLDivElement> {
     elevated?: boolean;
     interactive?: boolean;
 }
@@ -26,10 +27,9 @@ export function Card({
     );
 }
 
-export function CardHeader({
-    className,
-    ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
+export type CardHeaderProps = HTMLAttributes<HTMLDivElement>;
+
+export function CardHeader({ className, ...props }: CardHeaderProps) {
     return (
         <div
             className={cn(
@@ -41,10 +41,9 @@ export function CardHeader({
     );
 }
 
-export function CardTitle({
-    className,
-    ...props
-}: React.HTMLAttributes<HTMLHeadingElement>) {
+export type CardTitleProps = HTMLAttributes<HTMLHeadingElement>;
+
+export function CardTitle({ className, ...props }: CardTitleProps) {
     return (
         <h3
             className={cn(
@@ -56,10 +55,9 @@ export function CardTitle({
     );
 }
 
-export function CardBody({
-    className,
-    ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
+export type CardBodyProps = HTMLAttributes<HTMLDivElement>;
+
+export function CardBody({ className, ...props }: CardBodyProps) {
     return (
         <div
             className={cn("text-sm text-brand-subtle", className)}
