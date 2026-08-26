@@ -2,7 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
+import { auth } from "@/features/auth/lib/auth";
 import { JoinPublicButton } from "@/features/workspace/components/join-public-button";
+import { LeaveWorkspaceButton } from "@/features/workspace/components/leave-workspace-button";
 import { verifyWorkspaceRole } from "@/features/workspace/lib/rbac";
 import { getWorkspace } from "@/features/workspace/queries/get-workspace";
 
@@ -15,12 +17,11 @@ export default async function WorkspacePage({
     params: Promise<{ workspaceId: string }>;
 }) {
     const { workspaceId } = await params;
-    const role = await verifyWorkspaceRole(workspaceId, [
-        "ADMIN",
-        "MEMBER",
-        "GUEST",
+    const [role, workspace, session] = await Promise.all([
+        verifyWorkspaceRole(workspaceId, ["ADMIN", "MEMBER", "GUEST"]),
+        getWorkspace(workspaceId),
+        auth(),
     ]);
-    const workspace = await getWorkspace(workspaceId);
 
     if (!workspace) {
         notFound();
@@ -70,37 +71,52 @@ export default async function WorkspacePage({
 
     return (
         <main className="max-w-7xl mx-auto px-6 py-8">
-            <div className="mb-8">
-                <span className="font-brand-mono text-xs uppercase tracking-widest text-brand-subtle">
-                    Workspace Overview
-                </span>
-                <h1 className="text-3xl font-medium tracking-tight text-brand-ink mt-1">
-                    {workspace.name}
-                </h1>
-                <p className="text-xs font-brand-mono text-brand-subtle mt-2">
-                    {workspace.members.length}{" "}
-                    {workspace.members.length === 1 ? "member" : "members"}{" "}
-                    collaborating in this workspace
-                </p>
-                {role === "GUEST" && workspace.visibility === "PUBLIC" && (
-                    <div className="mt-4 p-4 border-2 border-brand-accent/30 bg-brand-surface rounded-brand flex items-center justify-between">
-                        <div>
-                            <p className="text-sm font-medium text-brand-ink">
-                                You are viewing this public workspace as a
-                                guest.
-                            </p>
-                            <p className="text-xs font-brand-mono text-brand-subtle">
-                                Join as a full member to add it to your
-                                dashboard and collaborate.
-                            </p>
-                        </div>
-                        <JoinPublicButton
-                            workspaceId={workspaceId}
-                            isMember={false}
-                        />
-                    </div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+                <div>
+                    <span className="font-brand-mono text-xs uppercase tracking-widest text-brand-subtle">
+                        Workspace Overview
+                    </span>
+                    <h1 className="text-3xl font-medium tracking-tight text-brand-ink mt-1">
+                        {workspace.name}
+                    </h1>
+                    <p className="text-xs font-brand-mono text-brand-subtle mt-2">
+                        {workspace.members.length}{" "}
+                        {workspace.members.length === 1 ? "member" : "members"}{" "}
+                        collaborating in this workspace
+                    </p>
+                </div>
+                {role !== "GUEST" && (
+                    <LeaveWorkspaceButton
+                        workspaceId={workspaceId}
+                        workspaceName={workspace.name}
+                        userRole={role}
+                        currentUserId={session?.user?.id}
+                        members={workspace.members}
+                        variant="secondary"
+                        size="sm"
+                    >
+                        Leave Workspace
+                    </LeaveWorkspaceButton>
                 )}
             </div>
+
+            {role === "GUEST" && workspace.visibility === "PUBLIC" && (
+                <div className="mb-8 p-4 border-2 border-brand-accent/30 bg-brand-surface rounded-brand flex items-center justify-between">
+                    <div>
+                        <p className="text-sm font-medium text-brand-ink">
+                            You are viewing this public workspace as a guest.
+                        </p>
+                        <p className="text-xs font-brand-mono text-brand-subtle">
+                            Join as a full member to add it to your dashboard
+                            and collaborate.
+                        </p>
+                    </div>
+                    <JoinPublicButton
+                        workspaceId={workspaceId}
+                        isMember={false}
+                    />
+                </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {quickLinks.map((link) => (

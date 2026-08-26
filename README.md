@@ -55,8 +55,12 @@ An enterprise-grade collaborative SaaS workspace built with Next.js 16 and React
     - **Team Invitations (FR-7)**: Secure invite link generation with tokenized URLs (`/invite/[token]`) for onboarding team members with the `MEMBER` role.
     - **Invitation Expiration & Single-Use (FR-8)**: 24-hour expiration on invitation links with single-use enforcement in database transactions.
     - **Workspace Navigation & Switcher**: Comprehensive top navigation inside workspaces (`WorkspaceNav`) featuring active tab indicators (Overview, Documents, Tasks, Chat, Analytics, Settings) and quick workspace switcher dropdown.
-    - **Accessible Dialog Primitive**: Native HTML `<dialog>` modal component built with semantic brand tokens and full keyboard accessibility.
-    - **E2E Test Suite**: Comprehensive Playwright test coverage (`e2e/workspace.spec.ts`) validating creation, settings management, deletion confirmation, member removal, immediate private workspace access revocation, visibility toggling (private/public), public workspace search & pagination, self-joining, and invitation expiration.
+    - **Leave Workspace & Admin Ownership Transfer**:
+        - Any regular workspace member (`MEMBER`, `GUEST`) can leave a workspace at any time via an accessible confirmation dialog, immediately revoking their access and removing the workspace from their dashboard and switcher.
+        - **Admin Ownership Transfer Guard**: Workspace Admins cannot leave without appointing another active member as the new Admin. The server action enforces this atomically using a database `$transaction` (`rawDb.workspaceMember.update` + `rawDb.workspaceMember.delete`).
+        - **Sole Member Edge Case Handling**: If an Admin is the sole member of a workspace, they are prevented from leaving and shown a clear validation dialog prompting them to either invite collaborators first or delete the workspace from the Danger Zone.
+        - **Cache Invalidation & Redirection**: All affected route hierarchies (`/[workspaceId]`, `/[workspaceId]/settings`, `/dashboard`, with layout scope) are invalidated upon departure and users are cleanly redirected back to `/dashboard`.
+    - **E2E Test Suite**: Comprehensive Playwright test coverage (`e2e/workspace.spec.ts`) validating creation, settings management, deletion confirmation, member removal, immediate private workspace access revocation, visibility toggling (private/public), public workspace search & pagination, self-joining, invitation expiration, member workspace leaving, sole admin leave prevention, and admin ownership transfer leave.
 
 7. **Codebase Consistency & Architectural Hygiene**
     - Standardized 100% of codebase imports across `src/`, `prisma/`, and `e2e/` adhering to strict 4-tier grouping: External Libraries (React first) → Absolute Project Imports (`@/...`) → Relative Imports (`../` before `./`) → Side-Effect Imports (always last).

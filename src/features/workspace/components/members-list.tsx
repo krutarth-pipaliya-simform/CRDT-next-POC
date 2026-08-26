@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { LeaveWorkspaceButton } from "@/features/workspace/components/leave-workspace-button";
 import { RemoveMemberButton } from "@/features/workspace/components/remove-member-button";
 
 export interface WorkspaceMemberUser {
@@ -58,6 +59,16 @@ export function MembersList({
                         </div>
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
+                        {member.user.id === currentUserId && (
+                            <LeaveWorkspaceButton
+                                workspaceId={workspaceId}
+                                userRole={member.role}
+                                currentUserId={currentUserId}
+                                members={members}
+                            >
+                                Leave
+                            </LeaveWorkspaceButton>
+                        )}
                         {currentUserRole === "ADMIN" &&
                             member.user.id !== currentUserId && (
                                 <RemoveMemberButton

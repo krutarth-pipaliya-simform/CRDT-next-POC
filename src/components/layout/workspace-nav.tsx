@@ -134,7 +134,7 @@ export function WorkspaceNav({
                         )}
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div>
                         <Badge
                             intent={userRole === "ADMIN" ? "default" : "muted"}
                         >
