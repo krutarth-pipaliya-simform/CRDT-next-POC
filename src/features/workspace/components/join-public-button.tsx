@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Button } from "@/components/ui/button";
-import { joinPublicWorkspaceAction } from "@/features/workspace/actions/join-public-workspace";
 import Link from "next/link";
 
-interface JoinPublicButtonProps {
+import { Button } from "@/components/ui/button";
+import { joinPublicWorkspaceAction } from "@/features/workspace/actions/join-public-workspace";
+
+export interface JoinPublicButtonProps {
     workspaceId: string;
     isMember: boolean;
 }

@@ -1,13 +1,14 @@
 "use client";
 
-import * as React from "react";
+import { useEffect, useRef, type ReactNode } from "react";
+
 import { cn } from "@/lib/cn";
 
 export interface DialogProps {
     open: boolean;
     onClose: () => void;
     title: string;
-    children: React.ReactNode;
+    children: ReactNode;
     className?: string;
 }
 
@@ -18,9 +19,9 @@ export function Dialog({
     children,
     className,
 }: DialogProps) {
-    const ref = React.useRef<HTMLDialogElement>(null);
+    const ref = useRef<HTMLDialogElement>(null);
 
-    React.useEffect(() => {
+    useEffect(() => {
         const dialog = ref.current;
         if (!dialog) return;
 

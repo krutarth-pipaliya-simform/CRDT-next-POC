@@ -1,7 +1,8 @@
-import * as React from "react";
+import type { HTMLAttributes } from "react";
+
 import { cn } from "@/lib/cn";
 
-export interface FormFieldProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface FormFieldProps extends HTMLAttributes<HTMLDivElement> {
     label: string;
     htmlFor: string;
     error?: string;

@@ -1,13 +1,14 @@
 "use client";
 
 import { useActionState } from "react";
-import { registerAction } from "@/features/auth/actions/register";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Alert } from "@/components/ui/alert";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
+
+import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { registerAction } from "@/features/auth/actions/register";
 
 export function RegisterForm() {
     const [state, formAction] = useActionState(registerAction, null);

@@ -1,9 +1,10 @@
 "use server";
 
-import { rawDb } from "@/lib/db";
-import { auth } from "@/features/auth/lib/auth";
-import { updateProfileSchema } from "../schemas";
 import { revalidatePath } from "next/cache";
+
+import { auth } from "@/features/auth/lib/auth";
+import { updateProfileSchema } from "@/features/profile/schemas";
+import { rawDb } from "@/lib/db";
 
 export async function updateProfile(prevState: unknown, formData: FormData) {
     const session = await auth();

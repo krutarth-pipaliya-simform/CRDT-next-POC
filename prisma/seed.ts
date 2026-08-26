@@ -1,5 +1,6 @@
-import { rawDb as prisma } from "../src/lib/db";
 import { Role } from "@prisma/client";
+
+import { rawDb as prisma } from "@/lib/db";
 
 async function main() {
     console.log("Seeding database...");

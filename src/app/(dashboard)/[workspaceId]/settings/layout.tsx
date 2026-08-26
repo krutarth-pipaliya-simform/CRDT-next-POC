@@ -1,16 +1,20 @@
-import { verifyWorkspaceRole } from "@/features/workspace/lib/rbac";
+import type { ReactNode } from "react";
+
 import { SettingsNav } from "@/features/workspace/components/settings-nav";
+import { verifyWorkspaceRole } from "@/features/workspace/lib/rbac";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+export interface SettingsLayoutProps {
+    children: ReactNode;
+    params: Promise<{ workspaceId: string }>;
+}
+
 export default async function SettingsLayout({
     children,
     params,
-}: {
-    children: React.ReactNode;
-    params: Promise<{ workspaceId: string }>;
-}) {
+}: SettingsLayoutProps) {
     const { workspaceId } = await params;
     // Only Admin can access settings (FR-6)
     await verifyWorkspaceRole(workspaceId, ["ADMIN"]);

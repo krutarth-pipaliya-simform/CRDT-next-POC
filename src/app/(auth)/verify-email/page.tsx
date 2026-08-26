@@ -1,5 +1,6 @@
-import { verifyToken } from "@/features/auth/lib/tokens";
 import Link from "next/link";
+
+import { verifyToken } from "@/features/auth/lib/tokens";
 
 export default async function VerifyEmailPage({
     searchParams,

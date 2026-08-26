@@ -54,6 +54,30 @@ The file `docs/architecture-review.md` is the **authoritative technical specific
 
 ---
 
+### Codebase Consistency & Import Conventions (Binding)
+
+All TypeScript/React source files MUST strictly follow these ordering and naming rules:
+
+1. **Import Order (Top → Bottom)**:
+    - **Group 1: External Libraries**: `react` / `react-dom` first, followed by third-party packages alphabetically (`@prisma/*`, `bcryptjs`, `next/*`, `zod`, etc.).
+    - **Group 2: Absolute Imports**: Project aliases (`@/...`) sorted alphabetically.
+    - **Group 3: Relative Imports**: Parent directories (`../`) before same-directory (`./`), sorted alphabetically.
+    - **Group 4: Side-Effect Imports**: CSS styles (`./globals.css`), `server-only`, polyfills always last.
+    - Leave **exactly one blank line** between each import group.
+    - Sort imports **alphabetically** within each group.
+    - Group React hooks together in the React import.
+    - Prefer named imports over default imports where available.
+    - Avoid deep relative paths; prefer project aliases (`@/...`).
+    - Use `import type` for TypeScript-only imports.
+
+2. **Naming & Props Conventions**:
+    - Props interfaces/types MUST be named consistently as `<ComponentName>Props` (e.g., `WorkspaceCardProps`, `UserDropdownProps`).
+    - File and folder names MUST strictly use `kebab-case`.
+    - Components, interfaces, and types MUST strictly use `PascalCase`.
+    - Maintain naming consistency across component, file, folder, interface, type, and export names.
+
+---
+
 ### Workflow Rules
 
 - **Always Read Skills**: Before executing complex tool workflows (like Git operations), you MUST check the `Available skills` list and read the corresponding `SKILL.md` file. You are bound by the instructions within those skills.

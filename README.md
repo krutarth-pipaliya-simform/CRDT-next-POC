@@ -58,6 +58,11 @@ An enterprise-grade collaborative SaaS workspace built with Next.js 16 and React
     - **Accessible Dialog Primitive**: Native HTML `<dialog>` modal component built with semantic brand tokens and full keyboard accessibility.
     - **E2E Test Suite**: Comprehensive Playwright test coverage (`e2e/workspace.spec.ts`) validating creation, settings management, deletion confirmation, member removal, immediate private workspace access revocation, visibility toggling (private/public), public workspace search & pagination, self-joining, and invitation expiration.
 
+7. **Codebase Consistency & Architectural Hygiene**
+    - Standardized 100% of codebase imports across `src/`, `prisma/`, and `e2e/` adhering to strict 4-tier grouping: External Libraries (React first) → Absolute Project Imports (`@/...`) → Relative Imports (`../` before `./`) → Side-Effect Imports (always last).
+    - Alphabetical sorting within import groups and unified TypeScript `import type` usage.
+    - Normalized all component props interfaces to `<ComponentName>Props` with strict `kebab-case` file naming and `PascalCase` component/type exports.
+
 ## Getting Started
 
 1. **Environment Setup**

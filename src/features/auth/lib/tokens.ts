@@ -1,5 +1,6 @@
-import { rawDb } from "@/lib/db";
 import crypto from "crypto";
+
+import { rawDb } from "@/lib/db";
 
 export async function generateVerificationToken(email: string) {
     const token = crypto.randomBytes(32).toString("hex");

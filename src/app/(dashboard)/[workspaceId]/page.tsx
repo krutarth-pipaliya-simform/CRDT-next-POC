@@ -1,9 +1,10 @@
-import { getWorkspace } from "@/features/workspace/queries/get-workspace";
-import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Card, CardHeader, CardTitle, CardBody } from "@/components/ui/card";
-import { verifyWorkspaceRole } from "@/features/workspace/lib/rbac";
+import { notFound } from "next/navigation";
+
+import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { JoinPublicButton } from "@/features/workspace/components/join-public-button";
+import { verifyWorkspaceRole } from "@/features/workspace/lib/rbac";
+import { getWorkspace } from "@/features/workspace/queries/get-workspace";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;

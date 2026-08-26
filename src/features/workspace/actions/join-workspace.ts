@@ -1,9 +1,10 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+
 import { auth } from "@/features/auth/lib/auth";
 import { rawDb } from "@/lib/db";
-import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
 
 export async function joinWorkspaceAction(token: string) {
     const session = await auth();

@@ -1,10 +1,12 @@
+import type { ReactNode } from "react";
+
 import { SiteHeader } from "@/components/layout/site-header";
 
-export default function DashboardLayout({
-    children,
-}: {
-    children: React.ReactNode;
-}) {
+export interface DashboardLayoutProps {
+    children: ReactNode;
+}
+
+export default function DashboardLayout({ children }: DashboardLayoutProps) {
     return (
         <>
             <SiteHeader />

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
-interface PaginationControlsProps {
+export interface PaginationControlsProps {
     currentPage: number;
     totalPages: number;
     totalCount: number;

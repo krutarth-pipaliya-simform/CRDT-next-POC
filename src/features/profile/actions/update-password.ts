@@ -1,9 +1,10 @@
 "use server";
 
-import { rawDb } from "@/lib/db";
-import { auth } from "@/features/auth/lib/auth";
-import { updatePasswordSchema } from "../schemas";
 import bcrypt from "bcryptjs";
+
+import { auth } from "@/features/auth/lib/auth";
+import { updatePasswordSchema } from "@/features/profile/schemas";
+import { rawDb } from "@/lib/db";
 
 export async function updatePassword(prevState: unknown, formData: FormData) {
     const session = await auth();

@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { auth } from "@/features/auth/lib/auth";
+
 import { UserDropdown } from "@/components/layout/user-dropdown";
 import { LinkButton } from "@/components/ui/link-button";
+import { auth } from "@/features/auth/lib/auth";
 
 export async function SiteHeader() {
     const session = await auth();

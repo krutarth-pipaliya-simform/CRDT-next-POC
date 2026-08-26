@@ -1,20 +1,22 @@
 import { Badge } from "@/components/ui/badge";
-import { RemoveMemberButton } from "./remove-member-button";
+import { RemoveMemberButton } from "@/features/workspace/components/remove-member-button";
 
-interface Member {
+export interface WorkspaceMemberUser {
     id: string;
-    role: string;
-    user: {
-        id: string;
-        name: string | null;
-        email: string | null;
-        image: string | null;
-    };
+    name: string | null;
+    email: string | null;
+    image: string | null;
 }
 
-interface MembersListProps {
+export interface WorkspaceMemberItem {
+    id: string;
+    role: string;
+    user: WorkspaceMemberUser;
+}
+
+export interface MembersListProps {
     workspaceId: string;
-    members: Member[];
+    members: WorkspaceMemberItem[];
     currentUserId?: string;
     currentUserRole?: string;
 }

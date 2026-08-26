@@ -1,8 +1,9 @@
-import { getWorkspace } from "@/features/workspace/queries/get-workspace";
-import { UpdateWorkspaceForm } from "@/features/workspace/components/update-workspace-form";
-import { DeleteWorkspaceButton } from "@/features/workspace/components/delete-workspace-button";
-import { Separator } from "@/components/ui/separator";
 import { notFound } from "next/navigation";
+
+import { Separator } from "@/components/ui/separator";
+import { DeleteWorkspaceButton } from "@/features/workspace/components/delete-workspace-button";
+import { UpdateWorkspaceForm } from "@/features/workspace/components/update-workspace-form";
+import { getWorkspace } from "@/features/workspace/queries/get-workspace";
 
 export default async function SettingsPage({
     params,

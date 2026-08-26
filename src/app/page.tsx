@@ -1,6 +1,6 @@
-import { auth } from "@/features/auth/lib/auth";
 import { SiteHeader } from "@/components/layout/site-header";
 import { LinkButton } from "@/components/ui/link-button";
+import { auth } from "@/features/auth/lib/auth";
 
 export default async function LandingPage() {
     const session = await auth();

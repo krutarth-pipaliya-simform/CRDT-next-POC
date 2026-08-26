@@ -1,11 +1,16 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { createInvitationAction } from "@/features/workspace/actions/create-invitation";
-import { Button } from "@/components/ui/button";
-import { Alert } from "@/components/ui/alert";
 
-export function InviteSection({ workspaceId }: { workspaceId: string }) {
+import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { createInvitationAction } from "@/features/workspace/actions/create-invitation";
+
+export interface InviteSectionProps {
+    workspaceId: string;
+}
+
+export function InviteSection({ workspaceId }: InviteSectionProps) {
     const [link, setLink] = useState<string | null>(null);
     const [copied, setCopied] = useState(false);
     const [error, setError] = useState<string | null>(null);

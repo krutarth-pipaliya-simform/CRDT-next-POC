@@ -1,12 +1,13 @@
 "use client";
 
-import { useActionState, useRef, useEffect } from "react";
-import { updatePassword } from "../actions/update-password";
+import { useActionState, useEffect, useRef } from "react";
+
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
-import { Alert } from "@/components/ui/alert";
-import { Card, CardHeader, CardTitle, CardBody } from "@/components/ui/card";
+import { updatePassword } from "@/features/profile/actions/update-password";
 
 export function PasswordForm() {
     const [state, action] = useActionState(updatePassword, null);

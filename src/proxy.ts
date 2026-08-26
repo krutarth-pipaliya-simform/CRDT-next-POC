@@ -1,9 +1,9 @@
 import { auth } from "@/features/auth/lib/auth";
 import {
-    apiAuthPrefix,
-    authRoutes,
     DEFAULT_LOGIN_REDIRECT,
     DEFAULT_UNAUTHENTICATED_REDIRECT,
+    apiAuthPrefix,
+    authRoutes,
     publicRoutes,
 } from "@/lib/routes";
 

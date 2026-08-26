@@ -1,19 +1,20 @@
 "use client";
 
-import * as React from "react";
+import type { ButtonHTMLAttributes, Ref } from "react";
 import { useFormStatus } from "react-dom";
-import { cn } from "@/lib/cn";
+
 import type { ButtonVariant, Size } from "@/components/ui/types";
+import { cn } from "@/lib/cn";
 
 export interface ButtonProps extends Omit<
-    React.ButtonHTMLAttributes<HTMLButtonElement>,
+    ButtonHTMLAttributes<HTMLButtonElement>,
     "ref"
 > {
     variant?: ButtonVariant;
     size?: Size;
     pendingText?: string;
     withArrow?: boolean;
-    ref?: React.Ref<HTMLButtonElement>;
+    ref?: Ref<HTMLButtonElement>;
 }
 
 export const variantClasses: Record<ButtonVariant, string> = {

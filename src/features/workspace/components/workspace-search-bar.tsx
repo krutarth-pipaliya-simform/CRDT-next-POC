@@ -1,11 +1,12 @@
 "use client";
 
+import { useState, useTransition, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useTransition } from "react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 
-interface WorkspaceSearchBarProps {
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+
+export interface WorkspaceSearchBarProps {
     tabName: string;
     initialQuery?: string;
     placeholder?: string;
@@ -21,7 +22,7 @@ export function WorkspaceSearchBar({
     const [query, setQuery] = useState(initialQuery);
     const [isPending, startTransition] = useTransition();
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
         startTransition(() => {
             const params = new URLSearchParams(

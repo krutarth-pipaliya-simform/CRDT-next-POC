@@ -1,11 +1,12 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { createWorkspaceAction } from "@/features/workspace/actions/create-workspace";
+
+import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Alert } from "@/components/ui/alert";
+import { createWorkspaceAction } from "@/features/workspace/actions/create-workspace";
 
 export function CreateWorkspaceDialog() {
     const [open, setOpen] = useState(false);
