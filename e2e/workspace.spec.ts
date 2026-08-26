@@ -1,6 +1,7 @@
-import { test, expect } from "@playwright/test";
-import { rawDb } from "../src/lib/db";
+import { expect, test } from "@playwright/test";
 import bcrypt from "bcryptjs";
+
+import { rawDb } from "@/lib/db";
 
 test.describe("Workspace Management", () => {
     let testUserEmail: string;

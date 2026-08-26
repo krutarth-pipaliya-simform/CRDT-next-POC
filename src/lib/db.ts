@@ -1,8 +1,9 @@
+import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import { withAccelerate } from "@prisma/extension-accelerate";
-import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
-import { env } from "./env";
+
+import { env } from "@/lib/env";
 
 type ExtendedPrismaClient = ReturnType<typeof createExtendedPrismaClient>;
 
