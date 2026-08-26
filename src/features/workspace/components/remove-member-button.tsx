@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useTransition } from "react";
+
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { removeMemberAction } from "@/features/workspace/actions/remove-member";
-import { Alert } from "@/components/ui/alert";
 
-interface RemoveMemberButtonProps {
+export interface RemoveMemberButtonProps {
     workspaceId: string;
     memberId: string;
     memberName: string;

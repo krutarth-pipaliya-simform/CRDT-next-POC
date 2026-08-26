@@ -1,9 +1,10 @@
 "use server";
 
+import { redirect } from "next/navigation";
+
 import { auth } from "@/features/auth/lib/auth";
 import { rawDb } from "@/lib/db";
 import { createWorkspaceSchema } from "@/schemas/workspace";
-import { redirect } from "next/navigation";
 
 export async function createWorkspaceAction(
     state: unknown,

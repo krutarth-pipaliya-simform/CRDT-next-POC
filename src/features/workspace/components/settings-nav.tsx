@@ -2,7 +2,7 @@
 
 import { NavTabs, type NavTabItem } from "@/components/ui/nav-tabs";
 
-interface SettingsNavProps {
+export interface SettingsNavProps {
     workspaceId: string;
 }
 

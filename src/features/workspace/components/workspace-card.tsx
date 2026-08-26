@@ -1,14 +1,17 @@
 import Link from "next/link";
-import { Card, CardHeader, CardTitle, CardBody } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 
-interface WorkspaceCardProps {
-    workspace: {
-        id: string;
-        name: string;
-        _count: { members: number };
-        members: { role: string; userId: string }[];
-    };
+import { Badge } from "@/components/ui/badge";
+import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
+
+export interface WorkspaceCardItem {
+    id: string;
+    name: string;
+    _count: { members: number };
+    members: { role: string; userId: string }[];
+}
+
+export interface WorkspaceCardProps {
+    workspace: WorkspaceCardItem;
     currentUserId: string;
 }
 

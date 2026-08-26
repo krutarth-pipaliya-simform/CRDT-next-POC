@@ -1,15 +1,18 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { deleteWorkspaceAction } from "@/features/workspace/actions/delete-workspace";
-import { Button } from "@/components/ui/button";
+
 import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { deleteWorkspaceAction } from "@/features/workspace/actions/delete-workspace";
+
+export interface DeleteWorkspaceButtonProps {
+    workspaceId: string;
+}
 
 export function DeleteWorkspaceButton({
     workspaceId,
-}: {
-    workspaceId: string;
-}) {
+}: DeleteWorkspaceButtonProps) {
     const [confirming, setConfirming] = useState(false);
     const [isPending, startTransition] = useTransition();
     const [error, setError] = useState<string | null>(null);

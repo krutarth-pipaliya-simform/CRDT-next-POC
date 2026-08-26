@@ -1,9 +1,10 @@
 "use server";
 
+import { Role } from "@prisma/client";
+import { revalidatePath } from "next/cache";
+
 import { auth } from "@/features/auth/lib/auth";
 import { rawDb } from "@/lib/db";
-import { revalidatePath } from "next/cache";
-import { Role } from "@prisma/client";
 
 export async function joinPublicWorkspaceAction(workspaceId: string) {
     try {

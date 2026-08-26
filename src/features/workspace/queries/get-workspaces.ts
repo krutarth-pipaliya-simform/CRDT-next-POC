@@ -1,6 +1,7 @@
-import "server-only";
 import { auth } from "@/features/auth/lib/auth";
 import { rawDb } from "@/lib/db";
+
+import "server-only";
 
 export async function getWorkspacesForUser(providedUserId?: string) {
     let userId = providedUserId;

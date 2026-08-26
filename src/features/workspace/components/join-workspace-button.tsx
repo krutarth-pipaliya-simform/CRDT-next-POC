@@ -1,11 +1,16 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { joinWorkspaceAction } from "@/features/workspace/actions/join-workspace";
-import { Button } from "@/components/ui/button";
-import { Alert } from "@/components/ui/alert";
 
-export function JoinWorkspaceButton({ token }: { token: string }) {
+import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { joinWorkspaceAction } from "@/features/workspace/actions/join-workspace";
+
+export interface JoinWorkspaceButtonProps {
+    token: string;
+}
+
+export function JoinWorkspaceButton({ token }: JoinWorkspaceButtonProps) {
     const [isPending, startTransition] = useTransition();
     const [error, setError] = useState<string | null>(null);
 

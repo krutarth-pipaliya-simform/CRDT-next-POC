@@ -1,6 +1,7 @@
-import "server-only";
-import { rawDb } from "@/lib/db";
 import { getWorkspaceRole } from "@/features/workspace/lib/rbac";
+import { rawDb } from "@/lib/db";
+
+import "server-only";
 
 export async function getWorkspace(workspaceId: string) {
     const role = await getWorkspaceRole(workspaceId);

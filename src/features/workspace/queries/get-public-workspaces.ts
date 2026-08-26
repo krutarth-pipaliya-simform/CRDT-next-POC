@@ -1,7 +1,8 @@
-import "server-only";
 import { rawDb } from "@/lib/db";
 
-interface GetPublicWorkspacesParams {
+import "server-only";
+
+export interface GetPublicWorkspacesParams {
     query?: string;
     page?: number;
     pageSize?: number;

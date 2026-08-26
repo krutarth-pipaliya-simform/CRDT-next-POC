@@ -1,8 +1,9 @@
-import { auth } from "@/features/auth/lib/auth";
-import { rawDb } from "@/lib/db";
+import { cache } from "react";
 import { Role } from "@prisma/client";
 import { redirect } from "next/navigation";
-import { cache } from "react";
+
+import { auth } from "@/features/auth/lib/auth";
+import { rawDb } from "@/lib/db";
 
 export const getWorkspaceRole = cache(async (workspaceId: string) => {
     const session = await auth();

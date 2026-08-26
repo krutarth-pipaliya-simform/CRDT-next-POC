@@ -1,14 +1,15 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { updateWorkspaceAction } from "@/features/workspace/actions/update-workspace";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Alert } from "@/components/ui/alert";
-import { WorkspaceVisibility } from "@/schemas/workspace";
-import { cn } from "@/lib/cn";
 
-interface UpdateWorkspaceFormProps {
+import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { updateWorkspaceAction } from "@/features/workspace/actions/update-workspace";
+import { cn } from "@/lib/cn";
+import { WorkspaceVisibility } from "@/schemas/workspace";
+
+export interface UpdateWorkspaceFormProps {
     workspaceId: string;
     initialName: string;
     initialVisibility?: WorkspaceVisibility;
