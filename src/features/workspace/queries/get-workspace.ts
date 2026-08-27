@@ -1,5 +1,5 @@
 import { getWorkspaceRole } from "@/features/workspace/lib/rbac";
-import { rawDb } from "@/lib/db";
+import { db } from "@/lib/db";
 
 import "server-only";
 
@@ -9,7 +9,7 @@ export async function getWorkspace(workspaceId: string) {
         return null;
     }
 
-    return rawDb.workspace.findUnique({
+    return db.workspace.findUnique({
         where: { id: workspaceId },
         include: {
             documents: {

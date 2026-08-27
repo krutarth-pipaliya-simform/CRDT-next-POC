@@ -1,6 +1,6 @@
 import crypto from "crypto";
 
-import { rawDb } from "@/lib/db";
+import { db } from "@/lib/db";
 
 export async function generateVerificationToken(email: string) {
     const token = crypto.randomBytes(32).toString("hex");
@@ -8,11 +8,11 @@ export async function generateVerificationToken(email: string) {
     const expires = new Date(new Date().getTime() + 24 * 60 * 60 * 1000);
 
     // Remove any existing tokens for this email to invalidate old ones
-    await rawDb.verificationToken.deleteMany({
+    await db.verificationToken.deleteMany({
         where: { identifier: email },
     });
 
-    const verificationToken = await rawDb.verificationToken.create({
+    const verificationToken = await db.verificationToken.create({
         data: {
             identifier: email,
             token,
@@ -24,7 +24,7 @@ export async function generateVerificationToken(email: string) {
 }
 
 export async function verifyToken(token: string) {
-    const existingToken = await rawDb.verificationToken.findUnique({
+    const existingToken = await db.verificationToken.findUnique({
         where: { token },
     });
 
@@ -36,7 +36,7 @@ export async function verifyToken(token: string) {
         return { error: "Token has expired!" };
     }
 
-    const existingUser = await rawDb.user.findUnique({
+    const existingUser = await db.user.findUnique({
         where: { email: existingToken.identifier },
     });
 
@@ -44,12 +44,12 @@ export async function verifyToken(token: string) {
         return { error: "User not found!" };
     }
 
-    await rawDb.user.update({
+    await db.user.update({
         where: { id: existingUser.id },
         data: { emailVerified: new Date() },
     });
 
-    await rawDb.verificationToken.delete({
+    await db.verificationToken.delete({
         where: { token: existingToken.token },
     });
 

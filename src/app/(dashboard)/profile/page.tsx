@@ -4,7 +4,7 @@ import { auth } from "@/features/auth/lib/auth";
 import { PasswordForm } from "@/features/profile/components/password-form";
 import { ProfileForm } from "@/features/profile/components/profile-form";
 import { ProfilePicture } from "@/features/profile/components/profile-picture";
-import { rawDb } from "@/lib/db";
+import { db } from "@/lib/db";
 
 export default async function ProfilePage() {
     const session = await auth();
@@ -12,7 +12,7 @@ export default async function ProfilePage() {
         redirect("/login");
     }
 
-    const user = await rawDb.user.findUnique({
+    const user = await db.user.findUnique({
         where: { id: session.user.id },
     });
 
@@ -24,7 +24,7 @@ export default async function ProfilePage() {
     const initials = user.name
         ? user.name
               .split(" ")
-              .map((n) => n[0])
+              .map((n: string) => n[0])
               .join("")
               .substring(0, 2)
               .toUpperCase()

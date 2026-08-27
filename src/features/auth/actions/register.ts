@@ -8,7 +8,7 @@ import { headers } from "next/headers";
 
 import { sendVerificationEmail } from "@/features/auth/lib/email";
 import { generateVerificationToken } from "@/features/auth/lib/tokens";
-import { rawDb } from "@/lib/db";
+import { db } from "@/lib/db";
 import { registerSchema } from "@/schemas/auth";
 
 export async function registerAction(state: unknown, formData: FormData) {
@@ -22,7 +22,7 @@ export async function registerAction(state: unknown, formData: FormData) {
         const { name, email, password } = validated.data;
 
         // Check if user already exists
-        const existingUser = await rawDb.user.findUnique({
+        const existingUser = await db.user.findUnique({
             where: { email },
         });
 
@@ -32,7 +32,7 @@ export async function registerAction(state: unknown, formData: FormData) {
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        await rawDb.user.create({
+        await db.user.create({
             data: {
                 name,
                 email,

@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 
 import { auth } from "@/features/auth/lib/auth";
-import { rawDb } from "@/lib/db";
+import { db } from "@/lib/db";
 import { createWorkspaceSchema } from "@/schemas/workspace";
 
 export async function createWorkspaceAction(
@@ -23,7 +23,7 @@ export async function createWorkspaceAction(
 
     let workspace;
     try {
-        workspace = await rawDb.workspace.create({
+        workspace = await db.workspace.create({
             data: {
                 name: validated.data.name,
                 members: {

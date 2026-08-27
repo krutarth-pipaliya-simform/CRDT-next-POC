@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 
 import { auth } from "@/features/auth/lib/auth";
 import { updatePasswordSchema } from "@/features/profile/schemas";
-import { rawDb } from "@/lib/db";
+import { db } from "@/lib/db";
 
 export async function updatePassword(prevState: unknown, formData: FormData) {
     const session = await auth();
@@ -30,7 +30,7 @@ export async function updatePassword(prevState: unknown, formData: FormData) {
     }
 
     try {
-        const user = await rawDb.user.findUnique({
+        const user = await db.user.findUnique({
             where: { id: session.user.id },
         });
 
@@ -53,7 +53,7 @@ export async function updatePassword(prevState: unknown, formData: FormData) {
 
         const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-        await rawDb.user.update({
+        await db.user.update({
             where: { id: session.user.id },
             data: { password: hashedPassword },
         });

@@ -4,11 +4,11 @@ import { headers } from "next/headers";
 
 import { sendVerificationEmail } from "@/features/auth/lib/email";
 import { generateVerificationToken } from "@/features/auth/lib/tokens";
-import { rawDb } from "@/lib/db";
+import { db } from "@/lib/db";
 
 export async function resendVerificationAction(email: string) {
     try {
-        const user = await rawDb.user.findUnique({
+        const user = await db.user.findUnique({
             where: { email },
         });
 
@@ -20,7 +20,7 @@ export async function resendVerificationAction(email: string) {
             return { error: "Email already verified" };
         }
 
-        const recentToken = await rawDb.verificationToken.findFirst({
+        const recentToken = await db.verificationToken.findFirst({
             where: { identifier: email },
         });
 

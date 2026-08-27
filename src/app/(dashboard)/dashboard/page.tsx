@@ -7,7 +7,10 @@ import { auth } from "@/features/auth/lib/auth";
 import { CreateWorkspaceDialog } from "@/features/workspace/components/create-workspace-dialog";
 import { JoinPublicButton } from "@/features/workspace/components/join-public-button";
 import { PaginationControls } from "@/features/workspace/components/pagination-controls";
-import { WorkspaceCard } from "@/features/workspace/components/workspace-card";
+import {
+    WorkspaceCard,
+    type WorkspaceCardItem,
+} from "@/features/workspace/components/workspace-card";
 import { WorkspaceSearchBar } from "@/features/workspace/components/workspace-search-bar";
 import { getPublicWorkspaces } from "@/features/workspace/queries/get-public-workspaces";
 import { getWorkspacesForUser } from "@/features/workspace/queries/get-workspaces";
@@ -58,6 +61,7 @@ export default async function DashboardPage({
 
     return (
         <main className="max-w-6xl mx-auto px-6 py-12">
+            {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8 border-b-2 border-brand-muted pb-8">
                 <div>
                     <h2 className="font-brand-mono text-xs uppercase tracking-widest text-brand-subtle mb-2">
@@ -70,13 +74,15 @@ export default async function DashboardPage({
                 <CreateWorkspaceDialog />
             </div>
 
-            {/* Dashboard Tabs */}
-            <NavTabs
-                ariaLabel="Workspace dashboard tabs"
-                activeValue={activeTab}
-                items={dashboardTabs}
-                className="mb-8"
-            />
+            {/* Navigation Tabs */}
+            <div className="mt-8">
+                <NavTabs
+                    ariaLabel="Workspace dashboard tabs"
+                    activeValue={activeTab}
+                    items={dashboardTabs}
+                    className="mb-8"
+                />
+            </div>
 
             {/* Tab 1: My Workspaces */}
             {activeTab === "my" && (
@@ -95,7 +101,7 @@ export default async function DashboardPage({
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {myWorkspaces.map((ws) => (
+                            {myWorkspaces.map((ws: WorkspaceCardItem) => (
                                 <WorkspaceCard
                                     key={ws.id}
                                     workspace={ws}
@@ -130,73 +136,77 @@ export default async function DashboardPage({
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {publicData.workspaces.map((ws) => {
-                                const isMember = ws.members.some(
-                                    (m) => m.userId === currentUserId,
-                                );
-                                return (
-                                    <Card
-                                        key={ws.id}
-                                        elevated
-                                        interactive
-                                        className="h-full flex flex-col justify-between group"
-                                    >
-                                        <div>
-                                            <CardHeader className="flex flex-row items-center justify-between pb-2 mb-2 border-b border-brand-muted gap-2">
+                            {publicData.workspaces.map(
+                                (ws: WorkspaceCardItem) => {
+                                    const isMember = ws.members.some(
+                                        (m: { userId: string }) =>
+                                            m.userId === currentUserId,
+                                    );
+                                    return (
+                                        <Card
+                                            key={ws.id}
+                                            elevated
+                                            interactive
+                                            className="h-full flex flex-col justify-between group"
+                                        >
+                                            <div>
+                                                <CardHeader className="flex flex-row items-center justify-between pb-2 mb-2 border-b border-brand-muted gap-2">
+                                                    <Link
+                                                        href={`/${ws.id}`}
+                                                        className="hover:underline flex-1 min-w-0"
+                                                    >
+                                                        <CardTitle className="text-base font-semibold text-brand-ink group-hover:text-brand-accent transition-colors truncate">
+                                                            {ws.name}
+                                                        </CardTitle>
+                                                    </Link>
+                                                    <Badge
+                                                        intent={
+                                                            isMember
+                                                                ? "muted"
+                                                                : "success"
+                                                        }
+                                                    >
+                                                        {isMember
+                                                            ? "Member"
+                                                            : "Public"}
+                                                    </Badge>
+                                                </CardHeader>
+                                                <CardBody className="flex flex-col gap-2">
+                                                    <div className="flex items-center gap-2 font-brand-mono text-xs text-brand-subtle">
+                                                        <span>
+                                                            {ws._count.members}{" "}
+                                                            {ws._count
+                                                                .members === 1
+                                                                ? "member"
+                                                                : "members"}
+                                                        </span>
+                                                    </div>
+                                                </CardBody>
+                                            </div>
+
+                                            <div className="pt-4 mt-auto border-t border-brand-muted flex items-center justify-between gap-2">
                                                 <Link
                                                     href={`/${ws.id}`}
-                                                    className="hover:underline flex-1 min-w-0"
-                                                >
-                                                    <CardTitle className="text-base font-semibold text-brand-ink group-hover:text-brand-accent transition-colors truncate">
-                                                        {ws.name}
-                                                    </CardTitle>
-                                                </Link>
-                                                <Badge
-                                                    intent={
-                                                        isMember
-                                                            ? "muted"
-                                                            : "success"
-                                                    }
+                                                    className="font-brand-mono text-xs text-brand-subtle hover:text-brand-ink uppercase tracking-wider flex items-center gap-1 transition-colors"
                                                 >
                                                     {isMember
-                                                        ? "Member"
-                                                        : "Public"}
-                                                </Badge>
-                                            </CardHeader>
-                                            <CardBody className="flex flex-col gap-2">
-                                                <div className="flex items-center gap-2 font-brand-mono text-xs text-brand-subtle">
-                                                    <span>
-                                                        {ws._count.members}{" "}
-                                                        {ws._count.members === 1
-                                                            ? "member"
-                                                            : "members"}
+                                                        ? "Open Workspace"
+                                                        : "View as Guest"}{" "}
+                                                    <span aria-hidden="true">
+                                                        →
                                                     </span>
-                                                </div>
-                                            </CardBody>
-                                        </div>
-
-                                        <div className="pt-4 mt-auto border-t border-brand-muted flex items-center justify-between gap-2">
-                                            <Link
-                                                href={`/${ws.id}`}
-                                                className="font-brand-mono text-xs text-brand-subtle hover:text-brand-ink uppercase tracking-wider flex items-center gap-1 transition-colors"
-                                            >
-                                                {isMember
-                                                    ? "Open Workspace"
-                                                    : "View as Guest"}{" "}
-                                                <span aria-hidden="true">
-                                                    →
-                                                </span>
-                                            </Link>
-                                            {!isMember && (
-                                                <JoinPublicButton
-                                                    workspaceId={ws.id}
-                                                    isMember={false}
-                                                />
-                                            )}
-                                        </div>
-                                    </Card>
-                                );
-                            })}
+                                                </Link>
+                                                {!isMember && (
+                                                    <JoinPublicButton
+                                                        workspaceId={ws.id}
+                                                        isMember={false}
+                                                    />
+                                                )}
+                                            </div>
+                                        </Card>
+                                    );
+                                },
+                            )}
                         </div>
                     )}
 

@@ -5,10 +5,10 @@ import Credentials from "next-auth/providers/credentials";
 import GitHub from "next-auth/providers/github";
 import Google from "next-auth/providers/google";
 
-import { rawDb } from "@/lib/db";
+import { db } from "@/lib/db";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-    adapter: PrismaAdapter(rawDb),
+    adapter: PrismaAdapter(db),
     pages: {
         signIn: "/login",
     },
@@ -39,7 +39,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                     return null;
                 }
 
-                const user = await rawDb.user.findUnique({
+                const user = await db.user.findUnique({
                     where: { email: credentials.email as string },
                 });
 

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { auth } from "@/features/auth/lib/auth";
 import { getWorkspaceRole } from "@/features/workspace/lib/rbac";
-import { rawDb } from "@/lib/db";
+import { db } from "@/lib/db";
 import { updateWorkspaceSchema } from "@/schemas/workspace";
 
 export async function updateWorkspaceAction(
@@ -33,7 +33,7 @@ export async function updateWorkspaceAction(
             };
         }
 
-        await rawDb.workspace.update({
+        await db.workspace.update({
             where: { id: workspaceId },
             data: {
                 name: validated.data.name,

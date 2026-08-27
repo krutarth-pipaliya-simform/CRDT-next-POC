@@ -3,7 +3,7 @@ import { Role } from "@prisma/client";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/features/auth/lib/auth";
-import { rawDb } from "@/lib/db";
+import { db } from "@/lib/db";
 
 export const getWorkspaceRole = cache(async (workspaceId: string) => {
     const session = await auth();
@@ -12,13 +12,13 @@ export const getWorkspaceRole = cache(async (workspaceId: string) => {
     }
 
     const [member, workspace] = await Promise.all([
-        rawDb.workspaceMember.findFirst({
+        db.workspaceMember.findFirst({
             where: {
                 workspaceId,
                 userId: session.user.id,
             },
         }),
-        rawDb.workspace.findUnique({
+        db.workspace.findUnique({
             where: { id: workspaceId },
             select: { visibility: true },
         }),

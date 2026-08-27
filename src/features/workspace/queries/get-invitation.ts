@@ -1,9 +1,9 @@
-import { rawDb } from "@/lib/db";
+import { db } from "@/lib/db";
 
 import "server-only";
 
 export async function getInvitationByToken(token: string) {
-    return rawDb.workspaceInvitation.findUnique({
+    return db.workspaceInvitation.findUnique({
         where: { token },
         include: {
             workspace: {

@@ -5,9 +5,7 @@ import { Pool } from "pg";
 
 import { env } from "@/lib/env";
 
-type ExtendedPrismaClient = ReturnType<typeof createExtendedPrismaClient>;
-
-export function createRawPrismaClient() {
+function createPrismaClient() {
     if (env.DATABASE_URL.startsWith("prisma://")) {
         return new PrismaClient({
             accelerateUrl: env.DATABASE_URL,
@@ -27,19 +25,21 @@ export function createRawPrismaClient() {
     return new PrismaClient({ adapter });
 }
 
-function createExtendedPrismaClient() {
-    return createRawPrismaClient().$extends(withAccelerate());
+function createExtendedClient() {
+    const rawClient = createPrismaClient();
+    return rawClient.$extends(withAccelerate());
 }
 
+type ExtendedPrismaClient = ReturnType<typeof createExtendedClient>;
+export type AppPrismaClient = PrismaClient & ExtendedPrismaClient;
+
 const globalForPrisma = globalThis as unknown as {
-    prisma: ExtendedPrismaClient;
-    rawPrisma: PrismaClient;
+    prisma: AppPrismaClient | undefined;
 };
 
-export const db = globalForPrisma.prisma || createExtendedPrismaClient();
-export const rawDb = globalForPrisma.rawPrisma || createRawPrismaClient();
+export const db: AppPrismaClient =
+    globalForPrisma.prisma ?? (createExtendedClient() as AppPrismaClient);
 
 if (process.env.NODE_ENV !== "production") {
     globalForPrisma.prisma = db;
-    globalForPrisma.rawPrisma = rawDb;
 }
