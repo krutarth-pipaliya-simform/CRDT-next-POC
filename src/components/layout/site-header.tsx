@@ -29,7 +29,7 @@ export async function SiteHeader() {
                 App Logo
             </Link>
 
-            {session?.user ? (
+            {navUser ? (
                 <>
                     <Link
                         href="/dashboard"
@@ -37,12 +37,12 @@ export async function SiteHeader() {
                     >
                         Dashboard
                     </Link>
-                    <div style={{ flexGrow: 1 }}></div>
-                    <UserDropdown user={navUser!} />
+                    <div className="flex-1" />
+                    <UserDropdown user={navUser} />
                 </>
             ) : (
                 <>
-                    <div style={{ flexGrow: 1 }}></div>
+                    <div className="flex-1" />
                     <LinkButton href="/login" variant="primary" size="sm">
                         Log In
                     </LinkButton>

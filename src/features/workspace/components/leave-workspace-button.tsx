@@ -7,6 +7,7 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import { getTransferCandidatesAction } from "@/features/workspace/actions/get-transfer-candidates";
 import { leaveWorkspaceAction } from "@/features/workspace/actions/leave-workspace";
 import { cn } from "@/lib/cn";
@@ -241,14 +242,12 @@ export function LeaveWorkspaceButton({
                                                         }
                                                     >
                                                         <div className="flex items-center gap-3 min-w-0">
-                                                            <div className="w-7 h-7 rounded-full bg-brand-ink text-brand-surface font-brand-mono text-xs font-semibold flex items-center justify-center uppercase shrink-0">
-                                                                {candidate.user
-                                                                    .name?.[0] ||
-                                                                    candidate
-                                                                        .user
-                                                                        .email?.[0] ||
-                                                                    "U"}
-                                                            </div>
+                                                            <UserAvatar
+                                                                user={
+                                                                    candidate.user
+                                                                }
+                                                                size="sm"
+                                                            />
                                                             <div className="flex flex-col min-w-0">
                                                                 <span className="text-xs text-brand-ink truncate font-medium">
                                                                     {candidate

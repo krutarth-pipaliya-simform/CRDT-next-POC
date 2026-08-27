@@ -1,10 +1,9 @@
 "use server";
 
-import { headers } from "next/headers";
-
 import { sendVerificationEmail } from "@/features/auth/lib/email";
 import { generateVerificationToken } from "@/features/auth/lib/tokens";
 import { db } from "@/lib/db";
+import { getAppUrl } from "@/lib/url";
 
 export type ResendVerificationResult =
     | { success: true; message: string; verifyUrl?: string; error?: never }
@@ -47,14 +46,7 @@ export async function resendVerificationAction(
         }
 
         const verificationToken = await generateVerificationToken(email);
-
-        const headersList = await headers();
-        const host = headersList.get("host") || "localhost:3000";
-        const protocol =
-            headersList.get("x-forwarded-proto") ??
-            (host.startsWith("localhost") ? "http" : "https");
-        const appUrl = `${protocol}://${host}`;
-
+        const appUrl = await getAppUrl();
         const verifyUrl = `${appUrl}/verify-email?token=${verificationToken.token}`;
 
         await sendVerificationEmail(

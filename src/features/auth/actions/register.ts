@@ -4,11 +4,10 @@ import { Role } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { AuthError } from "next-auth";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
-import { headers } from "next/headers";
-
 import { sendVerificationEmail } from "@/features/auth/lib/email";
 import { generateVerificationToken } from "@/features/auth/lib/tokens";
 import { db } from "@/lib/db";
+import { getAppUrl } from "@/lib/url";
 import { registerSchema } from "@/schemas/auth";
 
 export async function registerAction(state: unknown, formData: FormData) {
@@ -46,14 +45,7 @@ export async function registerAction(state: unknown, formData: FormData) {
 
         // Generate verification token and send email
         const verificationToken = await generateVerificationToken(email);
-
-        const headersList = await headers();
-        const host = headersList.get("host") || "localhost:3000";
-        const protocol =
-            headersList.get("x-forwarded-proto") ??
-            (host.startsWith("localhost") ? "http" : "https");
-        const appUrl = `${protocol}://${host}`;
-
+        const appUrl = await getAppUrl();
         const verifyUrl = `${appUrl}/verify-email?token=${verificationToken.token}`;
 
         await sendVerificationEmail(

@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import { LeaveWorkspaceButton } from "@/features/workspace/components/leave-workspace-button";
 import { RemoveMemberButton } from "@/features/workspace/components/remove-member-button";
 
@@ -44,11 +45,7 @@ export function MembersList({
                     className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-brand-surface hover:bg-brand-muted/30 transition-colors"
                 >
                     <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-8 h-8 rounded-full bg-brand-ink text-brand-surface font-brand-mono text-xs font-semibold flex items-center justify-center uppercase shrink-0">
-                            {member.user.name?.[0] ||
-                                member.user.email?.[0] ||
-                                "U"}
-                        </div>
+                        <UserAvatar user={member.user} size="md" />
                         <div className="flex flex-col min-w-0">
                             <span className="text-sm font-medium text-brand-ink truncate">
                                 {member.user.name || "Unnamed Member"}
