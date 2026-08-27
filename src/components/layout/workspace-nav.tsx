@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
 import { NavTabs, type NavTabItem } from "@/components/ui/nav-tabs";
+import { useOutsideClick } from "@/hooks/use-outside-click";
 import { cn } from "@/lib/cn";
 import type { WorkspaceRole } from "@/schemas/workspace";
 
@@ -24,20 +25,7 @@ export function WorkspaceNav({
     const [switcherOpen, setSwitcherOpen] = useState(false);
     const switcherRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        function handleClickOutside(event: MouseEvent) {
-            if (
-                switcherRef.current &&
-                event.target instanceof Node &&
-                !switcherRef.current.contains(event.target)
-            ) {
-                setSwitcherOpen(false);
-            }
-        }
-        document.addEventListener("mousedown", handleClickOutside);
-        return () =>
-            document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
+    useOutsideClick(switcherRef, () => setSwitcherOpen(false), switcherOpen);
 
     const navItems: NavTabItem[] = [
         { label: "Overview", href: `/${workspaceId}`, exact: true },
