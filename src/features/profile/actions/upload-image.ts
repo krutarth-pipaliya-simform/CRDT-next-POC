@@ -28,17 +28,45 @@ async function deleteOldImageFile(oldImageUrl: string | null) {
     }
 }
 
+export type UploadProfilePictureResult =
+    | {
+          success: true;
+          data: { message: string; imageUrl: string };
+          error?: never;
+          code?: never;
+      }
+    | {
+          success: false;
+          error: string;
+          code: string;
+          data?: never;
+      };
+
+export type RemoveProfilePictureResult =
+    | {
+          success: true;
+          data: { message: string };
+          error?: never;
+          code?: never;
+      }
+    | {
+          success: false;
+          error: string;
+          code: string;
+          data?: never;
+      };
+
 export async function uploadProfilePicture(
     prevState: unknown,
     formData: FormData,
-) {
+): Promise<UploadProfilePictureResult> {
     const session = await auth();
     if (!session?.user?.id) {
         return { success: false, error: "Unauthorized", code: "UNAUTHORIZED" };
     }
 
-    const file = formData.get("file") as File | null;
-    if (!file || file.size === 0) {
+    const file = formData.get("file");
+    if (!(file instanceof File) || file.size === 0) {
         return { success: false, error: "No file provided", code: "NO_FILE" };
     }
 
@@ -108,7 +136,7 @@ export async function uploadProfilePicture(
     }
 }
 
-export async function removeProfilePicture() {
+export async function removeProfilePicture(): Promise<RemoveProfilePictureResult> {
     const session = await auth();
     if (!session?.user?.id) {
         return { success: false, error: "Unauthorized", code: "UNAUTHORIZED" };

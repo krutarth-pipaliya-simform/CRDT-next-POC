@@ -15,9 +15,13 @@ export interface TransferCandidate {
     };
 }
 
+export type GetTransferCandidatesResult =
+    | { success: true; data: TransferCandidate[]; error?: never }
+    | { success: false; error: string; data?: never };
+
 export async function getTransferCandidatesAction(
     workspaceId: string,
-): Promise<{ success: boolean; data?: TransferCandidate[]; error?: string }> {
+): Promise<GetTransferCandidatesResult> {
     try {
         const session = await auth();
         if (!session?.user?.id) {

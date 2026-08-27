@@ -6,7 +6,13 @@ import { sendVerificationEmail } from "@/features/auth/lib/email";
 import { generateVerificationToken } from "@/features/auth/lib/tokens";
 import { db } from "@/lib/db";
 
-export async function resendVerificationAction(email: string) {
+export type ResendVerificationResult =
+    | { success: true; message: string; verifyUrl?: string; error?: never }
+    | { success?: false; error: string; message?: never; verifyUrl?: never };
+
+export async function resendVerificationAction(
+    email: string,
+): Promise<ResendVerificationResult> {
     try {
         const user = await db.user.findUnique({
             where: { email },

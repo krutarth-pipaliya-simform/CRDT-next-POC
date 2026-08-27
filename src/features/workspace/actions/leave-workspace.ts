@@ -7,10 +7,13 @@ import { auth } from "@/features/auth/lib/auth";
 import { db } from "@/lib/db";
 import { leaveWorkspaceSchema } from "@/schemas/workspace";
 
+export type LeaveWorkspaceResult =
+    { success: true; error?: never } | { success?: false; error: string };
+
 export async function leaveWorkspaceAction(
     workspaceId: string,
     transferToMemberId?: string,
-) {
+): Promise<LeaveWorkspaceResult> {
     try {
         const session = await auth();
         if (!session?.user?.id) {
@@ -94,7 +97,7 @@ export async function leaveWorkspaceAction(
 
         // Edge Case 4: Target member not found in this workspace
         const targetMember = otherMembers.find(
-            (m: { id: string; userId: string }) =>
+            (m) =>
                 m.id === transferToMemberId || m.userId === transferToMemberId,
         );
 

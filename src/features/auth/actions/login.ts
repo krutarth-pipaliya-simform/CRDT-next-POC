@@ -7,7 +7,31 @@ import { signIn } from "@/features/auth/lib/auth";
 import { DEFAULT_LOGIN_REDIRECT } from "@/lib/routes";
 import { loginSchema } from "@/schemas/auth";
 
-export async function loginAction(state: unknown, formData: FormData) {
+export type LoginActionResult =
+    | { success: true; error?: never; unverifiedEmail?: never }
+    | { success?: false; error: "unverified"; unverifiedEmail: string }
+    | { success?: false; error: string; unverifiedEmail?: never };
+
+function getCauseErrorMessage(error: AuthError): string | undefined {
+    const cause = error.cause;
+    if (
+        typeof cause === "object" &&
+        cause !== null &&
+        "err" in cause &&
+        typeof cause.err === "object" &&
+        cause.err !== null &&
+        "message" in cause.err &&
+        typeof cause.err.message === "string"
+    ) {
+        return cause.err.message;
+    }
+    return undefined;
+}
+
+export async function loginAction(
+    state: unknown,
+    formData: FormData,
+): Promise<LoginActionResult> {
     const data = Object.fromEntries(formData.entries());
     const validated = loginSchema.safeParse(data);
     if (!validated.success) {
@@ -15,8 +39,11 @@ export async function loginAction(state: unknown, formData: FormData) {
     }
 
     const { email, password } = validated.data;
+    const rawCallbackUrl = formData.get("callbackUrl");
     const callbackUrl =
-        (formData.get("callbackUrl") as string) || DEFAULT_LOGIN_REDIRECT;
+        typeof rawCallbackUrl === "string" && rawCallbackUrl
+            ? rawCallbackUrl
+            : DEFAULT_LOGIN_REDIRECT;
 
     try {
         await signIn("credentials", {
@@ -32,9 +59,11 @@ export async function loginAction(state: unknown, formData: FormData) {
         }
 
         if (error instanceof AuthError) {
-            // NextAuth v5 can wrap the error
-            const cause = error.cause?.err?.message;
-            if (cause === "email_not_verified") {
+            const cause = getCauseErrorMessage(error);
+            if (
+                cause === "email_not_verified" ||
+                error.message.includes("email_not_verified")
+            ) {
                 return { error: "unverified", unverifiedEmail: email };
             }
 
@@ -42,14 +71,6 @@ export async function loginAction(state: unknown, formData: FormData) {
                 case "CredentialsSignin":
                     return { error: "Invalid email or password" };
                 default:
-                    // Try to match the message if not in cause
-                    if (
-                        error.message.includes("email_not_verified") ||
-                        (error as AuthError).cause?.err?.message ===
-                            "email_not_verified"
-                    ) {
-                        return { error: "unverified", unverifiedEmail: email };
-                    }
                     return { error: "Something went wrong" };
             }
         }

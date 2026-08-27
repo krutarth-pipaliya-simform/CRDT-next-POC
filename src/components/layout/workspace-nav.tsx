@@ -28,7 +28,8 @@ export function WorkspaceNav({
         function handleClickOutside(event: MouseEvent) {
             if (
                 switcherRef.current &&
-                !switcherRef.current.contains(event.target as Node)
+                event.target instanceof Node &&
+                !switcherRef.current.contains(event.target)
             ) {
                 setSwitcherOpen(false);
             }

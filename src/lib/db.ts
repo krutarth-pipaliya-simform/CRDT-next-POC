@@ -5,7 +5,7 @@ import { Pool } from "pg";
 
 import { env } from "@/lib/env";
 
-function createPrismaClient() {
+function createPrismaClient(): PrismaClient {
     if (env.DATABASE_URL.startsWith("prisma://")) {
         return new PrismaClient({
             accelerateUrl: env.DATABASE_URL,
@@ -24,22 +24,18 @@ function createPrismaClient() {
     const adapter = new PrismaPg(pool);
     return new PrismaClient({ adapter });
 }
-
 function createExtendedClient() {
     const rawClient = createPrismaClient();
     return rawClient.$extends(withAccelerate());
 }
 
 type ExtendedPrismaClient = ReturnType<typeof createExtendedClient>;
+// Prisma dynamic client extension requires intersection with PrismaClient to preserve generic model query inference (include/select payloads)
 export type AppPrismaClient = PrismaClient & ExtendedPrismaClient;
 
-const globalForPrisma = globalThis as unknown as {
-    prisma: AppPrismaClient | undefined;
-};
-
 export const db: AppPrismaClient =
-    globalForPrisma.prisma ?? (createExtendedClient() as AppPrismaClient);
+    globalThis.prisma ?? (createExtendedClient() as AppPrismaClient);
 
 if (process.env.NODE_ENV !== "production") {
-    globalForPrisma.prisma = db;
+    globalThis.prisma = db;
 }

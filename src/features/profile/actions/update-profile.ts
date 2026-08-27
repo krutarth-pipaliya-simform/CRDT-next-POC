@@ -6,15 +6,31 @@ import { auth } from "@/features/auth/lib/auth";
 import { updateProfileSchema } from "@/features/profile/schemas";
 import { db } from "@/lib/db";
 
-export async function updateProfile(prevState: unknown, formData: FormData) {
+export type UpdateProfileResult =
+    | {
+          success: true;
+          data: { message: string };
+          error?: never;
+          code?: never;
+      }
+    | {
+          success: false;
+          error: string;
+          code: string;
+          data?: never;
+      };
+
+export async function updateProfile(
+    prevState: unknown,
+    formData: FormData,
+): Promise<UpdateProfileResult> {
     const session = await auth();
     if (!session?.user?.id) {
         return { success: false, error: "Unauthorized", code: "UNAUTHORIZED" };
     }
 
-    const name = formData.get("name") as string;
-
-    const parsed = updateProfileSchema.safeParse({ name });
+    const data = Object.fromEntries(formData.entries());
+    const parsed = updateProfileSchema.safeParse(data);
     if (!parsed.success) {
         return {
             success: false,
