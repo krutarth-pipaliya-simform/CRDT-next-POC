@@ -71,7 +71,7 @@ export function InviteSection({ workspaceId }: InviteSectionProps) {
                         readOnly
                         value={link}
                         className="w-full bg-brand-surface text-brand-ink font-brand-mono text-xs px-3 py-2 border border-brand-border outline-none select-all"
-                        onClick={(e) => (e.target as HTMLInputElement).select()}
+                        onClick={(e) => e.currentTarget.select()}
                     />
                     <div className="flex items-center justify-between gap-4 pt-1">
                         <Button

@@ -27,18 +27,17 @@ export function LoginForm() {
 
     const handleResend = () => {
         if (state?.unverifiedEmail) {
+            const emailToResend = state.unverifiedEmail;
             startTransition(async () => {
-                const result = await resendVerificationAction(
-                    state.unverifiedEmail as string,
-                );
+                const result = await resendVerificationAction(emailToResend);
                 if (result.success) {
                     setResendStatus({
                         type: "success",
-                        message: result.message!,
+                        message: result.message,
                         verifyUrl: result.verifyUrl,
                     });
                 } else {
-                    setResendStatus({ type: "error", message: result.error! });
+                    setResendStatus({ type: "error", message: result.error });
                 }
             });
         }

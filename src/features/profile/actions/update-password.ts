@@ -6,21 +6,31 @@ import { auth } from "@/features/auth/lib/auth";
 import { updatePasswordSchema } from "@/features/profile/schemas";
 import { db } from "@/lib/db";
 
-export async function updatePassword(prevState: unknown, formData: FormData) {
+export type UpdatePasswordResult =
+    | {
+          success: true;
+          data: { message: string };
+          error?: never;
+          code?: never;
+      }
+    | {
+          success: false;
+          error: string;
+          code: string;
+          data?: never;
+      };
+
+export async function updatePassword(
+    prevState: unknown,
+    formData: FormData,
+): Promise<UpdatePasswordResult> {
     const session = await auth();
     if (!session?.user?.id) {
         return { success: false, error: "Unauthorized", code: "UNAUTHORIZED" };
     }
 
-    const currentPassword = formData.get("currentPassword") as string;
-    const newPassword = formData.get("newPassword") as string;
-    const confirmPassword = formData.get("confirmPassword") as string;
-
-    const parsed = updatePasswordSchema.safeParse({
-        currentPassword,
-        newPassword,
-        confirmPassword,
-    });
+    const data = Object.fromEntries(formData.entries());
+    const parsed = updatePasswordSchema.safeParse(data);
     if (!parsed.success) {
         return {
             success: false,
@@ -28,6 +38,8 @@ export async function updatePassword(prevState: unknown, formData: FormData) {
             code: "VALIDATION_ERROR",
         };
     }
+
+    const { currentPassword, newPassword } = parsed.data;
 
     try {
         const user = await db.user.findUnique({

@@ -82,6 +82,14 @@ All TypeScript/React source files MUST strictly follow these ordering and naming
 - **No Duplicate Connection Pools**: Never create secondary `PrismaClient` instances or raw unextended clients. The singleton `db` client in `@/lib/db` manages connection pooling via `@prisma/adapter-pg` and `pg.Pool` (or `prisma://` Accelerate URL) with lazy singleton instantiation.
 - **Auth.js Compatibility**: `@auth/prisma-adapter` natively accepts the extended `db` client (`PrismaAdapter(db)`).
 
+### TypeScript & End-to-End Type Safety (Binding)
+
+- **Zero Unsafe Assertions**: Never use `as Type`, `as unknown as`, or non-null assertions `!` to bypass type safety.
+- **Runtime Validation First**: Parse unvalidated input (`FormData`, URL search params, request bodies) with Zod schemas (`schema.safeParse(Object.fromEntries(formData.entries()))`) before using data.
+- **Discriminated Unions**: All Server Actions and asynchronous procedures must return strictly discriminated unions (`{ success: true, data: ... } | { success: false, error: string }`) to prevent `!` and `as` in client components.
+- **DOM Event Narrowing**: Use `event.target instanceof Node` and `e.currentTarget` instead of `event.target as Node` / `as HTMLInputElement`.
+- **NextAuth Augmentations**: Extend `Session`, `User`, and `JWT` interfaces in `src/types/next-auth.d.ts` rather than casting `(token.id as string)`.
+
 ---
 
 ### Workflow Rules
