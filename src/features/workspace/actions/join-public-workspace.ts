@@ -4,7 +4,7 @@ import { Role } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
 import { auth } from "@/features/auth/lib/auth";
-import { rawDb } from "@/lib/db";
+import { db } from "@/lib/db";
 
 export async function joinPublicWorkspaceAction(workspaceId: string) {
     try {
@@ -15,7 +15,7 @@ export async function joinPublicWorkspaceAction(workspaceId: string) {
 
         const userId = session.user.id;
 
-        const workspace = await rawDb.workspace.findUnique({
+        const workspace = await db.workspace.findUnique({
             where: { id: workspaceId },
             include: {
                 members: {
@@ -33,10 +33,12 @@ export async function joinPublicWorkspaceAction(workspaceId: string) {
         }
 
         // Check if already a member
-        const isMember = workspace.members.some((m) => m.userId === userId);
+        const isMember = workspace.members.some(
+            (m: { userId: string }) => m.userId === userId,
+        );
 
         if (!isMember) {
-            await rawDb.workspaceMember.create({
+            await db.workspaceMember.create({
                 data: {
                     workspaceId,
                     userId,

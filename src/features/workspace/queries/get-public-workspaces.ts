@@ -1,4 +1,4 @@
-import { rawDb } from "@/lib/db";
+import { db } from "@/lib/db";
 
 import "server-only";
 
@@ -29,8 +29,8 @@ export async function getPublicWorkspaces({
     };
 
     const [totalCount, workspaces] = await Promise.all([
-        rawDb.workspace.count({ where }),
-        rawDb.workspace.findMany({
+        db.workspace.count({ where }),
+        db.workspace.findMany({
             where,
             include: {
                 members: { select: { role: true, userId: true } },

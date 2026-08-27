@@ -3,6 +3,7 @@ import Link from "next/link";
 import { UserDropdown } from "@/components/layout/user-dropdown";
 import { LinkButton } from "@/components/ui/link-button";
 import { auth } from "@/features/auth/lib/auth";
+import { db } from "@/lib/db";
 
 export async function SiteHeader() {
     const session = await auth();
@@ -10,8 +11,7 @@ export async function SiteHeader() {
 
     if (navUser?.id) {
         // Fetch fresh user data so the avatar updates immediately after an upload
-        const { rawDb } = await import("@/lib/db");
-        const dbUser = await rawDb.user.findUnique({
+        const dbUser = await db.user.findUnique({
             where: { id: navUser.id },
             select: { name: true, image: true, email: true },
         });

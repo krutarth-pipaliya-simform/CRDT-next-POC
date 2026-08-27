@@ -4,7 +4,7 @@ import { Role } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
 import { auth } from "@/features/auth/lib/auth";
-import { rawDb } from "@/lib/db";
+import { db } from "@/lib/db";
 import { leaveWorkspaceSchema } from "@/schemas/workspace";
 
 export async function leaveWorkspaceAction(
@@ -31,7 +31,7 @@ export async function leaveWorkspaceAction(
         }
 
         // Fetch caller's membership record in this workspace
-        const currentMember = await rawDb.workspaceMember.findFirst({
+        const currentMember = await db.workspaceMember.findFirst({
             where: {
                 workspaceId,
                 userId: session.user.id,
@@ -44,7 +44,7 @@ export async function leaveWorkspaceAction(
 
         // If the caller is not an ADMIN (e.g. MEMBER or GUEST), they can leave directly
         if (currentMember.role !== Role.ADMIN) {
-            await rawDb.workspaceMember.delete({
+            await db.workspaceMember.delete({
                 where: { id: currentMember.id },
             });
 
@@ -59,7 +59,7 @@ export async function leaveWorkspaceAction(
         }
 
         // Caller is an ADMIN: Retrieve other members to validate transfer
-        const otherMembers = await rawDb.workspaceMember.findMany({
+        const otherMembers = await db.workspaceMember.findMany({
             where: {
                 workspaceId,
                 userId: {
@@ -94,7 +94,7 @@ export async function leaveWorkspaceAction(
 
         // Edge Case 4: Target member not found in this workspace
         const targetMember = otherMembers.find(
-            (m) =>
+            (m: { id: string; userId: string }) =>
                 m.id === transferToMemberId || m.userId === transferToMemberId,
         );
 
@@ -105,12 +105,12 @@ export async function leaveWorkspaceAction(
         }
 
         // Atomic transaction: Appoint new admin and remove original admin's membership
-        await rawDb.$transaction([
-            rawDb.workspaceMember.update({
+        await db.$transaction([
+            db.workspaceMember.update({
                 where: { id: targetMember.id },
                 data: { role: Role.ADMIN },
             }),
-            rawDb.workspaceMember.delete({
+            db.workspaceMember.delete({
                 where: { id: currentMember.id },
             }),
         ]);

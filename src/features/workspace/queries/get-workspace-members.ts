@@ -1,5 +1,5 @@
 import { getWorkspaceRole } from "@/features/workspace/lib/rbac";
-import { rawDb } from "@/lib/db";
+import { db } from "@/lib/db";
 
 import "server-only";
 
@@ -9,7 +9,7 @@ export async function getWorkspaceMembers(workspaceId: string) {
         return [];
     }
 
-    return rawDb.workspaceMember.findMany({
+    return db.workspaceMember.findMany({
         where: { workspaceId },
         include: {
             user: {

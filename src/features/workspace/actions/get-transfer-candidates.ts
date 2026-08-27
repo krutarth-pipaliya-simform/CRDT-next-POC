@@ -2,7 +2,7 @@
 
 import { auth } from "@/features/auth/lib/auth";
 import { getWorkspaceRole } from "@/features/workspace/lib/rbac";
-import { rawDb } from "@/lib/db";
+import { db } from "@/lib/db";
 
 export interface TransferCandidate {
     id: string;
@@ -32,7 +32,7 @@ export async function getTransferCandidatesAction(
             };
         }
 
-        const members = await rawDb.workspaceMember.findMany({
+        const members = await db.workspaceMember.findMany({
             where: {
                 workspaceId,
                 userId: {

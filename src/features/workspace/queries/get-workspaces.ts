@@ -1,5 +1,5 @@
 import { auth } from "@/features/auth/lib/auth";
-import { rawDb } from "@/lib/db";
+import { db } from "@/lib/db";
 
 import "server-only";
 
@@ -11,7 +11,7 @@ export async function getWorkspacesForUser(providedUserId?: string) {
     }
     if (!userId) return [];
 
-    return rawDb.workspace.findMany({
+    return db.workspace.findMany({
         where: {
             members: { some: { userId } },
         },

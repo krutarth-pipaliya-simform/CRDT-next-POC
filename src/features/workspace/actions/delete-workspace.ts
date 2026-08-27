@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/features/auth/lib/auth";
 import { getWorkspaceRole } from "@/features/workspace/lib/rbac";
-import { rawDb } from "@/lib/db";
+import { db } from "@/lib/db";
 
 export async function deleteWorkspaceAction(workspaceId: string) {
     const session = await auth();
@@ -19,7 +19,7 @@ export async function deleteWorkspaceAction(workspaceId: string) {
     }
 
     try {
-        await rawDb.workspace.delete({
+        await db.workspace.delete({
             where: { id: workspaceId },
         });
 

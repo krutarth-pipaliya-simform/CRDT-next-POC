@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/features/auth/lib/auth";
-import { rawDb } from "@/lib/db";
+import { db } from "@/lib/db";
 
 export async function joinWorkspaceAction(token: string) {
     const session = await auth();
@@ -14,7 +14,7 @@ export async function joinWorkspaceAction(token: string) {
 
     let workspaceId: string;
     try {
-        const invitation = await rawDb.workspaceInvitation.findUnique({
+        const invitation = await db.workspaceInvitation.findUnique({
             where: { token },
         });
 
@@ -33,7 +33,7 @@ export async function joinWorkspaceAction(token: string) {
         workspaceId = invitation.workspaceId;
 
         // Check if user is already a member
-        const existingMember = await rawDb.workspaceMember.findFirst({
+        const existingMember = await db.workspaceMember.findFirst({
             where: {
                 workspaceId,
                 userId: session.user.id,
@@ -42,15 +42,15 @@ export async function joinWorkspaceAction(token: string) {
 
         if (!existingMember) {
             // Join as MEMBER and mark invitation as used
-            await rawDb.$transaction([
-                rawDb.workspaceMember.create({
+            await db.$transaction([
+                db.workspaceMember.create({
                     data: {
                         workspaceId,
                         userId: session.user.id,
                         role: "MEMBER",
                     },
                 }),
-                rawDb.workspaceInvitation.update({
+                db.workspaceInvitation.update({
                     where: { id: invitation.id },
                     data: { usedAt: new Date() },
                 }),

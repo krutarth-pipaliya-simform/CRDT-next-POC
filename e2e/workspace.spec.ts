@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import bcrypt from "bcryptjs";
 
-import { rawDb } from "@/lib/db";
+import { db } from "@/lib/db";
 
 test.describe("Workspace Management", () => {
     let testUserEmail: string;
@@ -12,7 +12,7 @@ test.describe("Workspace Management", () => {
         testUserEmail = `ws_admin_${Date.now()}@example.com`;
         const hashedPassword = await bcrypt.hash(testPassword, 10);
 
-        const user = await rawDb.user.create({
+        const user = await db.user.create({
             data: {
                 name: "Workspace Admin",
                 email: testUserEmail,
@@ -26,7 +26,7 @@ test.describe("Workspace Management", () => {
     test.afterAll(async () => {
         // Clean up created test user and associated records (cascade)
         if (testUserId) {
-            await rawDb.user.deleteMany({
+            await db.user.deleteMany({
                 where: { id: testUserId },
             });
         }
@@ -77,7 +77,7 @@ test.describe("Workspace Management", () => {
         page,
     }) => {
         // Create workspace in DB for isolation
-        const ws = await rawDb.workspace.create({
+        const ws = await db.workspace.create({
             data: {
                 name: `Initial Name ${Date.now()}`,
                 members: {
@@ -114,7 +114,7 @@ test.describe("Workspace Management", () => {
     test("FR-5: should delete workspace from danger zone with confirmation", async ({
         page,
     }) => {
-        const wsToDelete = await rawDb.workspace.create({
+        const wsToDelete = await db.workspace.create({
             data: {
                 name: `Workspace To Delete ${Date.now()}`,
                 members: {
@@ -151,7 +151,7 @@ test.describe("Workspace Management", () => {
         page,
     }) => {
         // 1. Create workspace with admin
-        const ws = await rawDb.workspace.create({
+        const ws = await db.workspace.create({
             data: {
                 name: `Collab Space ${Date.now()}`,
                 members: {
@@ -187,7 +187,7 @@ test.describe("Workspace Management", () => {
         const inviteePassword = "password123";
         const hashedInviteePassword = await bcrypt.hash(inviteePassword, 10);
 
-        const inviteeUser = await rawDb.user.create({
+        const inviteeUser = await db.user.create({
             data: {
                 name: "Invited Collab",
                 email: inviteeEmail,
@@ -242,7 +242,7 @@ test.describe("Workspace Management", () => {
         await inviteeContext.close();
 
         // Clean up invitee user
-        await rawDb.user.deleteMany({
+        await db.user.deleteMany({
             where: { id: inviteeUser.id },
         });
     });
@@ -250,7 +250,7 @@ test.describe("Workspace Management", () => {
     test("FR-8: should show expired error for invitations older than 24 hours", async ({
         page,
     }) => {
-        const ws = await rawDb.workspace.create({
+        const ws = await db.workspace.create({
             data: {
                 name: `Expired Invite Workspace ${Date.now()}`,
                 members: {
@@ -263,7 +263,7 @@ test.describe("Workspace Management", () => {
         });
 
         // Create an expired invitation (expired 2 hours ago)
-        const expiredInvitation = await rawDb.workspaceInvitation.create({
+        const expiredInvitation = await db.workspaceInvitation.create({
             data: {
                 workspaceId: ws.id,
                 createdById: testUserId,
@@ -284,7 +284,7 @@ test.describe("Workspace Management", () => {
     }) => {
         // Create an invitee user in DB
         const hashedPassword = await bcrypt.hash("password123", 10);
-        const inviteeUser = await rawDb.user.create({
+        const inviteeUser = await db.user.create({
             data: {
                 name: "Invitee To Remove",
                 email: `toremove_${Date.now()}@example.com`,
@@ -294,7 +294,7 @@ test.describe("Workspace Management", () => {
             },
         });
 
-        const ws = await rawDb.workspace.create({
+        const ws = await db.workspace.create({
             data: {
                 name: `Removal Test Workspace ${Date.now()}`,
                 members: {
@@ -329,7 +329,7 @@ test.describe("Workspace Management", () => {
         ).not.toBeVisible();
 
         // Clean up user
-        await rawDb.user.deleteMany({
+        await db.user.deleteMany({
             where: { id: inviteeUser.id },
         });
     });
@@ -338,7 +338,7 @@ test.describe("Workspace Management", () => {
         page,
     }) => {
         const hashedPassword = await bcrypt.hash("password123", 10);
-        const inviteeUser = await rawDb.user.create({
+        const inviteeUser = await db.user.create({
             data: {
                 name: "Layout Stability Member",
                 email: `stable_${Date.now()}@example.com`,
@@ -348,7 +348,7 @@ test.describe("Workspace Management", () => {
             },
         });
 
-        const ws = await rawDb.workspace.create({
+        const ws = await db.workspace.create({
             data: {
                 name: `Stability Test Workspace ${Date.now()}`,
                 members: {
@@ -436,10 +436,10 @@ test.describe("Workspace Management", () => {
         expect(revertedNameBox?.y).toBe(initialNameBox?.y);
 
         // Clean up
-        await rawDb.workspace.deleteMany({
+        await db.workspace.deleteMany({
             where: { id: ws.id },
         });
-        await rawDb.user.deleteMany({
+        await db.user.deleteMany({
             where: { id: inviteeUser.id },
         });
     });
@@ -447,7 +447,7 @@ test.describe("Workspace Management", () => {
     test("FR-5: should toggle workspace visibility between private and public", async ({
         page,
     }) => {
-        const ws = await rawDb.workspace.create({
+        const ws = await db.workspace.create({
             data: {
                 name: `Visibility Workspace ${Date.now()}`,
                 visibility: "PRIVATE",
@@ -472,7 +472,7 @@ test.describe("Workspace Management", () => {
         ).toBeVisible({ timeout: 15000 });
 
         // Verify DB update
-        const updated = await rawDb.workspace.findUnique({
+        const updated = await db.workspace.findUnique({
             where: { id: ws.id },
         });
         expect(updated?.visibility).toBe("PUBLIC");
@@ -486,7 +486,7 @@ test.describe("Workspace Management", () => {
         const createdWorkspaces = [];
 
         for (let i = 1; i <= 7; i++) {
-            const ws = await rawDb.workspace.create({
+            const ws = await db.workspace.create({
                 data: {
                     name: `${uniquePrefix} Workspace ${i}`,
                     visibility: "PUBLIC",
@@ -533,7 +533,7 @@ test.describe("Workspace Management", () => {
         await expect(page).toHaveURL(/page=2/);
 
         // Clean up created public workspaces
-        await rawDb.workspace.deleteMany({
+        await db.workspace.deleteMany({
             where: { id: { in: createdWorkspaces.map((w) => w.id) } },
         });
     });
@@ -543,7 +543,7 @@ test.describe("Workspace Management", () => {
     }) => {
         const creatorEmail = `public_creator_${Date.now()}@example.com`;
         const hashedPassword = await bcrypt.hash("password123", 10);
-        const creator = await rawDb.user.create({
+        const creator = await db.user.create({
             data: {
                 name: "Public Workspace Creator",
                 email: creatorEmail,
@@ -553,7 +553,7 @@ test.describe("Workspace Management", () => {
         });
 
         const publicWsName = `Open Source Community ${Date.now()}`;
-        const publicWs = await rawDb.workspace.create({
+        const publicWs = await db.workspace.create({
             data: {
                 name: publicWsName,
                 visibility: "PUBLIC",
@@ -592,10 +592,10 @@ test.describe("Workspace Management", () => {
         await expect(page.getByText(publicWsName)).toBeVisible();
 
         // Clean up
-        await rawDb.workspace.deleteMany({
+        await db.workspace.deleteMany({
             where: { id: publicWs.id },
         });
-        await rawDb.user.deleteMany({
+        await db.user.deleteMany({
             where: { id: creator.id },
         });
     });
@@ -605,7 +605,7 @@ test.describe("Workspace Management", () => {
     }) => {
         const creatorEmail = `guest_test_${Date.now()}@example.com`;
         const hashedPassword = await bcrypt.hash("password123", 10);
-        const creator = await rawDb.user.create({
+        const creator = await db.user.create({
             data: {
                 name: "Public Space Creator",
                 email: creatorEmail,
@@ -615,7 +615,7 @@ test.describe("Workspace Management", () => {
         });
 
         const publicWsName = `Guest View Space ${Date.now()}`;
-        const publicWs = await rawDb.workspace.create({
+        const publicWs = await db.workspace.create({
             data: {
                 name: publicWsName,
                 visibility: "PUBLIC",
@@ -660,10 +660,10 @@ test.describe("Workspace Management", () => {
         });
 
         // Clean up
-        await rawDb.workspace.deleteMany({
+        await db.workspace.deleteMany({
             where: { id: publicWs.id },
         });
-        await rawDb.user.deleteMany({
+        await db.user.deleteMany({
             where: { id: creator.id },
         });
     });
@@ -673,7 +673,7 @@ test.describe("Workspace Management", () => {
     }) => {
         const adminEmail = `admin_strict_${Date.now()}@example.com`;
         const hashedPassword = await bcrypt.hash("password123", 10);
-        const adminUser = await rawDb.user.create({
+        const adminUser = await db.user.create({
             data: {
                 name: "Strict Admin",
                 email: adminEmail,
@@ -684,7 +684,7 @@ test.describe("Workspace Management", () => {
 
         // 1. Create workspace initially PUBLIC with Admin
         const wsName = `Strict Access Space ${Date.now()}`;
-        const ws = await rawDb.workspace.create({
+        const ws = await db.workspace.create({
             data: {
                 name: wsName,
                 visibility: "PUBLIC",
@@ -710,11 +710,11 @@ test.describe("Workspace Management", () => {
         await expect(page.getByRole("heading", { name: wsName })).toBeVisible();
 
         // 3. Admin makes the workspace PRIVATE and REMOVES the test user
-        await rawDb.workspace.update({
+        await db.workspace.update({
             where: { id: ws.id },
             data: { visibility: "PRIVATE" },
         });
-        await rawDb.workspaceMember.deleteMany({
+        await db.workspaceMember.deleteMany({
             where: {
                 workspaceId: ws.id,
                 userId: testUserId,
@@ -749,10 +749,10 @@ test.describe("Workspace Management", () => {
         await expect(page.getByText(wsName)).not.toBeVisible();
 
         // Clean up
-        await rawDb.workspace.deleteMany({
+        await db.workspace.deleteMany({
             where: { id: ws.id },
         });
-        await rawDb.user.deleteMany({
+        await db.user.deleteMany({
             where: { id: adminUser.id },
         });
     });
@@ -762,7 +762,7 @@ test.describe("Workspace Management", () => {
     }) => {
         const memberEmail = `member_leave_${Date.now()}@example.com`;
         const hashedPassword = await bcrypt.hash("password123", 10);
-        const memberUser = await rawDb.user.create({
+        const memberUser = await db.user.create({
             data: {
                 name: "Departing Member",
                 email: memberEmail,
@@ -773,7 +773,7 @@ test.describe("Workspace Management", () => {
         });
 
         const wsName = `Member Leave Workspace ${Date.now()}`;
-        const ws = await rawDb.workspace.create({
+        const ws = await db.workspace.create({
             data: {
                 name: wsName,
                 visibility: "PRIVATE",
@@ -832,21 +832,21 @@ test.describe("Workspace Management", () => {
         await expect(page).toHaveURL("/unauthorized");
 
         // 8. Verify DB membership removed
-        const memberRecord = await rawDb.workspaceMember.findFirst({
+        const memberRecord = await db.workspaceMember.findFirst({
             where: { workspaceId: ws.id, userId: memberUser.id },
         });
         expect(memberRecord).toBeNull();
 
         // Clean up
-        await rawDb.workspace.deleteMany({ where: { id: ws.id } });
-        await rawDb.user.deleteMany({ where: { id: memberUser.id } });
+        await db.workspace.deleteMany({ where: { id: ws.id } });
+        await db.user.deleteMany({ where: { id: memberUser.id } });
     });
 
     test("Leave Workspace: Admin should be prevented from leaving when they are the only member", async ({
         page,
     }) => {
         const wsName = `Sole Admin Workspace ${Date.now()}`;
-        const soleWs = await rawDb.workspace.create({
+        const soleWs = await db.workspace.create({
             data: {
                 name: wsName,
                 members: {
@@ -894,13 +894,13 @@ test.describe("Workspace Management", () => {
         await expect(page.locator("dialog[open]")).not.toBeVisible();
 
         // Verify admin is still in workspace
-        const adminMember = await rawDb.workspaceMember.findFirst({
+        const adminMember = await db.workspaceMember.findFirst({
             where: { workspaceId: soleWs.id, userId: testUserId },
         });
         expect(adminMember).not.toBeNull();
 
         // Clean up
-        await rawDb.workspace.deleteMany({ where: { id: soleWs.id } });
+        await db.workspace.deleteMany({ where: { id: soleWs.id } });
     });
 
     test("Leave Workspace: Admin must transfer ownership before leaving; new admin appointed and original admin removed", async ({
@@ -908,7 +908,7 @@ test.describe("Workspace Management", () => {
     }) => {
         const successorEmail = `successor_${Date.now()}@example.com`;
         const hashedPassword = await bcrypt.hash("password123", 10);
-        const successorUser = await rawDb.user.create({
+        const successorUser = await db.user.create({
             data: {
                 name: "Successor Member",
                 email: successorEmail,
@@ -919,7 +919,7 @@ test.describe("Workspace Management", () => {
         });
 
         const wsName = `Transfer Org ${Date.now()}`;
-        const ws = await rawDb.workspace.create({
+        const ws = await db.workspace.create({
             data: {
                 name: wsName,
                 members: {
@@ -970,12 +970,12 @@ test.describe("Workspace Management", () => {
         await expect(page.getByText(wsName)).not.toBeVisible();
 
         // 7. Verify in database: testUserId is removed, successorUser is promoted to ADMIN
-        const originalAdminMember = await rawDb.workspaceMember.findFirst({
+        const originalAdminMember = await db.workspaceMember.findFirst({
             where: { workspaceId: ws.id, userId: testUserId },
         });
         expect(originalAdminMember).toBeNull();
 
-        const promotedMember = await rawDb.workspaceMember.findFirst({
+        const promotedMember = await db.workspaceMember.findFirst({
             where: { workspaceId: ws.id, userId: successorUser.id },
         });
         expect(promotedMember?.role).toBe("ADMIN");
@@ -1011,7 +1011,7 @@ test.describe("Workspace Management", () => {
         await successorContext.close();
 
         // Clean up
-        await rawDb.workspace.deleteMany({ where: { id: ws.id } });
-        await rawDb.user.deleteMany({ where: { id: successorUser.id } });
+        await db.workspace.deleteMany({ where: { id: ws.id } });
+        await db.user.deleteMany({ where: { id: successorUser.id } });
     });
 });

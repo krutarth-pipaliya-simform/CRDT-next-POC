@@ -41,10 +41,12 @@ export default async function WorkspaceLayout({
                 workspaceId={workspaceId}
                 workspaceName={workspace.name}
                 userRole={userRole}
-                workspaces={userWorkspaces.map((ws) => ({
-                    id: ws.id,
-                    name: ws.name,
-                }))}
+                workspaces={userWorkspaces.map(
+                    (ws: { id: string; name: string }) => ({
+                        id: ws.id,
+                        name: ws.name,
+                    }),
+                )}
             />
             <div className="flex-1">{children}</div>
         </div>

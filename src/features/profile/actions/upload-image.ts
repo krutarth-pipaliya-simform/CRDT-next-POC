@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import path from "path";
 
 import { auth } from "@/features/auth/lib/auth";
-import { rawDb } from "@/lib/db";
+import { db } from "@/lib/db";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
@@ -60,7 +60,7 @@ export async function uploadProfilePicture(
 
     try {
         // Fetch current user to get old image URL
-        const user = await rawDb.user.findUnique({
+        const user = await db.user.findUnique({
             where: { id: session.user.id },
             select: { image: true },
         });
@@ -84,7 +84,7 @@ export async function uploadProfilePicture(
         const imageUrl = `/api/uploads/profiles/${filename}`;
 
         // Update the user's profile to reference the new image
-        await rawDb.user.update({
+        await db.user.update({
             where: { id: session.user.id },
             data: { image: imageUrl },
         });
@@ -115,13 +115,13 @@ export async function removeProfilePicture() {
     }
 
     try {
-        const user = await rawDb.user.findUnique({
+        const user = await db.user.findUnique({
             where: { id: session.user.id },
             select: { image: true },
         });
         const oldImageUrl = user?.image || null;
 
-        await rawDb.user.update({
+        await db.user.update({
             where: { id: session.user.id },
             data: { image: null },
         });

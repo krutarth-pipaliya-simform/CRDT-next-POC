@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { auth } from "@/features/auth/lib/auth";
 import { updateProfileSchema } from "@/features/profile/schemas";
-import { rawDb } from "@/lib/db";
+import { db } from "@/lib/db";
 
 export async function updateProfile(prevState: unknown, formData: FormData) {
     const session = await auth();
@@ -24,7 +24,7 @@ export async function updateProfile(prevState: unknown, formData: FormData) {
     }
 
     try {
-        await rawDb.user.update({
+        await db.user.update({
             where: { id: session.user.id },
             data: { name: parsed.data.name },
         });
