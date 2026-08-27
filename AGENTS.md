@@ -76,6 +76,12 @@ All TypeScript/React source files MUST strictly follow these ordering and naming
     - Components, interfaces, and types MUST strictly use `PascalCase`.
     - Maintain naming consistency across component, file, folder, interface, type, and export names.
 
+### Database Client Singleton Convention (Binding)
+
+- **Single Canonical Client (`db`)**: Always import `db` from `@/lib/db` (`import { db } from "@/lib/db"`).
+- **No Duplicate Connection Pools**: Never create secondary `PrismaClient` instances or raw unextended clients. The singleton `db` client in `@/lib/db` manages connection pooling via `@prisma/adapter-pg` and `pg.Pool` (or `prisma://` Accelerate URL) with lazy singleton instantiation.
+- **Auth.js Compatibility**: `@auth/prisma-adapter` natively accepts the extended `db` client (`PrismaAdapter(db)`).
+
 ---
 
 ### Workflow Rules

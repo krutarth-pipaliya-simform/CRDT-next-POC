@@ -57,7 +57,7 @@ An enterprise-grade collaborative SaaS workspace built with Next.js 16 and React
     - **Workspace Navigation & Switcher**: Comprehensive top navigation inside workspaces (`WorkspaceNav`) featuring active tab indicators (Overview, Documents, Tasks, Chat, Analytics, Settings) and quick workspace switcher dropdown.
     - **Leave Workspace & Admin Ownership Transfer**:
         - Any regular workspace member (`MEMBER`, `GUEST`) can leave a workspace at any time via an accessible confirmation dialog, immediately revoking their access and removing the workspace from their dashboard and switcher.
-        - **Admin Ownership Transfer Guard**: Workspace Admins cannot leave without appointing another active member as the new Admin. The server action enforces this atomically using a database `$transaction` (`rawDb.workspaceMember.update` + `rawDb.workspaceMember.delete`).
+        - **Admin Ownership Transfer Guard**: Workspace Admins cannot leave without appointing another active member as the new Admin. The server action enforces this atomically using a database `$transaction` (`db.workspaceMember.update` + `db.workspaceMember.delete`).
         - **Sole Member Edge Case Handling**: If an Admin is the sole member of a workspace, they are prevented from leaving and shown a clear validation dialog prompting them to either invite collaborators first or delete the workspace from the Danger Zone.
         - **Cache Invalidation & Redirection**: All affected route hierarchies (`/[workspaceId]`, `/[workspaceId]/settings`, `/dashboard`, with layout scope) are invalidated upon departure and users are cleanly redirected back to `/dashboard`.
     - **E2E Test Suite**: Comprehensive Playwright test coverage (`e2e/workspace.spec.ts`) validating creation, settings management, deletion confirmation, member removal, immediate private workspace access revocation, visibility toggling (private/public), public workspace search & pagination, self-joining, invitation expiration, member workspace leaving, sole admin leave prevention, and admin ownership transfer leave.
@@ -66,6 +66,7 @@ An enterprise-grade collaborative SaaS workspace built with Next.js 16 and React
     - Standardized 100% of codebase imports across `src/`, `prisma/`, and `e2e/` adhering to strict 4-tier grouping: External Libraries (React first) → Absolute Project Imports (`@/...`) → Relative Imports (`../` before `./`) → Side-Effect Imports (always last).
     - Alphabetical sorting within import groups and unified TypeScript `import type` usage.
     - Normalized all component props interfaces to `<ComponentName>Props` with strict `kebab-case` file naming and `PascalCase` component/type exports.
+    - **Unified Database Client Singleton**: Consolidated all database operations across the repository to the canonical `db` client exported from `src/lib/db.ts` (extended with `withAccelerate()` and backed by `@prisma/adapter-pg` with `pg.Pool`), eliminating duplicate connection pools and unextended `rawDb` client instances.
 
 ## Getting Started
 
