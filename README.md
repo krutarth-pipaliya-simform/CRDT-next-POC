@@ -67,6 +67,14 @@ An enterprise-grade collaborative SaaS workspace built with Next.js 16 and React
     - Alphabetical sorting within import groups and unified TypeScript `import type` usage.
     - Normalized all component props interfaces to `<ComponentName>Props` with strict `kebab-case` file naming and `PascalCase` component/type exports.
     - **Unified Database Client Singleton**: Consolidated all database operations across the repository to the canonical `db` client exported from `src/lib/db.ts` (extended with `withAccelerate()` and backed by `@prisma/adapter-pg` with `pg.Pool`), eliminating duplicate connection pools and unextended `rawDb` client instances.
+    - **DRY & Reusable Abstractions (Anti-Copy-Paste Protocol)**:
+        - Extracted `UserAvatar` (`src/components/ui/user-avatar.tsx`) with centralized initials generation and image fallback logic.
+        - Extracted `EmptyState` (`src/components/ui/empty-state.tsx`) and `PageHeader` (`src/components/layout/page-header.tsx`) unifying all workspace and dashboard sub-pages.
+        - Extracted `useOutsideClick` (`src/hooks/use-outside-click.ts`) eliminating duplicated DOM event listeners across navigation dropdowns.
+        - Extracted `SocialAuthButtons` and `DevVerifyQuickLink` (`src/features/auth/components/`) unifying OAuth sign-in and development verification links across login and registration flows.
+        - Unified `WorkspaceCard` (`src/features/workspace/components/workspace-card.tsx`) to support both my-workspaces and public discovery cards seamlessly.
+        - Extracted `getAppUrl` (`src/lib/url.ts`) for centralized server-side base URL resolution from request headers.
+        - Added dedicated `dry-and-reusability` agent skill (`.agents/skills/dry-and-reusability/SKILL.md`).
 
 ## Getting Started
 
