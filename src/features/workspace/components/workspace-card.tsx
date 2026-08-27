@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
+import { JoinPublicButton } from "@/features/workspace/components/join-public-button";
 import { LeaveWorkspaceButton } from "@/features/workspace/components/leave-workspace-button";
 
 export interface WorkspaceCardItem {
@@ -14,15 +15,19 @@ export interface WorkspaceCardItem {
 export interface WorkspaceCardProps {
     workspace: WorkspaceCardItem;
     currentUserId: string;
+    mode?: "my" | "public";
 }
 
 export function WorkspaceCard({
     workspace,
     currentUserId,
+    mode = "my",
 }: WorkspaceCardProps) {
-    const myRole =
-        workspace.members.find((m) => m.userId === currentUserId)?.role ??
-        "MEMBER";
+    const memberRecord = workspace.members.find(
+        (m) => m.userId === currentUserId,
+    );
+    const isMember = Boolean(memberRecord);
+    const myRole = memberRecord?.role ?? "MEMBER";
 
     return (
         <Card
@@ -40,32 +45,56 @@ export function WorkspaceCard({
                             {workspace.name}
                         </CardTitle>
                     </Link>
-                    <Badge intent={myRole === "ADMIN" ? "default" : "muted"}>
-                        {myRole}
-                    </Badge>
+                    {mode === "public" ? (
+                        <Badge intent={isMember ? "muted" : "success"}>
+                            {isMember ? "Member" : "Public"}
+                        </Badge>
+                    ) : (
+                        <Badge
+                            intent={myRole === "ADMIN" ? "default" : "muted"}
+                        >
+                            {myRole}
+                        </Badge>
+                    )}
                 </CardHeader>
                 <CardBody className="text-xs font-brand-mono text-brand-subtle">
                     {workspace._count.members}{" "}
                     {workspace._count.members === 1 ? "member" : "members"}
                 </CardBody>
             </div>
+
             <div className="pt-4 mt-auto border-t border-brand-muted flex items-center justify-between gap-2">
                 <Link
                     href={`/${workspace.id}`}
                     className="font-brand-mono text-xs text-brand-accent uppercase tracking-widest flex items-center gap-1 hover:underline"
                 >
-                    Open <span aria-hidden="true">→</span>
+                    {mode === "public"
+                        ? isMember
+                            ? "Open Workspace"
+                            : "View as Guest"
+                        : "Open"}{" "}
+                    <span aria-hidden="true">→</span>
                 </Link>
-                <LeaveWorkspaceButton
-                    workspaceId={workspace.id}
-                    workspaceName={workspace.name}
-                    userRole={myRole}
-                    currentUserId={currentUserId}
-                    variant="ghost"
-                    size="sm"
-                >
-                    Leave
-                </LeaveWorkspaceButton>
+
+                {mode === "public" ? (
+                    !isMember && (
+                        <JoinPublicButton
+                            workspaceId={workspace.id}
+                            isMember={false}
+                        />
+                    )
+                ) : (
+                    <LeaveWorkspaceButton
+                        workspaceId={workspace.id}
+                        workspaceName={workspace.name}
+                        userRole={myRole}
+                        currentUserId={currentUserId}
+                        variant="ghost"
+                        size="sm"
+                    >
+                        Leave
+                    </LeaveWorkspaceButton>
+                )}
             </div>
         </Card>
     );
