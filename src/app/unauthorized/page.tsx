@@ -5,7 +5,7 @@ import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function UnauthorizedPage() {
     return (
-        <div className="min-h-[80vh] flex items-center justify-center p-6 bg-brand-surface">
+        <main className="min-h-[80vh] flex items-center justify-center p-6 bg-brand-surface">
             <Card elevated className="max-w-md w-full text-center">
                 <CardHeader className="flex flex-col items-center gap-2 pb-4 mb-4 border-b-2 border-brand-muted">
                     <span className="font-brand-mono text-xs uppercase tracking-widest text-brand-danger">
@@ -31,6 +31,6 @@ export default function UnauthorizedPage() {
                     </div>
                 </CardBody>
             </Card>
-        </div>
+        </main>
     );
 }

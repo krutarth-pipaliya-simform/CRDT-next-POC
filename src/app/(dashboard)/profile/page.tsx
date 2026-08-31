@@ -31,7 +31,7 @@ export default async function ProfilePage() {
         : user.email?.substring(0, 2).toUpperCase() || "U";
 
     return (
-        <div className="max-w-4xl mx-auto space-y-8 p-6">
+        <main className="max-w-4xl mx-auto space-y-8 p-6">
             <div>
                 <h1 className="text-3xl font-brand-mono font-bold text-brand-ink uppercase tracking-tight">
                     Account Settings
@@ -46,6 +46,6 @@ export default async function ProfilePage() {
             <ProfileForm initialName={user.name || ""} />
 
             <PasswordForm />
-        </div>
+        </main>
     );
 }
