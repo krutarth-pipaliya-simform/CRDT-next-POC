@@ -76,6 +76,26 @@ An enterprise-grade collaborative SaaS workspace built with Next.js 16 and React
         - Extracted `getAppUrl` (`src/lib/url.ts`) for centralized server-side base URL resolution from request headers.
         - Added dedicated `dry-and-reusability` agent skill (`.agents/skills/dry-and-reusability/SKILL.md`).
 
+8. **Collaborative Document Editor (FR-8, FR-9, FR-10)**
+    - **Rich Text Editing Engine (FR-8)**: TipTap v2 over ProseMirror with structured schema support for headings (H1–H4), lists (bullet, ordered, and nested task list / checklist with interactive checkboxes), blockquotes, horizontal rules, inline formatting (bold, italic, underline, strikethrough, inline code, highlight, links), syntax-highlighted code blocks (`lowlight`), and resizable/aligned images.
+    - **Interactive UI & Keyboard Navigation**:
+        - Fixed formatting toolbar with active state reflection and accessible ARIA roles.
+        - Selection-aware floating bubble menu (`EditorBubbleMenu`) for instant inline formatting.
+        - Slash Command menu (`/` trigger) supporting keyboard navigation and instant block insertion.
+        - Contextual table controls for dynamic row/col insertion, deletion, and header toggling.
+        - Live word and character counter in the editor status bar.
+    - **Real-Time Multiplayer Collaboration (FR-9)**:
+        - Conflict-free collaborative CRDT editing powered by `yjs`, `@tiptap/extension-collaboration`, and `@tiptap/extension-collaboration-cursor`.
+        - Dedicated standalone WebSocket collaboration server (`server/src/index.ts` via `npm run collab:dev`) providing room multiplexing, sync steps 1/2, and awareness broadcasting.
+        - Live Presence Bar displaying active collaborator avatars, deterministic high-contrast user colors, online/offline status, and live remote carets with user name tags.
+        - Offline-first local durability via `y-indexeddb` (`IndexeddbPersistence`), allowing unimpeded editing during network disconnects and commutative merge on reconnect.
+    - **Autosave & Persistence (FR-10)**:
+        - 5-second dirty-checked autosave interval persisting Yjs binary state snapshots to PostgreSQL via the `saveDocumentAction` Server Action.
+        - Live save status indicator reflecting `Saved`, `Saving...`, `Offline (saved locally)`, and `Failed (retry)` states.
+        - In-place collaborative document title editing with real-time propagation.
+    - **Workspace Document Management**: Search, filtering, creation modal, and document deletion with accessible confirmation dialogs.
+    - **E2E Test Suite**: Comprehensive Playwright test coverage (`e2e/document.spec.ts`) validating document creation, rich text editor mounting, real-time typing, title editing, autosave persistence, and workspace listing.
+
 ## Getting Started
 
 1. **Environment Setup**
@@ -88,9 +108,13 @@ An enterprise-grade collaborative SaaS workspace built with Next.js 16 and React
     npx prisma generate
     ```
 
-3. **Run the Development Server**
+3. **Run the Development & Collaboration Servers**
     ```bash
+    # Terminal 1: Run the Next.js web application
     npm run dev
+
+    # Terminal 2 (Optional for real-time multiplayer WebSocket sync):
+    npm run collab:dev
     ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser. You will be automatically redirected to the `/login` screen due to the `proxy.ts` auth guard.
