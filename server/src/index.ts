@@ -1,43 +1,58 @@
 import http from "http";
-import { WebSocketServer } from "ws";
-// @ts-expect-error y-websocket/bin/utils has no separate type definitions
-import { setupWSConnection } from "y-websocket/bin/utils";
 
-const PORT = Number(process.env.COLLAB_PORT) || 1234;
-const HOST = process.env.COLLAB_HOST || "0.0.0.0";
+import { createApp } from "./app.js";
+import { envConfig } from "./config/env.js";
+import {
+    closeWebSocketService,
+    initWebSocketService,
+} from "./services/ws-service.js";
 
-const server = http.createServer((req, res) => {
-    if (req.url === "/health") {
-        res.writeHead(200, { "Content-Type": "application/json" });
-        res.end(
-            JSON.stringify({
-                status: "healthy",
-                timestamp: new Date().toISOString(),
-            }),
-        );
-        return;
-    }
-    res.writeHead(200, { "Content-Type": "text/plain" });
-    res.end("CRDT WebSocket Collab Server is running.");
-});
+const app = createApp();
+const server = http.createServer(app);
 
-const wss = new WebSocketServer({ server });
+// Initialize real-time WebSocket collaboration service
+initWebSocketService(server);
 
-wss.on("connection", (conn, req) => {
-    // URL format: /?room=workspaceId:documentId or /workspaceId:documentId
-    const url = new URL(
-        req.url || "/",
-        `http://${req.headers.host || "localhost"}`,
-    );
-    const docName =
-        url.searchParams.get("room") || url.pathname.slice(1) || "default";
-
-    // Setup y-websocket connection for real-time multiplayer CRDT sync & awareness
-    setupWSConnection(conn, req, { docName, gc: true });
-});
-
-server.listen(PORT, HOST, () => {
+server.listen(envConfig.port, envConfig.host, () => {
     console.log(
-        `[Collab Server] Real-time collaboration WebSocket server listening on ws://${HOST}:${PORT}`,
+        `[Collab Server] Real-time collaboration Express + WebSocket server listening on http://${envConfig.host}:${envConfig.port} (ws://${envConfig.host}:${envConfig.port})`,
     );
 });
+
+// Graceful shutdown handling
+let isShuttingDown = false;
+
+async function handleGracefulShutdown(signal: string): Promise<void> {
+    if (isShuttingDown) return;
+    isShuttingDown = true;
+
+    console.log(
+        `[Collab Server] Received ${signal}. Starting graceful shutdown...`,
+    );
+
+    try {
+        await closeWebSocketService();
+
+        await new Promise<void>((resolve, reject) => {
+            server.close((err) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+                resolve();
+            });
+        });
+
+        console.log("[Collab Server] HTTP server closed cleanly.");
+        process.exit(0);
+    } catch (err) {
+        console.error(
+            "[Collab Server] Error encountered during shutdown:",
+            err,
+        );
+        process.exit(1);
+    }
+}
+
+process.on("SIGTERM", () => void handleGracefulShutdown("SIGTERM"));
+process.on("SIGINT", () => void handleGracefulShutdown("SIGINT"));
