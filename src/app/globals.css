@@ -105,6 +105,9 @@ body {
 .ProseMirror {
     outline: none;
     min-height: 400px;
+    max-width: 100%;
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 
 .ProseMirror p.is-editor-empty:first-child::before {
@@ -237,11 +240,17 @@ body {
 }
 
 /* Tables */
+.ProseMirror .tableWrapper {
+    overflow-x: auto;
+    max-width: 100%;
+    margin: 1.5rem 0;
+}
+
 .ProseMirror table {
     border-collapse: collapse;
-    margin: 1.5rem 0;
+    margin: 0;
     width: 100%;
-    table-layout: fixed;
+    table-layout: auto;
     overflow: hidden;
 }
 

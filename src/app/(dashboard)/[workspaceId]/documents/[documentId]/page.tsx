@@ -27,7 +27,7 @@ export default async function DocumentEditorPage({
     }
 
     return (
-        <main className="w-full min-h-[calc(100vh-4rem)] bg-brand-surface">
+        <main className="w-full min-h-[calc(100vh-4rem)] bg-brand-surface overflow-x-hidden min-w-0">
             <CollaborativeEditor
                 document={document}
                 workspaceId={workspaceId}

@@ -35,7 +35,7 @@ export function DocumentTitle({
             disabled={disabled}
             placeholder="Untitled Document"
             aria-label="Document Title"
-            className="w-full max-w-xl text-xl sm:text-2xl font-bold bg-transparent text-brand-ink placeholder:text-brand-subtle/50 border-b-2 border-transparent hover:border-brand-border focus:border-brand-accent focus:outline-none transition-colors duration-150 py-1"
+            className="w-full text-xl sm:text-2xl font-bold bg-transparent text-brand-ink placeholder:text-brand-subtle/50 border-b-2 border-transparent hover:border-brand-border focus:border-brand-accent focus:outline-none transition-colors duration-150 py-1 min-w-0"
         />
     );
 }

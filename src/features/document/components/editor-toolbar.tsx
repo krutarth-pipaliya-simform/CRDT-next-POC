@@ -66,7 +66,7 @@ export function EditorToolbar({
         <div
             role="toolbar"
             aria-label="Editor formatting toolbar"
-            className="flex flex-wrap items-center gap-1 p-2 bg-brand-surface border-2 border-brand-ink rounded-brand shadow-brand-subtle"
+            className="flex flex-wrap items-center gap-1 p-2 bg-brand-surface border-2 border-brand-ink rounded-brand shadow-brand-subtle max-w-full overflow-x-auto no-scrollbar"
         >
             {/* Undo / Redo */}
             <button

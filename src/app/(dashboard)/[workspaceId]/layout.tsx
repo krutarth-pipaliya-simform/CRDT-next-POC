@@ -48,7 +48,7 @@ export default async function WorkspaceLayout({
                     }),
                 )}
             />
-            <div className="flex-1">{children}</div>
+            <div className="flex-1 min-w-0 w-full">{children}</div>
         </div>
     );
 }

@@ -29,7 +29,7 @@ export default async function DocumentsPage({
     const documents = await getDocuments(workspaceId);
 
     return (
-        <main className="max-w-7xl mx-auto px-6 py-8">
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 w-full min-w-0">
             <PageHeader
                 eyebrow={workspace.name}
                 title="Documents"

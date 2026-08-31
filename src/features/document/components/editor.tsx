@@ -154,26 +154,28 @@ export function CollaborativeEditor({
     const charCount = editor?.storage.characterCount?.characters() ?? 0;
 
     return (
-        <div className="flex flex-col gap-4 max-w-5xl mx-auto px-4 sm:px-6 py-6">
+        <div className="flex flex-col gap-4 max-w-5xl mx-auto px-4 sm:px-6 py-6 w-full min-w-0">
             {/* Navigation & Status Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b-2 border-brand-border">
-                <div className="flex items-center gap-3">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-3 border-b-2 border-brand-border w-full min-w-0">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
                     <LinkNext
                         href={`/${workspaceId}/documents`}
-                        className="flex items-center justify-center p-2 text-brand-subtle hover:text-brand-ink bg-brand-surface hover:bg-brand-muted border-2 border-brand-ink rounded-brand shadow-brand-subtle transition-all duration-150"
+                        className="flex items-center justify-center p-2 text-brand-subtle hover:text-brand-ink bg-brand-surface hover:bg-brand-muted border-2 border-brand-ink rounded-brand shadow-brand-subtle transition-all duration-150 shrink-0"
                         title="Back to Documents"
                         aria-label="Back to Documents"
                     >
                         <ArrowLeft className="w-4 h-4" aria-hidden="true" />
                     </LinkNext>
 
-                    <DocumentTitle
-                        initialTitle={title}
-                        onTitleChange={setTitle}
-                    />
+                    <div className="min-w-0 flex-1">
+                        <DocumentTitle
+                            initialTitle={title}
+                            onTitleChange={setTitle}
+                        />
+                    </div>
                 </div>
 
-                <div className="flex items-center gap-3 self-end sm:self-auto">
+                <div className="flex items-center gap-3 shrink-0 flex-wrap sm:flex-nowrap">
                     <PresenceBar
                         users={collaborators}
                         currentUserId={currentUser.id}
@@ -201,7 +203,7 @@ export function CollaborativeEditor({
             </div>
 
             {/* Editor Toolbar */}
-            <div className="sticky top-2 z-20">
+            <div className="sticky top-2 z-20 max-w-full">
                 <EditorToolbar
                     editor={editor}
                     onOpenImageDialog={() => setIsImageDialogOpen(true)}
@@ -209,16 +211,20 @@ export function CollaborativeEditor({
             </div>
 
             {/* Contextual Table Controls */}
-            <TableControls editor={editor} />
+            <div className="max-w-full overflow-x-auto">
+                <TableControls editor={editor} />
+            </div>
 
             {/* Editor Surface Container */}
-            <div className="relative min-h-[550px] bg-brand-surface border-2 border-brand-ink rounded-brand shadow-brand-card focus-within:border-brand-accent transition-colors duration-150">
+            <div className="relative min-h-[550px] bg-brand-surface border-2 border-brand-ink rounded-brand shadow-brand-card focus-within:border-brand-accent transition-colors duration-150 max-w-full overflow-hidden">
                 {editor && <EditorBubbleMenu editor={editor} />}
-                <EditorContent editor={editor} />
+                <div className="overflow-x-auto w-full">
+                    <EditorContent editor={editor} />
+                </div>
             </div>
 
             {/* Editor Footer Status */}
-            <div className="flex items-center justify-between text-xs font-brand-mono uppercase tracking-wider text-brand-subtle px-2 py-1">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs font-brand-mono uppercase tracking-wider text-brand-subtle px-2 py-1">
                 <span>Markdown shortcuts & slash commands enabled</span>
                 <div className="flex items-center gap-4">
                     <span>{wordCount} words</span>
