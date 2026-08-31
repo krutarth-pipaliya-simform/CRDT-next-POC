@@ -39,8 +39,8 @@ export function WorkspaceNav({
     ];
 
     return (
-        <div className="border-b-2 border-brand-muted bg-brand-surface mb-6">
-            <div className="max-w-7xl mx-auto px-6">
+        <div className="border-b-2 border-brand-muted bg-brand-surface mb-6 w-full max-w-full overflow-x-hidden">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 w-full min-w-0">
                 {/* Workspace Header & Switcher */}
                 <div className="flex items-center justify-between py-4 border-b border-brand-border">
                     <div className="relative" ref={switcherRef}>

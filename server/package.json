@@ -1,0 +1,20 @@
+{
+    "name": "collab-server",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+        "start": "tsx src/index.ts",
+        "dev": "tsx watch src/index.ts"
+    },
+    "dependencies": {
+        "ws": "^8.18.0",
+        "y-websocket": "^2.0.4",
+        "yjs": "^13.6.23"
+    },
+    "devDependencies": {
+        "@types/node": "^20.19.43",
+        "@types/ws": "^8.5.14",
+        "tsx": "^4.23.12",
+        "typescript": "^5"
+    }
+}

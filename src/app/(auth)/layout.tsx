@@ -9,7 +9,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
     return (
         <main className="min-h-screen w-full flex bg-brand-surface font-brand-sans">
             {/* Left Column - Form Area */}
-            <div className="w-full lg:w-1/3 min-w-[400px] flex flex-col justify-center items-center p-8 sm:p-12 border-r-2 border-brand-muted relative">
+            <div className="w-full lg:w-1/3 min-w-100 flex flex-col justify-center items-center p-8 sm:p-12 border-r-2 border-brand-muted relative">
                 <div className="absolute top-8 left-8 sm:top-12 sm:left-12">
                     <Link
                         href="/"
