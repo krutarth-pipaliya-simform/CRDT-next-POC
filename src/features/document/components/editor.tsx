@@ -102,8 +102,50 @@ export function CollaborativeEditor({
             CharacterCount.configure({
                 limit: 100000,
             }),
-            CodeBlockLowlight.configure({
+            CodeBlockLowlight.extend({
+                addKeyboardShortcuts() {
+                    return {
+                        ...this.parent?.(),
+                        "Mod-a": ({ editor }) => {
+                            const { state } = editor;
+                            const { $from } = state.selection;
+                            if ($from.parent.type.name === "codeBlock") {
+                                const start = $from.start();
+                                const end = $from.end();
+                                // If already fully selected, let the default select-all happen
+                                if (
+                                    state.selection.from === start &&
+                                    state.selection.to === end
+                                ) {
+                                    import("sonner").then(({ toast }) => {
+                                        toast("Entire document selected", {
+                                            duration: 2000,
+                                        });
+                                    });
+                                    return false;
+                                }
+
+                                const result = editor.commands.setTextSelection(
+                                    { from: start, to: end },
+                                );
+                                import("sonner").then(({ toast }) => {
+                                    toast("Code block selected", {
+                                        description:
+                                            "Press Ctrl+A again to select the entire document.",
+                                        duration: 2500,
+                                    });
+                                });
+                                return result;
+                            }
+                            return false;
+                        },
+                    };
+                },
+            }).configure({
                 lowlight,
+                HTMLAttributes: {
+                    spellcheck: "false",
+                },
             }),
             Table.configure({
                 resizable: true,

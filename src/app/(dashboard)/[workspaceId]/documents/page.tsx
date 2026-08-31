@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 
 import { PageHeader } from "@/components/layout/page-header";
 import { DocumentList } from "@/features/document/components/document-list";
-import { getDocuments } from "@/features/document/queries/get-documents";
+import { getWorkspaceDocuments } from "@/features/document/queries/get-workspace-documents";
 import { verifyWorkspaceRole } from "@/features/workspace/lib/rbac";
 import { getWorkspace } from "@/features/workspace/queries/get-workspace";
 
@@ -26,7 +26,7 @@ export default async function DocumentsPage({
         notFound();
     }
 
-    const documents = await getDocuments(workspaceId);
+    const documents = await getWorkspaceDocuments(workspaceId);
 
     return (
         <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 w-full min-w-0">
