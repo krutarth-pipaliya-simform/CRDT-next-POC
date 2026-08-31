@@ -20,11 +20,11 @@ export function PageHeader({
     return (
         <div
             className={cn(
-                "flex flex-col sm:flex-row sm:items-center justify-between gap-6 pb-6 border-b-2 border-brand-muted mb-8",
+                "flex flex-col sm:flex-row sm:items-center justify-between gap-6 pb-6 border-b-2 border-brand-muted mb-8 w-full min-w-0",
                 className,
             )}
         >
-            <div>
+            <div className="min-w-0 flex-1">
                 {eyebrow && (
                     <span className="font-brand-mono text-xs uppercase tracking-widest text-brand-subtle">
                         {eyebrow}
