@@ -15,6 +15,8 @@ const nextConfig: NextConfig = {
             },
         ],
     },
+    // Required to allow other devices on LAN to use the dev server properly
+    allowedDevOrigins: ["172.16.6.126"],
 };
 
 export default nextConfig;

@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 
 import { auth } from "@/features/auth/lib/auth";
-import { CollaborativeEditor } from "@/features/document/components/editor";
+import { CollaborativeEditor } from "@/features/document/components/editor-wrapper";
 import { getDocument } from "@/features/document/queries/get-document";
 import { verifyWorkspaceRole } from "@/features/workspace/lib/rbac";
 
