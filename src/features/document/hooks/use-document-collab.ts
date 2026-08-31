@@ -71,7 +71,7 @@ export function useDocumentCollab({
 
         try {
             const wsProvider = new WebsocketProvider(wsUrl, roomName, ydoc, {
-                connect: true,
+                connect: false,
             });
 
             const userColor = getUserColor(currentUser.id);
@@ -92,11 +92,19 @@ export function useDocumentCollab({
         }
     });
 
-    const [saveState, setSaveState] = useState<SaveState>("idle");
+    const [saveState, setSaveState] = useState<SaveState>(() =>
+        !provider ? "offline" : "idle",
+    );
     const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
     const [collaborators, setCollaborators] = useState<PresenceUser[]>([]);
-    const [connectionStatus, setConnectionStatus] =
-        useState<ConnectionStatus>("connecting");
+    const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>(
+        () => {
+            if (!provider) return "disconnected";
+            if (provider.synced) return "synced";
+            if (provider.wsconnected) return "connected";
+            return "connecting";
+        },
+    );
     const [title, setTitle] = useState<string>(initialTitle);
 
     const isDirtyRef = useRef(false);
@@ -116,7 +124,6 @@ export function useDocumentCollab({
         if (!provider) {
             return () => {
                 indexeddbProvider.destroy();
-                ydoc.destroy();
             };
         }
 
@@ -162,17 +169,20 @@ export function useDocumentCollab({
             setCollaborators(uniqueUsers);
         };
 
+        // Immediately sync awareness state
+        handleAwarenessChange();
+
         provider.on("status", handleStatus);
         provider.on("sync", handleSync);
         provider.awareness.on("change", handleAwarenessChange);
+        provider.connect();
 
         return () => {
             provider.off("status", handleStatus);
             provider.off("sync", handleSync);
             provider.awareness.off("change", handleAwarenessChange);
-            provider.destroy();
+            provider.disconnect();
             indexeddbProvider.destroy();
-            ydoc.destroy();
         };
     }, [documentId, ydoc, provider]);
 

@@ -18,6 +18,7 @@ export function PresenceBar({
 }: PresenceBarProps) {
     const isOnline =
         connectionStatus === "connected" || connectionStatus === "synced";
+    const isConnecting = connectionStatus === "connecting";
 
     return (
         <div className="flex items-center gap-3">
@@ -27,13 +28,19 @@ export function PresenceBar({
                 style={{
                     backgroundColor: isOnline
                         ? "var(--color-brand-muted)"
-                        : "rgba(217, 119, 6, 0.1)",
+                        : isConnecting
+                          ? "rgba(41, 72, 255, 0.08)"
+                          : "rgba(217, 119, 6, 0.1)",
                     borderColor: isOnline
                         ? "var(--color-brand-border)"
-                        : "var(--color-brand-warning)",
+                        : isConnecting
+                          ? "var(--color-brand-accent)"
+                          : "var(--color-brand-warning)",
                     color: isOnline
                         ? "var(--color-brand-ink)"
-                        : "var(--color-brand-warning)",
+                        : isConnecting
+                          ? "var(--color-brand-accent)"
+                          : "var(--color-brand-warning)",
                 }}
             >
                 {isOnline ? (
@@ -44,6 +51,16 @@ export function PresenceBar({
                         />
                         <span className="text-[11px] font-bold">
                             Live ({users.length})
+                        </span>
+                    </>
+                ) : isConnecting ? (
+                    <>
+                        <span
+                            className="w-2 h-2 rounded-full bg-brand-accent animate-pulse"
+                            aria-hidden="true"
+                        />
+                        <span className="text-[11px] font-bold">
+                            Connecting...
                         </span>
                     </>
                 ) : (
