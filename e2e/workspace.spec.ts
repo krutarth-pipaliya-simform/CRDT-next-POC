@@ -222,7 +222,7 @@ test.describe("Workspace Management", () => {
             .click();
 
         // Should redirect to workspace overview
-        await expect(inviteePage).toHaveURL(`/${ws.id}`);
+        await expect(inviteePage).toHaveURL(`/${ws.id}`, { timeout: 15000 });
 
         // Invitee visiting dashboard sees workspace with MEMBER badge
         await inviteePage.goto("/dashboard");

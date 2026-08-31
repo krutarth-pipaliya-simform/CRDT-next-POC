@@ -95,3 +95,9 @@ All TypeScript/React source files MUST strictly follow these ordering and naming
 ### Workflow Rules
 
 - **Always Read Skills**: Before executing complex tool workflows (like Git operations), you MUST check the `Available skills` list and read the corresponding `SKILL.md` file. You are bound by the instructions within those skills.
+
+---
+
+### API Design & Refactoring Instructions
+
+- **Document API Payload Refactoring (Pending)**: In future refactors, update document-related schemas (e.g., `updateDocumentSchema`, `deleteDocumentSchema`, `saveDocumentStateSchema`) to only require the `documentId` (renaming the ambiguous `id` field to `documentId`) and remove `workspaceId` from the client payload. The server should fetch the document by `documentId` to determine its `workspaceId` and verify permissions dynamically. This simplifies the API payload and prevents the client from ever sending mismatched IDs.
