@@ -7,7 +7,12 @@ import * as Y from "yjs";
 
 import { saveDocumentAction } from "../actions/save-document";
 import { getUserColor } from "../lib/user-colors";
-import type { ConnectionStatus, PresenceUser, SaveState } from "../types";
+import type {
+    ConnectionStatus,
+    PresenceUser,
+    ReadOnlyReason,
+    SaveState,
+} from "../types";
 
 export interface UseDocumentCollabOptions {
     documentId: string;
@@ -31,6 +36,9 @@ export interface UseDocumentCollabResult {
     title: string;
     setTitle: (title: string) => void;
     saveNow: () => Promise<void>;
+    isReadOnly: boolean;
+    readOnlyReason: ReadOnlyReason;
+    takeOverEditing: () => void;
 }
 
 export function useDocumentCollab({
@@ -40,6 +48,18 @@ export function useDocumentCollab({
     initialContentBase64,
     currentUser,
 }: UseDocumentCollabOptions): UseDocumentCollabResult {
+    const sessionIdRef = useRef<string>("");
+    const joinedAtRef = useRef<number>(0);
+    const takeoverTimestampRef = useRef<number>(0);
+
+    const [isReadOnly, setIsReadOnly] = useState<boolean>(false);
+    const [readOnlyReason, setReadOnlyReason] = useState<ReadOnlyReason>(null);
+    const isReadOnlyRef = useRef<boolean>(false);
+
+    useEffect(() => {
+        isReadOnlyRef.current = isReadOnly;
+    }, [isReadOnly]);
+
     const [ydoc] = useState<Y.Doc>(() => {
         const doc = new Y.Doc();
         if (initialContentBase64) {
@@ -96,7 +116,15 @@ export function useDocumentCollab({
         !provider ? "offline" : "idle",
     );
     const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
-    const [collaborators, setCollaborators] = useState<PresenceUser[]>([]);
+    const [collaborators, setCollaborators] = useState<PresenceUser[]>(() => [
+        {
+            id: currentUser.id,
+            name: currentUser.name || "Anonymous",
+            color: getUserColor(currentUser.id),
+            avatarUrl: currentUser.image ?? null,
+            lastActive: 0,
+        },
+    ]);
     const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>(
         () => {
             if (!provider) return "disconnected";
@@ -114,8 +142,30 @@ export function useDocumentCollab({
         titleRef.current = title;
     }, [title]);
 
+    const takeOverEditing = useCallback(() => {
+        if (!provider) return;
+        const now = Date.now();
+        takeoverTimestampRef.current = now;
+        provider.awareness.setLocalStateField("session", {
+            sessionId: sessionIdRef.current,
+            joinedAt: joinedAtRef.current,
+            takeoverTimestamp: now,
+        });
+    }, [provider]);
+
     // Setup Local Persistence (IndexedDB) and WebSocket event listeners
     useEffect(() => {
+        if (!sessionIdRef.current) {
+            sessionIdRef.current =
+                typeof crypto !== "undefined" &&
+                typeof crypto.randomUUID === "function"
+                    ? crypto.randomUUID()
+                    : `sess-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+        }
+        if (joinedAtRef.current === 0) {
+            joinedAtRef.current = Date.now();
+        }
+
         const indexeddbProvider = new IndexeddbPersistence(
             `crdt-doc-${documentId}`,
             ydoc,
@@ -126,6 +176,12 @@ export function useDocumentCollab({
                 indexeddbProvider.destroy();
             };
         }
+
+        provider.awareness.setLocalStateField("session", {
+            sessionId: sessionIdRef.current,
+            joinedAt: joinedAtRef.current,
+            takeoverTimestamp: takeoverTimestampRef.current,
+        });
 
         const handleStatus = (event: { status: string }) => {
             if (event.status === "connected") {
@@ -150,23 +206,145 @@ export function useDocumentCollab({
             if (!states) return;
 
             const users: PresenceUser[] = [];
-            states.forEach((state) => {
+            const mySessions: Array<{
+                clientId: number;
+                sessionId: string;
+                joinedAt: number;
+                takeoverTimestamp: number;
+            }> = [];
+
+            states.forEach((state, clientId) => {
                 if (state.user && state.user.id) {
                     users.push({
                         id: state.user.id,
                         name: state.user.name || "Anonymous",
-                        color: state.user.color || "#2563eb",
+                        color: state.user.color || getUserColor(state.user.id),
                         avatarUrl: state.user.avatarUrl,
                         lastActive: Date.now(),
                     });
+
+                    if (state.user.id === currentUser.id) {
+                        const sess =
+                            (state.session as
+                                | {
+                                      sessionId?: string;
+                                      joinedAt?: number;
+                                      takeoverTimestamp?: number;
+                                  }
+                                | undefined) || {};
+                        const sessId =
+                            typeof sess.sessionId === "string"
+                                ? sess.sessionId
+                                : String(clientId);
+                        const joinedAt =
+                            typeof sess.joinedAt === "number"
+                                ? sess.joinedAt
+                                : 0;
+                        const takeover =
+                            typeof sess.takeoverTimestamp === "number"
+                                ? sess.takeoverTimestamp
+                                : 0;
+                        mySessions.push({
+                            clientId,
+                            sessionId: sessId,
+                            joinedAt,
+                            takeoverTimestamp: takeover,
+                        });
+                    }
                 }
             });
 
-            // Deduplicate by user ID
+            // Ensure current user is always included in active collaborators
+            const hasCurrentUser = users.some((u) => u.id === currentUser.id);
+            if (!hasCurrentUser) {
+                users.push({
+                    id: currentUser.id,
+                    name: currentUser.name || "Anonymous",
+                    color: getUserColor(currentUser.id),
+                    avatarUrl: currentUser.image ?? null,
+                    lastActive: Date.now(),
+                });
+            }
+
+            // Deduplicate by user ID for collaborator avatars
             const uniqueUsers = Array.from(
                 new Map(users.map((u) => [u.id, u])).values(),
             );
             setCollaborators(uniqueUsers);
+
+            // Multi-session conflict resolution for currentUser
+            if (mySessions.length <= 1) {
+                setIsReadOnly((prev) => {
+                    if (prev) {
+                        import("sonner").then(({ toast }) => {
+                            toast.success("Edit access active", {
+                                description:
+                                    "You now have edit access to this document.",
+                                duration: 3000,
+                            });
+                        });
+                    }
+                    return false;
+                });
+                setReadOnlyReason(null);
+            } else {
+                // Determine active editor:
+                // 1. Session with highest takeoverTimestamp > 0
+                // 2. If all takeoverTimestamp === 0, session with oldest joinedAt
+                // 3. Tiebreaker: lowest clientId
+                let activeSession = mySessions[0];
+                for (let i = 1; i < mySessions.length; i++) {
+                    const curr = mySessions[i];
+                    if (
+                        curr.takeoverTimestamp > activeSession.takeoverTimestamp
+                    ) {
+                        activeSession = curr;
+                    } else if (
+                        curr.takeoverTimestamp ===
+                        activeSession.takeoverTimestamp
+                    ) {
+                        if (
+                            curr.joinedAt < activeSession.joinedAt ||
+                            (curr.joinedAt === activeSession.joinedAt &&
+                                curr.clientId < activeSession.clientId)
+                        ) {
+                            activeSession = curr;
+                        }
+                    }
+                }
+
+                const localClientId = provider.awareness.clientID;
+                const isMe =
+                    activeSession.clientId === localClientId ||
+                    activeSession.sessionId === sessionIdRef.current;
+
+                if (isMe) {
+                    setIsReadOnly((prev) => {
+                        if (prev) {
+                            import("sonner").then(({ toast }) => {
+                                toast.success("Edit access active", {
+                                    description:
+                                        "You have edit access in this session.",
+                                    duration: 3000,
+                                });
+                            });
+                        }
+                        return false;
+                    });
+                    setReadOnlyReason(null);
+                } else {
+                    setIsReadOnly((prev) => {
+                        if (!prev) {
+                            setReadOnlyReason("taken_over");
+                        } else {
+                            setReadOnlyReason(
+                                (prevReason) => prevReason || "another_session",
+                            );
+                        }
+                        return true;
+                    });
+                }
+            }
         };
 
         // Immediately sync awareness state
@@ -184,11 +362,19 @@ export function useDocumentCollab({
             provider.disconnect();
             indexeddbProvider.destroy();
         };
-    }, [documentId, ydoc, provider]);
+    }, [
+        documentId,
+        ydoc,
+        provider,
+        currentUser.id,
+        currentUser.name,
+        currentUser.image,
+    ]);
 
-    // Mark document dirty on Y.Doc updates
+    // Mark document dirty on Y.Doc updates ONLY if active editor
     useEffect(() => {
         const handleUpdate = () => {
+            if (isReadOnlyRef.current) return;
             isDirtyRef.current = true;
             setSaveState((prev) =>
                 prev === "offline" ? "offline" : "pending",
@@ -203,7 +389,7 @@ export function useDocumentCollab({
 
     // Save procedure
     const performSave = useCallback(async () => {
-        if (!isDirtyRef.current) return;
+        if (!isDirtyRef.current || isReadOnlyRef.current) return;
 
         setSaveState("saving");
         try {
@@ -236,7 +422,7 @@ export function useDocumentCollab({
     // FR-10: 5-second dirty-checked autosave interval
     useEffect(() => {
         const intervalId = setInterval(() => {
-            if (isDirtyRef.current) {
+            if (isDirtyRef.current && !isReadOnlyRef.current) {
                 performSave();
             }
         }, 5000);
@@ -247,6 +433,7 @@ export function useDocumentCollab({
     }, [performSave]);
 
     const handleTitleChange = useCallback((newTitle: string) => {
+        if (isReadOnlyRef.current) return;
         setTitle(newTitle);
         titleRef.current = newTitle;
         isDirtyRef.current = true;
@@ -263,5 +450,8 @@ export function useDocumentCollab({
         title,
         setTitle: handleTitleChange,
         saveNow: performSave,
+        isReadOnly,
+        readOnlyReason,
+        takeOverEditing,
     };
 }

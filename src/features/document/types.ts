@@ -1,8 +1,16 @@
 export type SaveState =
-    "idle" | "pending" | "saving" | "saved" | "failed" | "offline";
+    "idle" | "pending" | "saving" | "saved" | "failed" | "offline" | "readonly";
 
 export type ConnectionStatus =
     "connecting" | "connected" | "disconnected" | "synced";
+
+export type ReadOnlyReason = "another_session" | "taken_over" | null;
+
+export interface SessionAwarenessData {
+    sessionId: string;
+    joinedAt: number;
+    takeoverTimestamp?: number;
+}
 
 export interface PresenceUser {
     id: string;
