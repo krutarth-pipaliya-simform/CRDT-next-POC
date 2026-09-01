@@ -11,7 +11,7 @@ export default async function WorkspaceUnauthorizedPage({
     const { workspaceId } = await params;
 
     return (
-        <div className="max-w-xl mx-auto px-6 py-16 flex items-center justify-center">
+        <main className="max-w-xl mx-auto px-6 py-16 flex items-center justify-center">
             <Card elevated className="w-full text-center">
                 <CardHeader className="flex flex-col items-center gap-2 pb-4 mb-4 border-b-2 border-brand-muted">
                     <span className="font-brand-mono text-xs uppercase tracking-widest text-brand-danger">
@@ -42,6 +42,6 @@ export default async function WorkspaceUnauthorizedPage({
                     </div>
                 </CardBody>
             </Card>
-        </div>
+        </main>
     );
 }

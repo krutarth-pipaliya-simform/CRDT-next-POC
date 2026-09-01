@@ -86,7 +86,12 @@ An enterprise-grade collaborative SaaS workspace built with Next.js 16 and React
         - Live word and character counter in the editor status bar.
     - **Real-Time Multiplayer Collaboration (FR-9)**:
         - Conflict-free collaborative CRDT editing powered by `yjs`, `@tiptap/extension-collaboration`, and `@tiptap/extension-collaboration-cursor`.
-        - Dedicated standalone WebSocket collaboration server (`server/src/index.ts` via `npm run collab:dev`) providing room multiplexing, sync steps 1/2, and awareness broadcasting.
+        - **Scalable Express 5 Collaboration Server (`server/`)**: Production-ready, modular Express 5 architecture providing:
+            - **Layered Architecture**: Encapsulated WebSocket service (`ws-service.ts`), controllers (`health-controller.ts`, `collab-controller.ts`, `info-controller.ts`), and modular routes (`/health`, `/api/collab/stats`, `/`).
+            - **Security & Middlewares**: Security headers via `helmet`, configurable CORS via `cors`, structured request logging, and centralized error/404 handling.
+            - **Config & Health Probes**: Validated environment configuration via `zod` (`src/config/env.ts`), supporting `/health` diagnostics (uptime, memory, active rooms, connection count) as well as `/health/liveness` and `/health/readiness` probes.
+            - **Live CRDT Multiplexing & Observability**: Real-time room multiplexing, sync steps 1/2, awareness broadcasting, and live `/api/collab/stats` room tracking.
+            - **Graceful Shutdown**: Intercepts `SIGTERM` / `SIGINT` signals to cleanly drain WebSocket connections and close HTTP servers without data loss.
         - Live Presence Bar displaying active collaborator avatars, deterministic high-contrast user colors, online/offline status, and live remote carets with user name tags.
         - Offline-first local durability via `y-indexeddb` (`IndexeddbPersistence`), allowing unimpeded editing during network disconnects and commutative merge on reconnect.
     - **Autosave & Persistence (FR-10)**:

@@ -5,7 +5,7 @@ import { getWorkspaceRole } from "@/features/workspace/lib/rbac";
 import { db } from "@/lib/db";
 import type { DocumentItem } from "../types";
 
-export async function getDocuments(
+export async function getWorkspaceDocuments(
     workspaceId: string,
 ): Promise<DocumentItem[]> {
     const session = await auth();

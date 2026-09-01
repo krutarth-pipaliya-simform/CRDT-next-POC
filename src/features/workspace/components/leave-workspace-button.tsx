@@ -122,7 +122,6 @@ export function LeaveWorkspaceButton({
                 setOpen(false);
                 if (redirectOnLeave) {
                     router.push("/dashboard");
-                    router.refresh();
                 }
             }
         });

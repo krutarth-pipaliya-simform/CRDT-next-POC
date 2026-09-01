@@ -4,14 +4,22 @@
     "private": true,
     "scripts": {
         "start": "tsx src/index.ts",
-        "dev": "tsx watch src/index.ts"
+        "dev": "tsx watch src/index.ts",
+        "type-check": "tsc --noEmit",
+        "build": "tsc"
     },
     "dependencies": {
+        "cors": "^2.8.6",
+        "express": "^5.2.1",
+        "helmet": "^8.3.0",
         "ws": "^8.18.0",
         "y-websocket": "^2.0.4",
-        "yjs": "^13.6.23"
+        "yjs": "^13.6.23",
+        "zod": "^4.5.4"
     },
     "devDependencies": {
+        "@types/cors": "^2.8.19",
+        "@types/express": "^5.0.6",
         "@types/node": "^20.19.43",
         "@types/ws": "^8.5.14",
         "tsx": "^4.23.12",
