@@ -9,19 +9,30 @@ export interface PresenceBarProps {
     users: PresenceUser[];
     currentUserId: string;
     connectionStatus: ConnectionStatus;
+    isReadOnly?: boolean;
 }
 
 export function PresenceBar({
     users,
     currentUserId,
     connectionStatus,
+    isReadOnly = false,
 }: PresenceBarProps) {
     const isOnline =
         connectionStatus === "connected" || connectionStatus === "synced";
     const isConnecting = connectionStatus === "connecting";
+    const activeCount = isOnline ? Math.max(1, users.length) : users.length;
 
     return (
         <div className="flex items-center gap-3">
+            {isReadOnly && (
+                <span
+                    className="px-2 py-1 text-[11px] font-bold font-brand-mono uppercase tracking-wider bg-brand-warning/10 text-brand-warning border border-brand-warning rounded-brand"
+                    title="This session is in read-only mode"
+                >
+                    Read-Only
+                </span>
+            )}
             {/* Connection Indicator */}
             <div
                 className="flex items-center gap-1.5 px-2 py-1 text-xs font-brand-mono uppercase tracking-wider border rounded-brand"
@@ -50,7 +61,7 @@ export function PresenceBar({
                             aria-hidden="true"
                         />
                         <span className="text-[11px] font-bold">
-                            Live ({users.length})
+                            Live ({activeCount})
                         </span>
                     </>
                 ) : isConnecting ? (
