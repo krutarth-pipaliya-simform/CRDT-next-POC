@@ -14,12 +14,14 @@ export interface SaveStatusIndicatorProps {
     saveState: SaveState;
     lastSavedAt: Date | null;
     onSaveNow?: () => void;
+    isReadOnly?: boolean;
 }
 
 export function SaveStatusIndicator({
     saveState,
     lastSavedAt,
     onSaveNow,
+    isReadOnly = false,
 }: SaveStatusIndicatorProps) {
     const formattedTime = lastSavedAt
         ? new Intl.DateTimeFormat("en-US", {
@@ -29,7 +31,7 @@ export function SaveStatusIndicator({
           }).format(lastSavedAt)
         : null;
 
-    if (saveState === "saving" || saveState === "pending") {
+    if (!isReadOnly && (saveState === "saving" || saveState === "pending")) {
         return (
             <div
                 role="status"

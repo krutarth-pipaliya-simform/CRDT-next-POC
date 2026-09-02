@@ -252,6 +252,7 @@ export function CollaborativeEditor({
                         saveState={saveState}
                         lastSavedAt={lastSavedAt}
                         onSaveNow={saveNow}
+                        isReadOnly={isReadOnly}
                     />
 
                     <Button

@@ -51,14 +51,14 @@ export function useDocumentCollab({
     const sessionIdRef = useRef<string>("");
     const joinedAtRef = useRef<number>(0);
     const takeoverTimestampRef = useRef<number>(0);
+    const isReadOnlyRef = useRef<boolean>(false);
+    const isDirtyRef = useRef<boolean>(false);
+    const titleRef = useRef<string>(initialTitle);
 
     const [isReadOnly, setIsReadOnly] = useState<boolean>(false);
     const [readOnlyReason, setReadOnlyReason] = useState<ReadOnlyReason>(null);
-    const isReadOnlyRef = useRef<boolean>(false);
-
-    useEffect(() => {
-        isReadOnlyRef.current = isReadOnly;
-    }, [isReadOnly]);
+    const [title, setTitle] = useState<string>(initialTitle);
+    const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
 
     const [ydoc] = useState<Y.Doc>(() => {
         const doc = new Y.Doc();
@@ -115,7 +115,7 @@ export function useDocumentCollab({
     const [saveState, setSaveState] = useState<SaveState>(() =>
         !provider ? "offline" : "idle",
     );
-    const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+
     const [collaborators, setCollaborators] = useState<PresenceUser[]>(() => [
         {
             id: currentUser.id,
@@ -125,6 +125,7 @@ export function useDocumentCollab({
             lastActive: 0,
         },
     ]);
+
     const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>(
         () => {
             if (!provider) return "disconnected";
@@ -133,14 +134,17 @@ export function useDocumentCollab({
             return "connecting";
         },
     );
-    const [title, setTitle] = useState<string>(initialTitle);
-
-    const isDirtyRef = useRef(false);
-    const titleRef = useRef(title);
 
     useEffect(() => {
         titleRef.current = title;
     }, [title]);
+
+    useEffect(() => {
+        isReadOnlyRef.current = isReadOnly;
+        if (isReadOnly) {
+            isDirtyRef.current = false;
+        }
+    }, [isReadOnly]);
 
     const takeOverEditing = useCallback(() => {
         if (!provider) return;
@@ -363,6 +367,10 @@ export function useDocumentCollab({
                     });
                     setReadOnlyReason(null);
                 } else {
+                    isDirtyRef.current = false;
+                    setSaveState((prev) =>
+                        prev === "offline" ? "offline" : "saved",
+                    );
                     setIsReadOnly((prev) => {
                         if (!prev) {
                             setReadOnlyReason("taken_over");
@@ -405,8 +413,15 @@ export function useDocumentCollab({
 
     // Mark document dirty on Y.Doc updates ONLY if active editor
     useEffect(() => {
-        const handleUpdate = () => {
+        const handleUpdate = (_update: Uint8Array, origin: unknown) => {
             if (isReadOnlyRef.current) return;
+            // Ignore updates coming from IndexedDB persistence or remote WebSocket sync
+            if (
+                origin instanceof IndexeddbPersistence ||
+                origin instanceof WebsocketProvider
+            ) {
+                return;
+            }
             isDirtyRef.current = true;
             setSaveState((prev) =>
                 prev === "offline" ? "offline" : "pending",
@@ -472,10 +487,16 @@ export function useDocumentCollab({
         setSaveState("pending");
     }, []);
 
+    const effectiveSaveState: SaveState = isReadOnly
+        ? saveState === "offline"
+            ? "offline"
+            : "saved"
+        : saveState;
+
     return {
         ydoc,
         provider,
-        saveState,
+        saveState: effectiveSaveState,
         lastSavedAt,
         collaborators,
         connectionStatus,
