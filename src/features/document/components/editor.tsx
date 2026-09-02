@@ -174,15 +174,24 @@ export function CollaborativeEditor({
                 CollaborationCursor.configure({
                     provider,
                     user: {
+                        id: currentUser.id,
                         name: currentUser.name,
                         color: userColor,
+                        avatarUrl: currentUser.image ?? null,
                     },
                 }),
             );
         }
 
         return list;
-    }, [ydoc, provider, currentUser.name, userColor]);
+    }, [
+        ydoc,
+        provider,
+        currentUser.id,
+        currentUser.name,
+        currentUser.image,
+        userColor,
+    ]);
 
     const editor = useEditor(
         {

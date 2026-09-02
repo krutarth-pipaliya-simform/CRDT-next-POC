@@ -177,6 +177,14 @@ export function useDocumentCollab({
             };
         }
 
+        const userColor = getUserColor(currentUser.id);
+        provider.awareness.setLocalStateField("user", {
+            id: currentUser.id,
+            name: currentUser.name,
+            color: userColor,
+            avatarUrl: currentUser.image ?? null,
+        });
+
         provider.awareness.setLocalStateField("session", {
             sessionId: sessionIdRef.current,
             joinedAt: joinedAtRef.current,
@@ -214,16 +222,30 @@ export function useDocumentCollab({
             }> = [];
 
             states.forEach((state, clientId) => {
-                if (state.user && state.user.id) {
+                if (state.user) {
+                    const userId =
+                        typeof state.user.id === "string" && state.user.id
+                            ? state.user.id
+                            : clientId === provider.awareness.clientID
+                              ? currentUser.id
+                              : `user-${clientId}`;
+                    const userName =
+                        state.user.name || "Anonymous Collaborator";
+                    const color = state.user.color || getUserColor(userId);
+                    const avatarUrl = state.user.avatarUrl || null;
+
                     users.push({
-                        id: state.user.id,
-                        name: state.user.name || "Anonymous",
-                        color: state.user.color || getUserColor(state.user.id),
-                        avatarUrl: state.user.avatarUrl,
+                        id: userId,
+                        name: userName,
+                        color,
+                        avatarUrl,
                         lastActive: Date.now(),
                     });
 
-                    if (state.user.id === currentUser.id) {
+                    if (
+                        userId === currentUser.id ||
+                        state.user.id === currentUser.id
+                    ) {
                         const sess =
                             (state.session as
                                 | {
@@ -270,6 +292,14 @@ export function useDocumentCollab({
             const uniqueUsers = Array.from(
                 new Map(users.map((u) => [u.id, u])).values(),
             );
+
+            // Sort so current user is always first, then other collaborators alphabetically
+            uniqueUsers.sort((a, b) => {
+                if (a.id === currentUser.id) return -1;
+                if (b.id === currentUser.id) return 1;
+                return a.name.localeCompare(b.name);
+            });
+
             setCollaborators(uniqueUsers);
 
             // Multi-session conflict resolution for currentUser
@@ -353,12 +383,14 @@ export function useDocumentCollab({
         provider.on("status", handleStatus);
         provider.on("sync", handleSync);
         provider.awareness.on("change", handleAwarenessChange);
+        provider.awareness.on("update", handleAwarenessChange);
         provider.connect();
 
         return () => {
             provider.off("status", handleStatus);
             provider.off("sync", handleSync);
             provider.awareness.off("change", handleAwarenessChange);
+            provider.awareness.off("update", handleAwarenessChange);
             provider.disconnect();
             indexeddbProvider.destroy();
         };
