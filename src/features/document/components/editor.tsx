@@ -294,7 +294,9 @@ export function CollaborativeEditor({
 
             {/* Editor Surface Container */}
             <div className="relative min-h-[550px] bg-brand-surface border-2 border-brand-ink rounded-brand shadow-brand-card focus-within:border-brand-accent transition-colors duration-150 max-w-full overflow-hidden">
-                {editor && !isReadOnly && <EditorBubbleMenu editor={editor} />}
+                {editor && (
+                    <EditorBubbleMenu editor={editor} isReadOnly={isReadOnly} />
+                )}
                 <div className="overflow-x-auto w-full">
                     <EditorContent editor={editor} />
                 </div>
