@@ -34,11 +34,13 @@ import {
 export interface EditorToolbarProps {
     editor: Editor | null;
     onOpenImageDialog: () => void;
+    disabled?: boolean;
 }
 
 export function EditorToolbar({
     editor,
     onOpenImageDialog,
+    disabled = false,
 }: EditorToolbarProps) {
     const [isLinkPromptOpen, setIsLinkPromptOpen] = useState(false);
     const [linkUrl, setLinkUrl] = useState("");
@@ -48,6 +50,7 @@ export function EditorToolbar({
     }
 
     const setLink = () => {
+        if (disabled) return;
         if (!linkUrl) {
             editor.chain().focus().extendMarkRange("link").unsetLink().run();
         } else {
@@ -66,7 +69,12 @@ export function EditorToolbar({
         <div
             role="toolbar"
             aria-label="Editor formatting toolbar"
-            className="flex flex-wrap items-center gap-1 p-2 bg-brand-surface border-2 border-brand-ink rounded-brand shadow-brand-subtle max-w-full overflow-x-auto no-scrollbar"
+            aria-disabled={disabled}
+            className={`flex flex-wrap items-center gap-1 p-2 bg-brand-surface border-2 border-brand-ink rounded-brand shadow-brand-subtle max-w-full overflow-x-auto no-scrollbar transition-opacity duration-150 ${
+                disabled
+                    ? "opacity-50 pointer-events-none cursor-not-allowed"
+                    : ""
+            }`}
         >
             {/* Undo / Redo */}
             <button

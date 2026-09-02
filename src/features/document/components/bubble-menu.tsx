@@ -17,9 +17,13 @@ import {
 
 export interface EditorBubbleMenuProps {
     editor: Editor | null;
+    isReadOnly?: boolean;
 }
 
-export function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
+export function EditorBubbleMenu({
+    editor,
+    isReadOnly = false,
+}: EditorBubbleMenuProps) {
     const [isLinkPromptOpen, setIsLinkPromptOpen] = useState(false);
     const [linkUrl, setLinkUrl] = useState("");
 
@@ -46,6 +50,10 @@ export function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
         <TipTapBubbleMenu
             editor={editor}
             tippyOptions={{ duration: 100, placement: "top" }}
+            shouldShow={({ editor }) => {
+                if (isReadOnly) return false;
+                return !editor.view.state.selection.empty && editor.isEditable;
+            }}
             className="flex items-center gap-0.5 p-1 bg-brand-ink text-brand-surface border-2 border-brand-ink rounded-brand shadow-brand-card z-40"
         >
             {isLinkPromptOpen ? (

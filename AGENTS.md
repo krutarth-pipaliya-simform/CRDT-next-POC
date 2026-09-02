@@ -98,6 +98,20 @@ All TypeScript/React source files MUST strictly follow these ordering and naming
 
 ---
 
+### Multi-Session Document Concurrency & Read-Only Lock Convention (Binding)
+
+- **Single Active Editor per Account**: A user cannot edit the same document simultaneously from multiple sessions (tabs, windows, or devices) using the same account.
+- **Real-Time Read-Only Mode**: When a second session opens a document already active in another tab for that user, it is automatically placed into Read-Only Mode (`editor.setEditable(false)`, disabled title input, disabled toolbar) while continuing to receive live CRDT updates.
+- **Session Takeover Protocol**: Read-only sessions display `<ReadOnlyBanner>` allowing the user to click "Take Over Editing", which updates awareness timestamps, promoting that session to active editor and cleanly demoting earlier sessions to read-only.
+- **Autosave Suppression**: Secondary/read-only sessions must NEVER trigger autosaves or write to the database to prevent stale overwrites.
+
+### Server & Monorepo Build Isolation Convention (Binding)
+
+- **Standalone `server/` Directory**: The Node.js Express collaboration server lives in `server/` with its own `package.json` and `tsconfig.json`.
+- **Root `tsconfig.json` Exclusion**: The root `tsconfig.json` MUST exclude `"server"` so Next.js / Vercel builds do not attempt to typecheck Express/Helmet/CORS dependencies from the root Next.js build environment.
+
+---
+
 ### API Design & Refactoring Instructions
 
 - **Document API Payload Refactoring (Pending)**: In future refactors, update document-related schemas (e.g., `updateDocumentSchema`, `deleteDocumentSchema`, `saveDocumentStateSchema`) to only require the `documentId` (renaming the ambiguous `id` field to `documentId`) and remove `workspaceId` from the client payload. The server should fetch the document by `documentId` to determine its `workspaceId` and verify permissions dynamically. This simplifies the API payload and prevents the client from ever sending mismatched IDs.

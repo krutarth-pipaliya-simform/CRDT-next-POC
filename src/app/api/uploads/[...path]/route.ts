@@ -16,15 +16,18 @@ export async function GET(
         );
         const fileBuffer = await fs.readFile(filePath);
 
-        const extension = path.extname(filePath).slice(1);
+        const extension = path.extname(filePath).slice(1).toLowerCase();
+        const contentTypes: Record<string, string> = {
+            jpg: "image/jpeg",
+            jpeg: "image/jpeg",
+            png: "image/png",
+            webp: "image/webp",
+            gif: "image/gif",
+            svg: "image/svg+xml",
+            avif: "image/avif",
+        };
         const contentType =
-            extension === "jpg" || extension === "jpeg"
-                ? "image/jpeg"
-                : extension === "png"
-                  ? "image/png"
-                  : extension === "webp"
-                    ? "image/webp"
-                    : "application/octet-stream";
+            contentTypes[extension] || "application/octet-stream";
 
         return new NextResponse(fileBuffer, {
             headers: {
