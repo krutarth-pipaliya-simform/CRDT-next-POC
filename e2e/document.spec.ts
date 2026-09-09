@@ -137,4 +137,99 @@ test.describe("Collaborative Document Editor (FR-8, FR-9, FR-10)", () => {
             timeout: 15000,
         });
     });
+
+    test("should prevent simultaneous editing from multiple sessions and enforce read-only mode with takeover capability", async ({
+        browser,
+    }) => {
+        // Session 1 opens document
+        const context1 = await browser.newContext();
+        const page1 = await context1.newPage();
+        await loginAsTestUser(page1);
+
+        await page1.goto(`/${testWorkspaceId}/documents`);
+        await page1
+            .getByRole("button", { name: "New Document" })
+            .or(page1.getByRole("button", { name: "Create First Document" }))
+            .first()
+            .click();
+        const docTitle = `Multi-Session Lock Test ${Date.now()}`;
+        await page1.getByLabel("Document Title").fill(docTitle);
+        await page1.getByRole("button", { name: "Create Document" }).click();
+        await expect(page1).toHaveURL(
+            new RegExp(`/${testWorkspaceId}/documents/`),
+        );
+        const docUrl = page1.url();
+
+        // Verify Session 1 is editable
+        await expect(page1.locator(".ProseMirror")).toHaveAttribute(
+            "contenteditable",
+            "true",
+        );
+        await expect(
+            page1.getByRole("textbox", { name: "Document Title" }),
+        ).toBeEnabled();
+        await expect(page1.getByRole("alert")).not.toBeVisible();
+
+        // Session 2 for the SAME user opens the same document
+        const context2 = await browser.newContext();
+        const page2 = await context2.newPage();
+        await loginAsTestUser(page2);
+        await page2.goto(docUrl);
+
+        // Session 2 must be switched to read-only mode
+        await expect(page2.getByRole("alert")).toBeVisible({
+            timeout: 15000,
+        });
+        await expect(page2.getByText("Read-Only Mode Active")).toBeVisible();
+        await expect(page2.locator(".ProseMirror")).toHaveAttribute(
+            "contenteditable",
+            "false",
+        );
+        await expect(
+            page2.getByRole("textbox", { name: "Document Title" }),
+        ).toBeDisabled();
+        await expect(page2.getByText("Read-Only")).toBeVisible();
+
+        // Session 2 takes over editing
+        await page2.getByRole("button", { name: "Take Over Editing" }).click();
+
+        // Session 2 is now editable
+        await expect(page2.locator(".ProseMirror")).toHaveAttribute(
+            "contenteditable",
+            "true",
+        );
+        await expect(
+            page2.getByRole("textbox", { name: "Document Title" }),
+        ).toBeEnabled();
+        await expect(page2.getByRole("alert")).not.toBeVisible();
+
+        // Session 1 is now switched to read-only mode
+        await expect(page1.getByRole("alert")).toBeVisible({
+            timeout: 15000,
+        });
+        await expect(
+            page1.getByText("Editing Session Taken Over"),
+        ).toBeVisible();
+        await expect(page1.locator(".ProseMirror")).toHaveAttribute(
+            "contenteditable",
+            "false",
+        );
+
+        // Session 2 closes: Session 1 automatically regains edit access
+        await page2.close();
+        await context2.close();
+
+        await expect(page1.locator(".ProseMirror")).toHaveAttribute(
+            "contenteditable",
+            "true",
+            { timeout: 15000 },
+        );
+        await expect(
+            page1.getByRole("textbox", { name: "Document Title" }),
+        ).toBeEnabled();
+        await expect(page1.getByRole("alert")).not.toBeVisible();
+
+        await page1.close();
+        await context1.close();
+    });
 });

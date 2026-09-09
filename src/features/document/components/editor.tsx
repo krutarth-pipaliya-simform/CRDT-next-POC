@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import CharacterCount from "@tiptap/extension-character-count";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import Collaboration from "@tiptap/extension-collaboration";
@@ -23,15 +23,17 @@ import { ArrowLeft, Save } from "lucide-react";
 import LinkNext from "next/link";
 
 import { Button } from "@/components/ui/button";
+
+import { useDocumentCollab } from "../hooks/use-document-collab";
 import { lowlight } from "../lib/syntax-highlighter";
 import { getUserColor } from "../lib/user-colors";
-import { useDocumentCollab } from "../hooks/use-document-collab";
 import type { DocumentDetail } from "../types";
 import { EditorBubbleMenu } from "./bubble-menu";
 import { DocumentTitle } from "./document-title";
 import { EditorToolbar } from "./editor-toolbar";
 import { ImageDialog } from "./image-dialog";
 import { PresenceBar } from "./presence-bar";
+import { ReadOnlyBanner } from "./read-only-banner";
 import { SaveStatusIndicator } from "./save-status-indicator";
 import { createSlashCommandExtension } from "./slash-menu/slash-command";
 import { TableControls } from "./table-controls";
@@ -63,6 +65,9 @@ export function CollaborativeEditor({
         title,
         setTitle,
         saveNow,
+        isReadOnly,
+        readOnlyReason,
+        takeOverEditing,
     } = useDocumentCollab({
         documentId: document.id,
         workspaceId,
@@ -169,20 +174,30 @@ export function CollaborativeEditor({
                 CollaborationCursor.configure({
                     provider,
                     user: {
+                        id: currentUser.id,
                         name: currentUser.name,
                         color: userColor,
+                        avatarUrl: currentUser.image ?? null,
                     },
                 }),
             );
         }
 
         return list;
-    }, [ydoc, provider, currentUser.name, userColor]);
+    }, [
+        ydoc,
+        provider,
+        currentUser.id,
+        currentUser.name,
+        currentUser.image,
+        userColor,
+    ]);
 
     const editor = useEditor(
         {
             extensions,
             immediatelyRender: false,
+            editable: !isReadOnly,
             editorProps: {
                 attributes: {
                     class: "prose max-w-none focus:outline-none min-h-[500px] px-6 py-6 font-brand-sans text-brand-ink",
@@ -191,6 +206,13 @@ export function CollaborativeEditor({
         },
         [ydoc, provider],
     );
+
+    // Keep editor editable state in sync when multi-session lock changes
+    useEffect(() => {
+        if (editor && !editor.isDestroyed) {
+            editor.setEditable(!isReadOnly);
+        }
+    }, [editor, isReadOnly]);
 
     const wordCount = editor?.storage.characterCount?.words() ?? 0;
     const charCount = editor?.storage.characterCount?.characters() ?? 0;
@@ -213,6 +235,7 @@ export function CollaborativeEditor({
                         <DocumentTitle
                             initialTitle={title}
                             onTitleChange={setTitle}
+                            disabled={isReadOnly}
                         />
                     </div>
                 </div>
@@ -222,12 +245,14 @@ export function CollaborativeEditor({
                         users={collaborators}
                         currentUserId={currentUser.id}
                         connectionStatus={connectionStatus}
+                        isReadOnly={isReadOnly}
                     />
 
                     <SaveStatusIndicator
                         saveState={saveState}
                         lastSavedAt={lastSavedAt}
                         onSaveNow={saveNow}
+                        isReadOnly={isReadOnly}
                     />
 
                     <Button
@@ -235,7 +260,7 @@ export function CollaborativeEditor({
                         variant="secondary"
                         size="sm"
                         onClick={saveNow}
-                        disabled={saveState === "saving"}
+                        disabled={isReadOnly || saveState === "saving"}
                         className="hidden sm:inline-flex"
                     >
                         <Save className="w-3.5 h-3.5 mr-1" aria-hidden="true" />
@@ -244,22 +269,35 @@ export function CollaborativeEditor({
                 </div>
             </div>
 
+            {/* Read-Only Multi-Session Notification Banner */}
+            {isReadOnly && (
+                <ReadOnlyBanner
+                    reason={readOnlyReason}
+                    onTakeOverEditing={takeOverEditing}
+                />
+            )}
+
             {/* Editor Toolbar */}
             <div className="sticky top-2 z-20 max-w-full">
                 <EditorToolbar
                     editor={editor}
                     onOpenImageDialog={() => setIsImageDialogOpen(true)}
+                    disabled={isReadOnly}
                 />
             </div>
 
             {/* Contextual Table Controls */}
-            <div className="max-w-full overflow-x-auto">
-                <TableControls editor={editor} />
-            </div>
+            {!isReadOnly && (
+                <div className="max-w-full overflow-x-auto">
+                    <TableControls editor={editor} />
+                </div>
+            )}
 
             {/* Editor Surface Container */}
             <div className="relative min-h-[550px] bg-brand-surface border-2 border-brand-ink rounded-brand shadow-brand-card focus-within:border-brand-accent transition-colors duration-150 max-w-full overflow-hidden">
-                {editor && <EditorBubbleMenu editor={editor} />}
+                {editor && (
+                    <EditorBubbleMenu editor={editor} isReadOnly={isReadOnly} />
+                )}
                 <div className="overflow-x-auto w-full">
                     <EditorContent editor={editor} />
                 </div>
@@ -267,7 +305,11 @@ export function CollaborativeEditor({
 
             {/* Editor Footer Status */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs font-brand-mono uppercase tracking-wider text-brand-subtle px-2 py-1">
-                <span>Markdown shortcuts & slash commands enabled</span>
+                <span>
+                    {isReadOnly
+                        ? "Read-only mode (spectating live changes)"
+                        : "Markdown shortcuts & slash commands enabled"}
+                </span>
                 <div className="flex items-center gap-4">
                     <span>{wordCount} words</span>
                     <span>{charCount} characters</span>
@@ -278,8 +320,9 @@ export function CollaborativeEditor({
             <ImageDialog
                 open={isImageDialogOpen}
                 onClose={() => setIsImageDialogOpen(false)}
+                workspaceId={workspaceId}
                 onInsert={(data) => {
-                    if (editor) {
+                    if (editor && !isReadOnly) {
                         editor
                             .chain()
                             .focus()

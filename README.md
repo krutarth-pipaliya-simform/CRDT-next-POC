@@ -92,14 +92,16 @@ An enterprise-grade collaborative SaaS workspace built with Next.js 16 and React
             - **Config & Health Probes**: Validated environment configuration via `zod` (`src/config/env.ts`), supporting `/health` diagnostics (uptime, memory, active rooms, connection count) as well as `/health/liveness` and `/health/readiness` probes.
             - **Live CRDT Multiplexing & Observability**: Real-time room multiplexing, sync steps 1/2, awareness broadcasting, and live `/api/collab/stats` room tracking.
             - **Graceful Shutdown**: Intercepts `SIGTERM` / `SIGINT` signals to cleanly drain WebSocket connections and close HTTP servers without data loss.
-        - Live Presence Bar displaying active collaborator avatars, deterministic high-contrast user colors, online/offline status, and live remote carets with user name tags.
+        - Live Presence Bar displaying active collaborator avatars, deterministic high-contrast user colors, online/offline status, live participant counts, and live remote carets with user name tags.
+        - **Multi-Session Document Edit Lock & Read-Only Enforcement**: Prevents simultaneous conflicting edits from multiple tabs or sessions using the same user account. If a document is already open in one session, secondary sessions for that user automatically switch to **Read-Only Mode** (disabling the editor canvas, title input, and formatting toolbar) while continuing to receive live CRDT updates. Includes a prominent `<ReadOnlyBanner>` with an instant **"Take Over Editing"** action and automatic promotion when earlier sessions close.
+        - **Document Image Upload & Embedding**: Dedicated `<ImageDialog>` supporting local device image uploads (PNG, JPG, WebP, GIF, SVG up to 5MB) with drag-and-drop, live thumbnail preview, file size metadata, server-side storage at `/api/uploads/documents/`, and web URL embedding with alt text.
         - Offline-first local durability via `y-indexeddb` (`IndexeddbPersistence`), allowing unimpeded editing during network disconnects and commutative merge on reconnect.
     - **Autosave & Persistence (FR-10)**:
-        - 5-second dirty-checked autosave interval persisting Yjs binary state snapshots to PostgreSQL via the `saveDocumentAction` Server Action.
+        - 5-second dirty-checked autosave interval persisting Yjs binary state snapshots to PostgreSQL via the `saveDocumentAction` Server Action (strictly suppressed during read-only sessions to prevent accidental overwrites).
         - Live save status indicator reflecting `Saved`, `Saving...`, `Offline (saved locally)`, and `Failed (retry)` states.
         - In-place collaborative document title editing with real-time propagation.
     - **Workspace Document Management**: Search, filtering, creation modal, and document deletion with accessible confirmation dialogs.
-    - **E2E Test Suite**: Comprehensive Playwright test coverage (`e2e/document.spec.ts`) validating document creation, rich text editor mounting, real-time typing, title editing, autosave persistence, and workspace listing.
+    - **E2E Test Suite**: Comprehensive Playwright test coverage (`e2e/document.spec.ts`) validating document creation, rich text editor mounting, real-time typing, title editing, autosave persistence, workspace listing, multi-session edit prevention, read-only mode enforcement, and session takeover.
 
 ## Getting Started
 

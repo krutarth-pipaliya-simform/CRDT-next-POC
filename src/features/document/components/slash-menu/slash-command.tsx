@@ -262,8 +262,8 @@ export const createSlashCommandExtension = (onOpenImageDialog?: () => void) => {
                                 popupElement = document.createElement("div");
                                 popupElement.style.position = "absolute";
                                 popupElement.style.zIndex = "9999";
-                                document.body.appendChild(popupElement);
                                 popupElement.appendChild(component.element);
+                                document.body.appendChild(popupElement);
 
                                 const rect = props.clientRect?.();
                                 if (rect && popupElement) {
@@ -283,7 +283,6 @@ export const createSlashCommandExtension = (onOpenImageDialog?: () => void) => {
 
                             onKeyDown: (props) => {
                                 if (props.event.key === "Escape") {
-                                    popupElement?.remove();
                                     return true;
                                 }
                                 return (
@@ -292,8 +291,21 @@ export const createSlashCommandExtension = (onOpenImageDialog?: () => void) => {
                             },
 
                             onExit: () => {
-                                popupElement?.remove();
-                                component?.destroy();
+                                try {
+                                    component?.destroy();
+                                } catch (err) {
+                                    console.warn(
+                                        "[SlashCommand] Error destroying component:",
+                                        err,
+                                    );
+                                }
+                                if (popupElement && popupElement.parentNode) {
+                                    popupElement.parentNode.removeChild(
+                                        popupElement,
+                                    );
+                                }
+                                component = null;
+                                popupElement = null;
                             },
                         };
                     },
