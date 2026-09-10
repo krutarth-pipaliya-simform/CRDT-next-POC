@@ -14,6 +14,17 @@
     --color-brand-warning: #d97706;
     --color-brand-border: #e8e8e8;
 
+    /* Task Priority Tokens */
+    --color-brand-priority-low: #6b7280;
+    --color-brand-priority-medium: #2948ff;
+    --color-brand-priority-high: #d97706;
+    --color-brand-priority-urgent: #e53e3e;
+
+    /* Kanban Column Tokens */
+    --color-brand-column-todo: #f4f4f4;
+    --color-brand-column-progress: #eef2ff;
+    --color-brand-column-done: #f0fdf4;
+
     /* Typography */
     --font-brand-sans: var(--font-geist-sans);
     --font-brand-mono: var(--font-geist-mono);

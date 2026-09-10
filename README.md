@@ -103,6 +103,19 @@ An enterprise-grade collaborative SaaS workspace built with Next.js 16 and React
     - **Workspace Document Management**: Search, filtering, creation modal, and document deletion with accessible confirmation dialogs.
     - **E2E Test Suite**: Comprehensive Playwright test coverage (`e2e/document.spec.ts`) validating document creation, rich text editor mounting, real-time typing, title editing, autosave persistence, workspace listing, multi-session edit prevention, read-only mode enforcement, and session takeover.
 
+9. **Task Management & Kanban Board (Phase 4 / FR-11, FR-12)**
+    - **Kanban Board Workflow Engine**: Three-column workflow board (`To Do`, `In Progress`, `Done`) powered by `@dnd-kit/core` and `@dnd-kit/sortable` with droppable column containers, drag overlays, and status indicators.
+    - **Optimistic Drag-and-Drop (Next.js 16 Pattern)**: Instant visual reordering across and within columns using React 19's `useOptimistic` reducer and `startTransition`, backed by `moveTaskAction` Server Action with fractional position indexing (`Float`).
+    - **Instant Priority Cycling**: One-click priority cycling (`LOW` → `MEDIUM` → `HIGH` → `URGENT` → `LOW`) via `<PriorityBadge>` using optimistic transitions and semantic brand color tokens.
+    - **Task CRUD & Modal Lifecycle**:
+        - Create task modal with key-based form reset and pending state management via `useActionState`.
+        - Detailed task inspection and field-level updates in `<TaskDetailDialog>` (title, description, column, priority, assignee, due date).
+        - Workspace member assignment with avatar resolution via `<AssigneePicker>`.
+        - Task deletion with confirmation safety banner.
+    - **Real-Time Search & Filtering**: Fast client-side filtering by task title, description, or assigned collaborator.
+    - **Strict Role-Based Access Control (RBAC)**: Admins and Members can create, edit, move, and delete tasks; Guests are restricted to view-only mode with disabled drag, non-interactive badges, and hidden action triggers.
+    - **E2E Test Suite**: Comprehensive Playwright test suite (`e2e/task.spec.ts`) with 8 scenarios verifying empty state, task creation, priority cycling, detail editing, search filtering, drag-and-drop column transition, deletion confirmation, and guest RBAC enforcement.
+
 ## Getting Started
 
 1. **Environment Setup**

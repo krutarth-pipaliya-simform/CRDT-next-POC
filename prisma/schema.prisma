@@ -72,6 +72,19 @@ enum WorkspaceVisibility {
   PRIVATE
 }
 
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
 // --- Domain Models ---
 model Workspace {
   id          String              @id @default(cuid())
@@ -102,12 +115,13 @@ model WorkspaceInvitation {
 }
 
 model WorkspaceMember {
-  id          String    @id @default(cuid())
-  workspaceId String
-  userId      String
-  role        Role      @default(MEMBER)
-  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id            String    @id @default(cuid())
+  workspaceId   String
+  userId        String
+  role          Role      @default(MEMBER)
+  workspace     Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assignedTasks Task[]
 }
 
 model Document {
@@ -121,12 +135,21 @@ model Document {
 }
 
 model Task {
-  id          String    @id @default(cuid())
+  id          String           @id @default(cuid())
   title       String
   description String?
-  status      String    @default("TODO")
+  status      TaskStatus       @default(TODO)
+  priority    TaskPriority     @default(MEDIUM)
+  position    Float            @default(0)
+  dueDate     DateTime?
+  assigneeId  String?
   workspaceId String
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  assignee    WorkspaceMember? @relation(fields: [assigneeId], references: [id], onDelete: SetNull)
+  workspace   Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, status])
+  @@index([assigneeId])
 }
+
