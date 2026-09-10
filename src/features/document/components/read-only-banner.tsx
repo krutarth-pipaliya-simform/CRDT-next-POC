@@ -20,6 +20,7 @@ export function ReadOnlyBanner({
         <div
             role="alert"
             aria-live="polite"
+            data-testid="read-only-banner"
             className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 bg-brand-surface border-2 border-brand-ink rounded-brand shadow-brand-subtle border-l-4 border-l-brand-warning transition-all duration-150"
         >
             <div className="flex items-start gap-3 min-w-0">

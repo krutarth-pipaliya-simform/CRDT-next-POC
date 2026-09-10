@@ -168,7 +168,7 @@ test.describe("Collaborative Document Editor (FR-8, FR-9, FR-10)", () => {
         await expect(
             page1.getByRole("textbox", { name: "Document Title" }),
         ).toBeEnabled();
-        await expect(page1.getByRole("alert")).not.toBeVisible();
+        await expect(page1.getByTestId("read-only-banner")).not.toBeVisible();
 
         // Session 2 for the SAME user opens the same document
         const context2 = await browser.newContext();
@@ -177,7 +177,7 @@ test.describe("Collaborative Document Editor (FR-8, FR-9, FR-10)", () => {
         await page2.goto(docUrl);
 
         // Session 2 must be switched to read-only mode
-        await expect(page2.getByRole("alert")).toBeVisible({
+        await expect(page2.getByTestId("read-only-banner")).toBeVisible({
             timeout: 15000,
         });
         await expect(page2.getByText("Read-Only Mode Active")).toBeVisible();
@@ -201,10 +201,10 @@ test.describe("Collaborative Document Editor (FR-8, FR-9, FR-10)", () => {
         await expect(
             page2.getByRole("textbox", { name: "Document Title" }),
         ).toBeEnabled();
-        await expect(page2.getByRole("alert")).not.toBeVisible();
+        await expect(page2.getByTestId("read-only-banner")).not.toBeVisible();
 
         // Session 1 is now switched to read-only mode
-        await expect(page1.getByRole("alert")).toBeVisible({
+        await expect(page1.getByTestId("read-only-banner")).toBeVisible({
             timeout: 15000,
         });
         await expect(
@@ -227,7 +227,7 @@ test.describe("Collaborative Document Editor (FR-8, FR-9, FR-10)", () => {
         await expect(
             page1.getByRole("textbox", { name: "Document Title" }),
         ).toBeEnabled();
-        await expect(page1.getByRole("alert")).not.toBeVisible();
+        await expect(page1.getByTestId("read-only-banner")).not.toBeVisible();
 
         await page1.close();
         await context1.close();
