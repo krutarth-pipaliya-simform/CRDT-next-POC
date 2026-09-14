@@ -46,7 +46,7 @@ export function ActivityFeed({
         return (
             <EmptyState
                 title="No activity yet"
-                description="Task assignments, completed work, new documents, mentions, and members joining will all show up here."
+                description="When someone is assigned a task, finishes one, starts a document or joins the workspace, it lands here."
             />
         );
     }
@@ -54,11 +54,11 @@ export function ActivityFeed({
     return (
         <div
             data-testid="activity-feed"
-            className="border-2 border-brand-ink rounded-brand bg-brand-surface shadow-brand-card"
+            className="border border-brand-border rounded-brand bg-brand-surface"
         >
-            <div className="flex items-center justify-between gap-4 px-4 py-3 border-b-2 border-brand-muted">
+            <div className="flex items-center justify-between gap-4 px-4 py-2.5 border-b border-brand-border">
                 <div className="flex items-center gap-2">
-                    <span className="font-brand-mono text-[10px] uppercase tracking-widest text-brand-subtle">
+                    <span className="text-[12px] text-brand-subtle">
                         {workspaceUnread > 0
                             ? `${workspaceUnread} unread`
                             : "All caught up"}
@@ -99,7 +99,7 @@ export function ActivityFeed({
 
             {unreadCount > workspaceUnread && (
                 <div className="border-t-2 border-brand-muted px-4 py-2.5">
-                    <p className="font-brand-mono text-[10px] uppercase tracking-wider text-brand-subtle">
+                    <p className="text-[12px] text-brand-subtle">
                         {unreadCount - workspaceUnread} unread in other
                         workspaces
                     </p>

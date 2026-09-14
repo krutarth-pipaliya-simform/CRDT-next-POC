@@ -54,7 +54,7 @@ export function SlashMenuList({ items, command, ref }: SlashMenuListProps) {
 
     if (items.length === 0) {
         return (
-            <div className="p-3 bg-brand-surface border-2 border-brand-ink text-brand-subtle text-xs font-brand-mono rounded-brand shadow-brand-card">
+            <div className="p-3 bg-brand-surface border-2 border-brand-ink text-brand-subtle text-xs rounded-brand shadow-brand-card">
                 No matching commands
             </div>
         );
@@ -66,7 +66,7 @@ export function SlashMenuList({ items, command, ref }: SlashMenuListProps) {
             aria-label="Slash commands"
             className="w-72 max-h-80 overflow-y-auto p-1.5 bg-brand-surface border-2 border-brand-ink rounded-brand shadow-brand-card z-50 flex flex-col gap-0.5 no-scrollbar"
         >
-            <div className="px-2 py-1 text-[10px] font-brand-mono font-bold uppercase tracking-wider text-brand-subtle">
+            <div className="px-2 py-1 text-[12px] font-bold text-brand-subtle">
                 Insert Block
             </div>
             {items.map((item, index) => {
@@ -94,11 +94,11 @@ export function SlashMenuList({ items, command, ref }: SlashMenuListProps) {
                             {item.icon}
                         </div>
                         <div className="flex flex-col min-w-0">
-                            <span className="text-xs font-bold font-brand-mono truncate">
+                            <span className="text-xs font-bold truncate">
                                 {item.title}
                             </span>
                             <span
-                                className={`text-[10px] truncate ${
+                                className={`text-[12px] truncate ${
                                     isSelected
                                         ? "text-brand-surface/70"
                                         : "text-brand-subtle"

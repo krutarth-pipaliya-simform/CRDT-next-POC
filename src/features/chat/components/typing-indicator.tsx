@@ -40,7 +40,7 @@ export function TypingIndicator({ typingUsers }: TypingIndicatorProps) {
                             />
                         ))}
                     </span>
-                    <span className="font-brand-mono text-[10px] uppercase tracking-wider text-brand-subtle truncate">
+                    <span className="text-[12px] text-brand-subtle truncate">
                         {describeTyping(typingUsers)}
                     </span>
                 </>

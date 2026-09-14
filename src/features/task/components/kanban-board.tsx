@@ -223,9 +223,9 @@ export function KanbanBoard({
                         type="search"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search tasks by title, description, or assignee..."
+                        placeholder="Search tasks"
                         aria-label="Filter tasks"
-                        className="w-full bg-brand-surface text-brand-ink placeholder:text-brand-subtle text-xs border-2 border-brand-ink rounded-brand px-3 py-2 font-brand-sans focus:outline-none focus:ring-2 focus:ring-brand-accent transition-colors"
+                        className="w-full h-10 bg-brand-surface text-brand-ink placeholder:text-brand-subtle/70 text-sm border border-brand-line hover:border-brand-ink rounded-brand px-3 transition-colors"
                     />
                     {searchQuery && (
                         <button
@@ -247,7 +247,7 @@ export function KanbanBoard({
                         onClick={() => handleAddTask("TODO")}
                         className="shrink-0"
                     >
-                        + New Task
+                        New task
                     </Button>
                 )}
             </div>

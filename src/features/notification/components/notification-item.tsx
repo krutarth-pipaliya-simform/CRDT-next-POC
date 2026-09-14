@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 
+import { PresenceRail } from "@/components/ui/presence-rail";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { cn } from "@/lib/cn";
+import { formatRelativeTime } from "@/lib/format-time";
 
-import { formatRelativeTime } from "../lib/format-relative-time";
 import { NOTIFICATION_TYPE_ICONS, type NotificationPayload } from "../types";
 
 export interface NotificationItemProps {
@@ -25,6 +26,13 @@ export function NotificationItem({
 
     const content = (
         <>
+            {notification.actor && (
+                <PresenceRail
+                    userIds={[notification.actor.id]}
+                    fallback={false}
+                />
+            )}
+
             <div className="shrink-0 mt-0.5">
                 {notification.actor ? (
                     <UserAvatar
@@ -55,7 +63,7 @@ export function NotificationItem({
                     <time
                         suppressHydrationWarning
                         dateTime={notification.createdAt}
-                        className="shrink-0 font-brand-mono text-[10px] uppercase tracking-wider text-brand-subtle"
+                        className="shrink-0 font-brand-mono text-[12px] text-brand-subtle"
                     >
                         {formatRelativeTime(notification.createdAt)}
                     </time>

@@ -73,13 +73,13 @@ export default async function WorkspacePage({
         <main className="max-w-7xl mx-auto px-6 py-8">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                 <div>
-                    <span className="font-brand-mono text-xs uppercase tracking-widest text-brand-subtle">
+                    <span className="text-xs text-brand-subtle">
                         Workspace Overview
                     </span>
                     <h1 className="text-3xl font-medium tracking-tight text-brand-ink mt-1">
                         {workspace.name}
                     </h1>
-                    <p className="text-xs font-brand-mono text-brand-subtle mt-2">
+                    <p className="text-xs text-brand-subtle mt-2">
                         {workspace.members.length}{" "}
                         {workspace.members.length === 1 ? "member" : "members"}{" "}
                         collaborating in this workspace
@@ -106,7 +106,7 @@ export default async function WorkspacePage({
                         <p className="text-sm font-medium text-brand-ink">
                             You are viewing this public workspace as a guest.
                         </p>
-                        <p className="text-xs font-brand-mono text-brand-subtle">
+                        <p className="text-xs text-brand-subtle">
                             Join as a full member to add it to your dashboard
                             and collaborate.
                         </p>
@@ -135,7 +135,7 @@ export default async function WorkspacePage({
                                     <CardTitle className="text-base font-semibold text-brand-ink group-hover:text-brand-accent transition-colors">
                                         {link.title}
                                     </CardTitle>
-                                    <span className="font-brand-mono text-[10px] uppercase tracking-wider px-2 py-0.5 border border-brand-border bg-brand-muted text-brand-subtle rounded-brand">
+                                    <span className="text-[12px] px-2 py-0.5 border border-brand-border bg-brand-muted text-brand-subtle rounded-brand">
                                         {link.badge}
                                     </span>
                                 </CardHeader>
@@ -144,8 +144,8 @@ export default async function WorkspacePage({
                                 </CardBody>
                             </div>
                             <div className="pt-4 flex items-center justify-end">
-                                <span className="font-brand-mono text-xs text-brand-accent uppercase tracking-widest flex items-center gap-1">
-                                    Open <span aria-hidden="true">→</span>
+                                <span className="text-xs text-brand-accent flex items-center gap-1">
+                                    Open
                                 </span>
                             </div>
                         </Card>

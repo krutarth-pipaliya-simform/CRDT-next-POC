@@ -4,7 +4,7 @@ import { useState, type CSSProperties, type MouseEvent } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-import { UserAvatar } from "@/components/ui/user-avatar";
+import { PresenceRail } from "@/components/ui/presence-rail";
 import { cn } from "@/lib/cn";
 
 import type { TaskWithAssignee } from "../types";
@@ -67,6 +67,11 @@ export function TaskCard({
           })
         : null;
 
+    const assigneeUserId = task.assignee?.user?.id ?? null;
+    const assigneeName = task.assignee?.user
+        ? (task.assignee.user.name ?? task.assignee.user.email ?? "Member")
+        : null;
+
     const isPastDue =
         task.dueDate &&
         new Date(task.dueDate).getTime() < now &&
@@ -95,74 +100,57 @@ export function TaskCard({
                 }
             }}
             className={cn(
-                "group relative bg-brand-surface border-2 border-brand-ink p-3.5 rounded-brand shadow-brand-subtle transition-all select-none",
+                // Flat at rest on a rule; the hard shadow is saved for the card
+                // that is genuinely floating under the cursor mid-drag.
+                "group relative flex gap-3 bg-brand-surface border border-brand-border p-3 pl-0 rounded-brand transition-[transform,box-shadow,border-color] duration-100 select-none",
                 canEdit
-                    ? "cursor-grab active:cursor-grabbing hover:-translate-y-0.5 hover:shadow-brand-card"
-                    : "cursor-pointer",
+                    ? "cursor-grab active:cursor-grabbing hover:border-brand-ink hover:-translate-y-[2px] hover:shadow-brand-subtle"
+                    : "cursor-pointer hover:border-brand-line",
                 isOverlay &&
-                    "rotate-2 shadow-brand-card ring-2 ring-brand-accent cursor-grabbing z-50",
-                "focus-visible:outline-2 focus-visible:outline-brand-accent focus-visible:outline-offset-2",
+                    "rotate-1 shadow-brand-card border-brand-ink cursor-grabbing z-50",
             )}
         >
-            {/* Header: Title and Priority */}
-            <div className="flex items-start justify-between gap-2 mb-2">
-                <h3 className="font-brand-sans font-semibold text-sm text-brand-ink leading-snug line-clamp-2">
+            {/* Whose task this is, readable before the title. */}
+            <PresenceRail
+                userIds={assigneeUserId ? [assigneeUserId] : []}
+                className="ml-0"
+            />
+
+            <div className="min-w-0 flex-1">
+                <h3 className="font-semibold text-sm text-brand-ink leading-snug line-clamp-2">
                     {task.title}
                 </h3>
-                <div className="shrink-0 pt-0.5">
+
+                {task.description && (
+                    <p className="text-[13px] text-brand-subtle line-clamp-2 mt-1.5 leading-relaxed">
+                        {task.description}
+                    </p>
+                )}
+
+                {/* Who, then how urgent, then when — the order someone
+                    triaging a board actually reads them in. An empty slot is
+                    left empty rather than filled with an em dash. */}
+                <div className="flex items-center flex-wrap gap-x-2 gap-y-1 mt-2.5 text-[13px] text-brand-subtle">
+                    <span className="truncate max-w-[14ch] text-brand-ink">
+                        {assigneeName ?? "Unassigned"}
+                    </span>
                     <PriorityBadge
                         taskId={task.id}
                         priority={task.priority}
                         canEdit={canEdit}
                     />
-                </div>
-            </div>
-
-            {/* Description Snippet */}
-            {task.description && (
-                <p className="font-brand-sans text-xs text-brand-subtle line-clamp-2 mb-3">
-                    {task.description}
-                </p>
-            )}
-
-            {/* Footer: Due date and Assignee */}
-            <div className="flex items-center justify-between gap-2 pt-2 border-t border-brand-border/80 text-xs font-brand-mono text-brand-subtle">
-                <div className="flex items-center gap-1.5">
-                    {formattedDueDate ? (
-                        <span
+                    {formattedDueDate && (
+                        <time
                             className={cn(
-                                "inline-flex items-center gap-1 px-1.5 py-0.5 rounded-brand border text-[11px]",
-                                isPastDue
-                                    ? "bg-brand-danger/10 text-brand-danger border-brand-danger font-semibold"
-                                    : "bg-brand-muted text-brand-subtle border-brand-border",
+                                isPastDue && "text-brand-danger font-medium",
                             )}
-                            title={isPastDue ? "Overdue" : "Due date"}
+                            title={isPastDue ? "Overdue" : "Due"}
                         >
-                            <span>📅</span>
-                            <span>{formattedDueDate}</span>
-                        </span>
-                    ) : (
-                        <span className="text-brand-subtle/50 text-[11px]">
-                            —
-                        </span>
+                            {isPastDue ? "Overdue " : "Due "}
+                            {formattedDueDate}
+                        </time>
                     )}
                 </div>
-
-                {task.assignee?.user ? (
-                    <div
-                        className="flex items-center gap-1"
-                        title={`Assigned to ${task.assignee.user.name || task.assignee.user.email || "Member"}`}
-                    >
-                        <UserAvatar user={task.assignee.user} size="sm" />
-                    </div>
-                ) : (
-                    <span
-                        className="text-[10px] text-brand-subtle/60 uppercase tracking-wider"
-                        title="Unassigned"
-                    >
-                        Unassigned
-                    </span>
-                )}
             </div>
         </article>
     );

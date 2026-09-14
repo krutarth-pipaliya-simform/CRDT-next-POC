@@ -20,15 +20,10 @@ export default async function SettingsLayout({
     await verifyWorkspaceRole(workspaceId, ["ADMIN"]);
 
     return (
-        <main className="max-w-4xl mx-auto px-6 py-10">
-            <div className="mb-8">
-                <h2 className="font-brand-mono text-xs uppercase tracking-widest text-brand-subtle mb-2">
-                    Workspace Management
-                </h2>
-                <h1 className="text-3xl font-medium tracking-tight text-brand-ink">
-                    Settings
-                </h1>
-            </div>
+        <main className="max-w-4xl mx-auto px-4 sm:px-6 pb-16">
+            <h1 className="text-[30px] font-semibold tracking-[-0.024em] text-brand-ink mb-6">
+                Settings
+            </h1>
 
             <SettingsNav workspaceId={workspaceId} />
 

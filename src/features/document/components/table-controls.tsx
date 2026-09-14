@@ -16,9 +16,9 @@ export function TableControls({ editor }: TableControlsProps) {
         <div
             role="toolbar"
             aria-label="Table Controls"
-            className="flex flex-wrap items-center gap-1 p-1 bg-brand-surface border border-brand-border rounded-brand text-xs font-brand-mono shadow-brand-subtle my-2"
+            className="flex flex-wrap items-center gap-1 p-1 bg-brand-surface border border-brand-border rounded-brand text-xs shadow-brand-subtle my-2"
         >
-            <span className="px-2 text-brand-subtle font-bold uppercase text-[10px]">
+            <span className="px-2 text-brand-subtle font-bold uppercase text-[12px]">
                 Table:
             </span>
 

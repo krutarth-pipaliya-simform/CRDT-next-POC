@@ -28,7 +28,7 @@ export default async function MembersSettingsPage({
                     <h3 className="text-lg font-medium text-brand-ink">
                         Workspace Members ({workspace.members.length})
                     </h3>
-                    <p className="text-xs font-brand-mono text-brand-subtle">
+                    <p className="text-xs text-brand-subtle">
                         Users who have access to this workspace and their
                         assigned roles.
                     </p>
@@ -48,7 +48,7 @@ export default async function MembersSettingsPage({
                     <h3 className="text-lg font-medium text-brand-ink">
                         Invite New Members
                     </h3>
-                    <p className="text-xs font-brand-mono text-brand-subtle">
+                    <p className="text-xs text-brand-subtle">
                         Create single-use secure invite links with 24-hour
                         expiration.
                     </p>

@@ -14,7 +14,7 @@ export default async function WorkspaceUnauthorizedPage({
         <main className="max-w-xl mx-auto px-6 py-16 flex items-center justify-center">
             <Card elevated className="w-full text-center">
                 <CardHeader className="flex flex-col items-center gap-2 pb-4 mb-4 border-b-2 border-brand-muted">
-                    <span className="font-brand-mono text-xs uppercase tracking-widest text-brand-danger">
+                    <span className="text-xs text-brand-danger">
                         403 · Restricted Area
                     </span>
                     <CardTitle className="text-2xl font-bold text-brand-ink">
@@ -25,7 +25,7 @@ export default async function WorkspaceUnauthorizedPage({
                     <p className="text-sm leading-relaxed">
                         You do not have the required role to access this section
                         in workspace{" "}
-                        <span className="font-brand-mono text-brand-ink font-semibold">
+                        <span className="text-brand-ink font-semibold">
                             {workspaceId}
                         </span>
                         .

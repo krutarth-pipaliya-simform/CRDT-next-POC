@@ -3,6 +3,9 @@
 import { WifiOff } from "lucide-react";
 
 import { UserAvatar } from "@/components/ui/user-avatar";
+import { cn } from "@/lib/cn";
+import { presenceVar } from "@/lib/presence";
+
 import type { ConnectionStatus, PresenceUser } from "../types";
 
 export interface PresenceBarProps {
@@ -12,6 +15,11 @@ export interface PresenceBarProps {
     isReadOnly?: boolean;
 }
 
+/**
+ * Who is in this document right now. The colour on each avatar is the same hue
+ * as that person's caret in the text, which is the whole point — you can look
+ * up from a moving cursor and know whose it is.
+ */
 export function PresenceBar({
     users,
     currentUserId,
@@ -21,113 +29,93 @@ export function PresenceBar({
     const isOnline =
         connectionStatus === "connected" || connectionStatus === "synced";
     const isConnecting = connectionStatus === "connecting";
-    const activeCount = isOnline ? Math.max(1, users.length) : users.length;
+    const others = users.filter((user) => user.id !== currentUserId);
 
     return (
         <div className="flex items-center gap-3">
             {isReadOnly && (
                 <span
-                    className="px-2 py-1 text-[11px] font-bold font-brand-mono uppercase tracking-wider bg-brand-warning/10 text-brand-warning border border-brand-warning rounded-brand"
-                    title="This session is in read-only mode"
+                    className="px-1.5 py-0.5 text-[13px] text-brand-warning border border-brand-warning/40 bg-brand-warning/10 rounded-brand"
+                    title="Another of your sessions has this document open"
                 >
-                    Read-Only
+                    Read only
                 </span>
             )}
-            {/* Connection Indicator */}
-            <div
-                className="flex items-center gap-1.5 px-2 py-1 text-xs font-brand-mono uppercase tracking-wider border rounded-brand"
-                style={{
-                    backgroundColor: isOnline
-                        ? "var(--color-brand-muted)"
-                        : isConnecting
-                          ? "rgba(41, 72, 255, 0.08)"
-                          : "rgba(217, 119, 6, 0.1)",
-                    borderColor: isOnline
-                        ? "var(--color-brand-border)"
-                        : isConnecting
-                          ? "var(--color-brand-accent)"
-                          : "var(--color-brand-warning)",
-                    color: isOnline
-                        ? "var(--color-brand-ink)"
-                        : isConnecting
-                          ? "var(--color-brand-accent)"
-                          : "var(--color-brand-warning)",
-                }}
-            >
-                {isOnline ? (
-                    <>
-                        <span
-                            className="w-2 h-2 rounded-full bg-brand-success animate-pulse"
-                            aria-hidden="true"
-                        />
-                        <span className="text-[11px] font-bold">
-                            Live ({activeCount})
-                        </span>
-                    </>
-                ) : isConnecting ? (
-                    <>
-                        <span
-                            className="w-2 h-2 rounded-full bg-brand-accent animate-pulse"
-                            aria-hidden="true"
-                        />
-                        <span className="text-[11px] font-bold">
-                            Connecting...
-                        </span>
-                    </>
-                ) : (
-                    <>
-                        <WifiOff
-                            className="w-3 h-3 text-brand-warning"
-                            aria-hidden="true"
-                        />
-                        <span className="text-[11px] font-bold">Offline</span>
-                    </>
-                )}
-            </div>
 
-            {/* Collaborator Avatars */}
             {users.length > 0 && (
-                <div className="flex items-center -space-x-2 overflow-hidden py-1 px-1">
+                <div className="flex items-center -space-x-1">
                     {users.slice(0, 5).map((user) => {
                         const isSelf = user.id === currentUserId;
                         return (
-                            <div
+                            <span
                                 key={user.id}
-                                className="relative group focus-visible:outline-none"
-                                title={`${user.name}${isSelf ? " (You)" : ""}`}
+                                className="relative group"
+                                title={`${user.name}${isSelf ? " (you)" : ""}`}
                             >
-                                <div
-                                    className="rounded-full border-2 border-brand-surface shadow-brand-subtle transition-transform duration-150 group-hover:scale-110 group-hover:z-10"
-                                    style={{ borderColor: user.color }}
-                                >
-                                    <UserAvatar
-                                        user={{
-                                            name: user.name,
-                                            image: user.avatarUrl,
-                                        }}
-                                        size="sm"
-                                        className="w-7 h-7 text-[10px]"
-                                    />
-                                </div>
-
-                                {/* Accessible tooltip */}
-                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover:block z-30 px-2 py-1 bg-brand-ink text-brand-surface text-[10px] font-brand-mono rounded-brand whitespace-nowrap shadow-brand-card pointer-events-none">
-                                    {user.name} {isSelf ? "(You)" : ""}
-                                </div>
-                            </div>
+                                <UserAvatar
+                                    user={{
+                                        id: user.id,
+                                        name: user.name,
+                                        image: user.avatarUrl,
+                                    }}
+                                    size="sm"
+                                    className="ring-2 ring-brand-surface transition-transform duration-100 group-hover:-translate-y-0.5"
+                                />
+                                <span
+                                    aria-hidden="true"
+                                    className="absolute -bottom-px left-0 right-0 h-[3px]"
+                                    style={{
+                                        backgroundColor: presenceVar(user.id),
+                                    }}
+                                />
+                            </span>
                         );
                     })}
 
                     {users.length > 5 && (
-                        <div
-                            className="flex items-center justify-center w-7 h-7 rounded-full bg-brand-muted text-brand-ink font-brand-mono text-[10px] font-bold border-2 border-brand-border"
-                            title={`${users.length - 5} more collaborators`}
+                        <span
+                            className="w-6 h-6 grid place-items-center rounded-brand bg-brand-muted text-brand-subtle text-[11px] tabular-nums ring-2 ring-brand-surface"
+                            title={`${users.length - 5} more people are here`}
                         >
                             +{users.length - 5}
-                        </div>
+                        </span>
                     )}
                 </div>
             )}
+
+            {/* Connection is only worth a word when something is wrong;
+                "everything is fine" does not need a green badge shouting it. */}
+            <span
+                className={cn(
+                    "flex items-center gap-1.5 text-[13px]",
+                    isOnline ? "text-brand-subtle" : "text-brand-warning",
+                )}
+            >
+                {isOnline ? (
+                    <>
+                        <span
+                            aria-hidden="true"
+                            className="w-1.5 h-1.5 rounded-full bg-brand-success"
+                        />
+                        {others.length === 0
+                            ? "Just you"
+                            : `${users.length} here`}
+                    </>
+                ) : isConnecting ? (
+                    <>
+                        <span
+                            aria-hidden="true"
+                            className="w-1.5 h-1.5 rounded-full bg-brand-warning animate-presence-pulse"
+                        />
+                        Reconnecting
+                    </>
+                ) : (
+                    <>
+                        <WifiOff className="w-3.5 h-3.5" aria-hidden="true" />
+                        Offline — edits are saved here
+                    </>
+                )}
+            </span>
         </div>
     );
 }

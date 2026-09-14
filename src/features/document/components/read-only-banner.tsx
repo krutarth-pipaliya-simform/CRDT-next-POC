@@ -34,12 +34,12 @@ export function ReadOnlyBanner({
 
                 <div className="flex flex-col gap-0.5 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-xs font-bold font-brand-mono uppercase tracking-wider text-brand-ink">
+                        <span className="text-xs font-bold text-brand-ink">
                             {isTakenOver
                                 ? "Editing Session Taken Over"
                                 : "Read-Only Mode Active"}
                         </span>
-                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-brand-mono uppercase tracking-widest bg-brand-muted border border-brand-border text-brand-subtle rounded-brand">
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[12px] bg-brand-muted border border-brand-border text-brand-subtle rounded-brand">
                             <Eye className="w-2.5 h-2.5" aria-hidden="true" />
                             Spectating
                         </span>
@@ -59,7 +59,7 @@ export function ReadOnlyBanner({
                     variant="secondary"
                     size="sm"
                     onClick={onTakeOverEditing}
-                    className="w-full sm:w-auto text-xs font-brand-mono uppercase tracking-wider bg-brand-muted hover:bg-brand-ink hover:text-brand-surface border-2 border-brand-ink shadow-brand-subtle transition-all"
+                    className="w-full sm:w-auto text-xs bg-brand-muted hover:bg-brand-ink hover:text-brand-surface border-2 border-brand-ink shadow-brand-subtle transition-all"
                 >
                     Take Over Editing
                 </Button>

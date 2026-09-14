@@ -17,8 +17,8 @@ export type TaskWithAssignee = Task & {
 export type TasksByStatus = Record<TaskStatus, TaskWithAssignee[]>;
 
 export const TASK_STATUS_LABELS: Record<TaskStatus, string> = {
-    TODO: "To Do",
-    IN_PROGRESS: "In Progress",
+    TODO: "To do",
+    IN_PROGRESS: "In progress",
     DONE: "Done",
 } as const;
 

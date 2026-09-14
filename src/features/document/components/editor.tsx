@@ -23,10 +23,10 @@ import { ArrowLeft, Save } from "lucide-react";
 import LinkNext from "next/link";
 
 import { Button } from "@/components/ui/button";
+import { getUserColor } from "@/lib/presence";
 
 import { useDocumentCollab } from "../hooks/use-document-collab";
 import { lowlight } from "../lib/syntax-highlighter";
-import { getUserColor } from "../lib/user-colors";
 import type { DocumentDetail } from "../types";
 import { EditorBubbleMenu } from "./bubble-menu";
 import { DocumentTitle } from "./document-title";
@@ -304,7 +304,7 @@ export function CollaborativeEditor({
             </div>
 
             {/* Editor Footer Status */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs font-brand-mono uppercase tracking-wider text-brand-subtle px-2 py-1">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-brand-subtle px-2 py-1">
                 <span>
                     {isReadOnly
                         ? "Read-only mode (spectating live changes)"

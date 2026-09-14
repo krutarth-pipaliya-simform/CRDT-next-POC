@@ -36,7 +36,7 @@ export function SaveStatusIndicator({
             <div
                 role="status"
                 aria-live="polite"
-                className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-brand-mono uppercase tracking-wider text-brand-subtle bg-brand-muted border border-brand-border rounded-brand"
+                className="flex items-center gap-1.5 px-2.5 py-1 text-xs text-brand-subtle bg-brand-muted border border-brand-border rounded-brand"
             >
                 <Loader2
                     className="w-3.5 h-3.5 animate-spin text-brand-accent"
@@ -52,7 +52,7 @@ export function SaveStatusIndicator({
             <div
                 role="status"
                 aria-live="assertive"
-                className="flex items-center gap-2 px-2.5 py-1 text-xs font-brand-mono uppercase tracking-wider text-brand-danger bg-brand-danger/10 border border-brand-danger rounded-brand"
+                className="flex items-center gap-2 px-2.5 py-1 text-xs text-brand-danger bg-brand-danger/10 border border-brand-danger rounded-brand"
             >
                 <AlertCircle className="w-3.5 h-3.5" aria-hidden="true" />
                 <span>Save failed</span>
@@ -60,7 +60,7 @@ export function SaveStatusIndicator({
                     <button
                         type="button"
                         onClick={onSaveNow}
-                        className="flex items-center gap-1 px-1.5 py-0.5 ml-1 text-[10px] font-bold uppercase bg-brand-danger text-brand-on-fill hover:opacity-90 rounded-brand focus-visible:outline-2 focus-visible:outline-brand-ink"
+                        className="flex items-center gap-1 px-1.5 py-0.5 ml-1 text-[12px] font-bold uppercase bg-brand-danger text-brand-on-fill hover:opacity-90 rounded-brand focus-visible:outline-2 focus-visible:outline-brand-ink"
                     >
                         <RefreshCw className="w-2.5 h-2.5" aria-hidden="true" />
                         Retry
@@ -75,7 +75,7 @@ export function SaveStatusIndicator({
             <div
                 role="status"
                 aria-live="polite"
-                className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-brand-mono uppercase tracking-wider text-brand-warning bg-brand-warning/10 border border-brand-warning rounded-brand"
+                className="flex items-center gap-1.5 px-2.5 py-1 text-xs text-brand-warning bg-brand-warning/10 border border-brand-warning rounded-brand"
             >
                 <CloudOff className="w-3.5 h-3.5" aria-hidden="true" />
                 <span>Offline (saved locally)</span>
@@ -87,7 +87,7 @@ export function SaveStatusIndicator({
         <div
             role="status"
             aria-live="polite"
-            className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-brand-mono uppercase tracking-wider text-brand-success bg-brand-success/10 border border-brand-success/30 rounded-brand"
+            className="flex items-center gap-1.5 px-2.5 py-1 text-xs text-brand-success bg-brand-success/10 border border-brand-success/30 rounded-brand"
         >
             <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
             <span>Saved {formattedTime ? `at ${formattedTime}` : ""}</span>

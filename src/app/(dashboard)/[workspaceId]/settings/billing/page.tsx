@@ -41,7 +41,7 @@ export default async function BillingSettingsPage({
                 <h3 className="text-lg font-medium text-brand-ink">
                     Plan & Billing
                 </h3>
-                <p className="text-xs font-brand-mono text-brand-subtle">
+                <p className="text-xs text-brand-subtle">
                     Subscriptions are billed per workspace and managed by
                     Stripe.
                 </p>

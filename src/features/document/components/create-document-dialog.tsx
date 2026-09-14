@@ -47,7 +47,7 @@ export function CreateDocumentDialog({
     };
 
     return (
-        <Dialog open={open} onClose={onClose} title="Create New Document">
+        <Dialog open={open} onClose={onClose} title="New document">
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                 <FormField
                     label="Document Title"
@@ -57,7 +57,7 @@ export function CreateDocumentDialog({
                     <Input
                         id="create-doc-title"
                         type="text"
-                        placeholder="e.g. Sprint Architecture Spec"
+                        placeholder="Launch plan"
                         value={title}
                         onChange={(e) => {
                             setTitle(e.target.value);

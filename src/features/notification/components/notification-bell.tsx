@@ -82,7 +82,7 @@ export function NotificationBell({
                 {unreadCount > 0 && (
                     <span
                         data-testid="notification-unread-count"
-                        className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-brand-accent text-brand-surface font-brand-mono text-[10px] font-bold border-2 border-brand-surface"
+                        className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-brand-accent text-brand-surface text-[12px] font-bold border-2 border-brand-surface"
                     >
                         {badgeLabel}
                     </span>
@@ -96,7 +96,7 @@ export function NotificationBell({
                 >
                     <div className="flex items-center justify-between gap-2 px-4 py-3 border-b-2 border-brand-muted">
                         <div className="flex items-center gap-2 min-w-0">
-                            <span className="font-brand-mono text-[10px] uppercase tracking-widest text-brand-subtle">
+                            <span className="text-[12px] text-brand-subtle">
                                 Notifications
                             </span>
                             <span
@@ -122,7 +122,7 @@ export function NotificationBell({
                             <button
                                 type="button"
                                 onClick={() => void markAllRead()}
-                                className="font-brand-mono text-[10px] uppercase tracking-wider text-brand-accent hover:underline cursor-pointer"
+                                className="text-[12px] text-brand-accent hover:underline cursor-pointer"
                             >
                                 Mark all read
                             </button>
@@ -131,7 +131,7 @@ export function NotificationBell({
 
                     <div className="max-h-96 overflow-y-auto divide-y divide-brand-border">
                         {notifications.length === 0 ? (
-                            <p className="px-4 py-10 text-center text-xs font-brand-mono text-brand-subtle">
+                            <p className="px-4 py-10 text-center text-xs text-brand-subtle">
                                 Nothing here yet.
                             </p>
                         ) : (
@@ -150,9 +150,9 @@ export function NotificationBell({
                             <Link
                                 href={`/${notifications[0].workspaceId}/activity`}
                                 onClick={() => setIsOpen(false)}
-                                className="font-brand-mono text-[10px] uppercase tracking-wider text-brand-accent hover:underline"
+                                className="text-[12px] text-brand-accent hover:underline"
                             >
-                                View activity feed →
+                                View all activity
                             </Link>
                         </div>
                     )}

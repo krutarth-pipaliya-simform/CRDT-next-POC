@@ -165,7 +165,7 @@ function TaskDetailForm({
                             </option>
                         </select>
                     ) : (
-                        <span className="font-brand-mono text-sm font-semibold text-brand-ink">
+                        <span className="text-sm font-semibold text-brand-ink">
                             {TASK_STATUS_LABELS[task.status]}
                         </span>
                     )}
@@ -234,7 +234,7 @@ function TaskDetailForm({
                             className="w-full bg-brand-surface text-brand-ink text-sm border-2 border-brand-ink rounded-brand px-3 py-2 font-brand-sans focus:outline-none focus:ring-2 focus:ring-brand-accent cursor-pointer"
                         />
                     ) : (
-                        <span className="font-brand-mono text-sm text-brand-ink">
+                        <span className="text-sm text-brand-ink">
                             {task.dueDate
                                 ? new Date(task.dueDate).toLocaleDateString()
                                 : "None"}
@@ -244,14 +244,14 @@ function TaskDetailForm({
             </div>
 
             {/* Metadata */}
-            <div className="text-[11px] font-brand-mono text-brand-subtle/70 pt-2 border-t border-brand-border">
+            <div className="text-[11px] text-brand-subtle/70 pt-2 border-t border-brand-border">
                 Created {new Date(task.createdAt).toLocaleString()}
             </div>
 
             {/* Delete Confirmation Alert */}
             {showDeleteConfirm && canEdit && (
                 <div className="p-3 bg-brand-danger/10 border-2 border-brand-danger rounded-brand flex flex-col gap-2">
-                    <p className="text-xs font-brand-mono text-brand-danger font-semibold uppercase">
+                    <p className="text-xs text-brand-danger font-semibold uppercase">
                         Permanently delete this task?
                     </p>
                     <div className="flex gap-2">

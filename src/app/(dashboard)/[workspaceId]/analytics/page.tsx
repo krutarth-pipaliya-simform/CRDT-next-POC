@@ -69,9 +69,8 @@ export default async function AnalyticsPage({
     return (
         <main className="max-w-7xl mx-auto px-6 py-8">
             <PageHeader
-                eyebrow="Metrics"
-                title="Workspace Analytics"
-                description={`Task throughput and activity for ${workspace.name}.`}
+                title="Analytics"
+                description="How much is moving through the board, and who is moving it."
                 action={<PlanBadge plan={plan} />}
             />
 
@@ -83,7 +82,7 @@ export default async function AnalyticsPage({
                 />
                 {plan === "FREE" && (
                     <p
-                        className="text-[11px] font-brand-mono text-brand-subtle"
+                        className="text-[11px] text-brand-subtle"
                         data-testid="analytics-range-lock"
                     >
                         Longer history is part of Pro —{" "}
@@ -172,7 +171,7 @@ export default async function AnalyticsPage({
                                 contributors={analytics.contributors}
                             />
                         ) : (
-                            <p className="text-xs font-brand-mono text-brand-subtle py-10 text-center">
+                            <p className="text-xs text-brand-subtle py-10 text-center">
                                 No tasks are assigned yet.
                             </p>
                         )}

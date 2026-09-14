@@ -16,11 +16,16 @@ export interface PriorityBadgeProps {
     className?: string;
 }
 
+/**
+ * Priority is weight, not identity, so it is set in text rather than in a
+ * bordered chip. Low and Medium recede into the ink scale; only High and Urgent
+ * take colour, which is what makes them findable when a column is full.
+ */
 const priorityStyles: Record<TaskPriority, string> = {
-    LOW: "bg-brand-muted text-brand-subtle border-brand-border",
-    MEDIUM: "bg-brand-accent/10 text-brand-accent border-brand-accent",
-    HIGH: "bg-brand-warning/10 text-brand-warning border-brand-warning",
-    URGENT: "bg-brand-danger/10 text-brand-danger border-brand-danger font-semibold",
+    LOW: "text-brand-subtle",
+    MEDIUM: "text-brand-subtle",
+    HIGH: "text-brand-warning",
+    URGENT: "text-brand-danger font-medium",
 };
 
 export function PriorityBadge({
@@ -46,7 +51,7 @@ export function PriorityBadge({
         return (
             <span
                 className={cn(
-                    "inline-flex items-center px-2 py-0.5 font-brand-mono text-[10px] uppercase tracking-wider border rounded-brand select-none",
+                    "inline-flex items-center text-[13px] select-none",
                     priorityStyles[optimisticPriority],
                     className,
                 )}
@@ -63,7 +68,7 @@ export function PriorityBadge({
             title="Click to cycle priority"
             aria-label={`Current priority: ${TASK_PRIORITY_LABELS[optimisticPriority]}. Click to change.`}
             className={cn(
-                "inline-flex items-center px-2 py-0.5 font-brand-mono text-[10px] uppercase tracking-wider border rounded-brand select-none cursor-pointer transition-transform hover:scale-105 active:scale-95 focus-visible:outline-2 focus-visible:outline-brand-ink focus-visible:outline-offset-1",
+                "inline-flex items-center text-[13px] select-none cursor-pointer rounded-brand underline-offset-2 hover:underline transition-colors",
                 priorityStyles[optimisticPriority],
                 className,
             )}

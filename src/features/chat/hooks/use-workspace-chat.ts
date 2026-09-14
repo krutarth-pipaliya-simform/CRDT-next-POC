@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { WebsocketProvider } from "y-websocket";
 import * as Y from "yjs";
 
-import { getUserColor } from "@/features/document/lib/user-colors";
+import { getUserColor } from "@/lib/presence";
 
 import { sendMessageAction } from "../actions/send-message";
 import {

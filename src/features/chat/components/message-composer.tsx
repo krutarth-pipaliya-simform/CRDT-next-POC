@@ -81,12 +81,12 @@ export function MessageComposer({
                     data-testid="chat-composer-input"
                     placeholder={placeholder}
                     className={cn(
-                        "flex-1 resize-none bg-brand-muted text-brand-ink placeholder:text-brand-subtle",
-                        "px-4 py-3 text-sm border-2 rounded-brand outline-none transition-colors",
+                        "flex-1 resize-none bg-brand-surface text-brand-ink placeholder:text-brand-subtle/70",
+                        "px-3 py-2.5 text-sm border rounded-brand transition-colors",
                         "disabled:opacity-60 disabled:cursor-not-allowed",
                         isOverLimit
                             ? "border-brand-danger"
-                            : "border-transparent focus:border-brand-accent",
+                            : "border-brand-line hover:border-brand-ink",
                     )}
                 />
 
@@ -103,13 +103,13 @@ export function MessageComposer({
             </div>
 
             <div className="flex items-center justify-between gap-3 mt-1.5 px-1">
-                <span className="font-brand-mono text-[10px] uppercase tracking-wider text-brand-subtle">
-                    Enter to send · Shift+Enter for a new line
+                <span className="text-[13px] text-brand-subtle">
+                    Enter sends. Shift + Enter starts a new line.
                 </span>
                 {value.length > MESSAGE_MAX_LENGTH * 0.8 && (
                     <span
                         className={cn(
-                            "font-brand-mono text-[10px] tracking-wider shrink-0",
+                            "font-brand-mono text-[11px] shrink-0 tabular-nums",
                             isOverLimit
                                 ? "text-brand-danger"
                                 : "text-brand-subtle",

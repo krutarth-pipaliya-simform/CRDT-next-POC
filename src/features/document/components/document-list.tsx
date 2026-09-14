@@ -49,7 +49,7 @@ export function DocumentList({
                     />
                     <Input
                         type="search"
-                        placeholder="Search workspace documents..."
+                        placeholder="Search documents"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="pl-9"
@@ -64,7 +64,7 @@ export function DocumentList({
                         onClick={() => setIsCreateOpen(true)}
                     >
                         <Plus className="w-4 h-4 mr-1.5" aria-hidden="true" />
-                        New Document
+                        New document
                     </Button>
                 )}
             </div>
@@ -74,7 +74,7 @@ export function DocumentList({
                 <div className="flex flex-col items-center gap-4 py-8">
                     <EmptyState
                         title="No documents yet"
-                        description={`Create collaborative CRDT documents in ${workspaceName} with real-time multiplayer synchronization, rich text blocks, and autosave.`}
+                        description={`Start one and share it with ${workspaceName}. Everyone can write in it at the same time.`}
                     />
                     {canCreate && (
                         <Button
@@ -92,12 +92,12 @@ export function DocumentList({
                 </div>
             ) : filteredDocuments.length === 0 ? (
                 <div className="py-8 text-center">
-                    <p className="text-brand-subtle text-sm font-brand-mono">
+                    <p className="text-brand-subtle text-sm">
                         No documents found matching &quot;{searchQuery}&quot;
                     </p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                     {filteredDocuments.map((doc) => (
                         <DocumentCard
                             key={doc.id}

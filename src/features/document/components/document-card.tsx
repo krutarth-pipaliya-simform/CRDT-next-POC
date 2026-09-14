@@ -8,6 +8,8 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
+import { formatRelativeTime } from "@/lib/format-time";
+
 import { deleteDocumentAction } from "../actions/delete-document";
 import type { DocumentItem } from "../types";
 
@@ -27,13 +29,11 @@ export function DocumentCard({
     const [isPending, startTransition] = useTransition();
     const router = useRouter();
 
-    const formattedDate = new Intl.DateTimeFormat("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-        hour: "numeric",
-        minute: "numeric",
-    }).format(new Date(document.updatedAt));
+    const updatedAt = new Date(document.updatedAt);
+    const exactDate = new Intl.DateTimeFormat(undefined, {
+        dateStyle: "medium",
+        timeStyle: "short",
+    }).format(updatedAt);
 
     const handleDelete = () => {
         setDeleteError(null);
@@ -54,70 +54,66 @@ export function DocumentCard({
 
     return (
         <>
-            <Card className="flex flex-col justify-between p-5 hover:border-brand-accent transition-all duration-150 group min-w-0 w-full overflow-hidden">
-                <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-start gap-3 min-w-0">
-                        <div className="p-2.5 bg-brand-muted border-2 border-brand-ink rounded-brand text-brand-ink group-hover:bg-brand-accent group-hover:text-brand-on-fill transition-colors">
-                            <FileText className="w-5 h-5" aria-hidden="true" />
-                        </div>
-                        <div className="flex flex-col min-w-0">
-                            <Link
-                                href={`/${workspaceId}/documents/${document.id}`}
-                                className="font-bold text-base text-brand-ink hover:text-brand-accent transition-colors truncate focus-visible:outline-2 focus-visible:outline-brand-ink"
-                            >
-                                {document.title}
-                            </Link>
-                            <span className="text-xs font-brand-mono text-brand-subtle mt-0.5">
-                                Updated {formattedDate}
-                            </span>
-                        </div>
-                    </div>
+            <Card
+                interactive
+                className="relative flex items-start gap-3 p-4 min-w-0 w-full overflow-hidden"
+            >
+                <span className="p-2 bg-brand-muted rounded-brand text-brand-subtle shrink-0">
+                    <FileText className="w-4 h-4" aria-hidden="true" />
+                </span>
 
-                    {canManage && (
-                        <button
-                            type="button"
-                            onClick={() => setIsDeleteDialogOpen(true)}
-                            className="p-1.5 text-brand-subtle hover:text-brand-danger hover:bg-brand-danger/10 border border-transparent hover:border-brand-danger rounded-brand transition-colors"
-                            title="Delete Document"
-                            aria-label={`Delete ${document.title}`}
+                <div className="flex flex-col min-w-0 flex-1">
+                    {/* The whole card is the target; the heading carries the
+                        link so the accessible name is the document's title. */}
+                    <h3 className="min-w-0">
+                        <Link
+                            href={`/${workspaceId}/documents/${document.id}`}
+                            className="font-semibold text-[15px] text-brand-ink truncate block after:absolute after:inset-0 after:content-['']"
                         >
-                            <Trash2 className="w-4 h-4" aria-hidden="true" />
-                        </button>
-                    )}
+                            {document.title}
+                        </Link>
+                    </h3>
+                    <time
+                        dateTime={updatedAt.toISOString()}
+                        title={exactDate}
+                        suppressHydrationWarning
+                        className="text-[13px] text-brand-subtle mt-0.5"
+                    >
+                        Edited {formatRelativeTime(updatedAt)}
+                    </time>
                 </div>
 
-                <div className="flex items-center justify-between mt-5 pt-3 border-t border-brand-border">
-                    <span className="text-[10px] font-brand-mono uppercase tracking-wider text-brand-subtle">
-                        CRDT Real-Time Sync
-                    </span>
-                    <Link
-                        href={`/${workspaceId}/documents/${document.id}`}
-                        className="px-3 py-1 text-xs font-bold font-brand-mono uppercase tracking-wider text-brand-ink bg-brand-muted hover:bg-brand-ink hover:text-brand-surface border border-brand-ink rounded-brand transition-all duration-150 shadow-brand-subtle hover:shadow-none"
+                {canManage && (
+                    <button
+                        type="button"
+                        onClick={() => setIsDeleteDialogOpen(true)}
+                        className="relative z-10 p-1.5 -m-1 text-brand-subtle hover:text-brand-danger rounded-brand transition-colors shrink-0"
+                        aria-label={`Delete ${document.title}`}
                     >
-                        Open Editor →
-                    </Link>
-                </div>
+                        <Trash2 className="w-4 h-4" aria-hidden="true" />
+                    </button>
+                )}
             </Card>
 
             {/* Delete Confirmation Dialog */}
             <Dialog
                 open={isDeleteDialogOpen}
                 onClose={() => setIsDeleteDialogOpen(false)}
-                title="Delete Document"
+                title="Delete this document?"
             >
                 <div className="flex flex-col gap-4">
-                    <p className="text-sm text-brand-subtle">
-                        Are you sure you want to permanently delete{" "}
-                        <strong className="text-brand-ink">
+                    <p className="text-sm text-brand-subtle leading-relaxed">
+                        <strong className="text-brand-ink font-semibold">
                             {document.title}
-                        </strong>
-                        ? This action cannot be undone.
+                        </strong>{" "}
+                        and everything in it will be deleted for everyone in
+                        this workspace. This cannot be undone.
                     </p>
 
                     {deleteError && (
                         <div
                             role="alert"
-                            className="p-3 bg-brand-danger/10 border border-brand-danger text-brand-danger text-xs font-brand-mono rounded-brand"
+                            className="p-3 bg-brand-danger/10 border border-brand-danger/40 text-brand-danger text-[13px] rounded-brand"
                         >
                             {deleteError}
                         </div>
@@ -137,7 +133,7 @@ export function DocumentCard({
                             onClick={handleDelete}
                             disabled={isPending}
                         >
-                            {isPending ? "Deleting..." : "Delete Document"}
+                            {isPending ? "Deleting…" : "Delete document"}
                         </Button>
                     </div>
                 </div>

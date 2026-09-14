@@ -39,9 +39,8 @@ export default async function ChatPage({ params }: ChatPageProps) {
     return (
         <main className="max-w-5xl mx-auto px-6 py-8">
             <PageHeader
-                eyebrow="Channels"
-                title="Team Chat"
-                description={`Connect and message team members in ${workspace.name}.`}
+                title="Chat"
+                description="Messages send even when you are offline, and catch up the moment you reconnect."
             />
 
             <ChatPanel

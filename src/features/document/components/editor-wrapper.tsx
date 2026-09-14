@@ -7,7 +7,7 @@ export const CollaborativeEditor = dynamic(
     {
         ssr: false,
         loading: () => (
-            <div className="p-8 text-center text-brand-ink/60 animate-pulse font-brand-mono uppercase tracking-widest text-sm">
+            <div className="p-8 text-center text-brand-ink/60 animate-pulse text-sm">
                 Loading Editor...
             </div>
         ),

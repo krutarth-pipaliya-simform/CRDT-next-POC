@@ -1,8 +1,9 @@
 "use client";
 
 import { UserAvatar } from "@/components/ui/user-avatar";
-import { formatClockTime } from "@/features/notification/lib/format-relative-time";
 import { cn } from "@/lib/cn";
+import { formatClockTime } from "@/lib/format-time";
+import { presenceVar } from "@/lib/presence";
 
 import type { ChatMessage } from "../types";
 
@@ -29,11 +30,19 @@ export function MessageItem({
             data-testid="chat-message"
             data-delivery-state={message.deliveryState}
             className={cn(
-                "flex items-start gap-3 px-4 transition-opacity",
-                isGrouped ? "py-0.5" : "pt-4 pb-0.5",
+                "group flex items-start gap-3 pl-3 pr-4 transition-opacity",
+                isGrouped ? "py-0.5" : "pt-3.5 pb-0.5",
                 isSending && "opacity-60",
             )}
         >
+            {/* The rail runs the height of every message in a run, so a burst
+                from one person reads as one block of their colour. */}
+            <span
+                aria-hidden="true"
+                className="w-[3px] self-stretch shrink-0"
+                style={{ backgroundColor: presenceVar(message.author.id) }}
+            />
+
             <div className="w-8 shrink-0">
                 {!isGrouped && <UserAvatar user={message.author} size="md" />}
             </div>
@@ -41,13 +50,18 @@ export function MessageItem({
             <div className="min-w-0 flex-1">
                 {!isGrouped && (
                     <div className="flex items-baseline gap-2 mb-0.5">
-                        <span className="text-sm font-semibold text-brand-ink truncate">
+                        <span
+                            className="text-sm font-semibold truncate"
+                            style={{
+                                color: presenceVar(message.author.id),
+                            }}
+                        >
                             {isOwn ? "You" : authorName}
                         </span>
                         <time
                             suppressHydrationWarning
                             dateTime={message.createdAt}
-                            className="font-brand-mono text-[10px] uppercase tracking-wider text-brand-subtle shrink-0"
+                            className="font-brand-mono text-[11px] text-brand-subtle shrink-0 tabular-nums"
                         >
                             {formatClockTime(message.createdAt)}
                         </time>
@@ -60,15 +74,15 @@ export function MessageItem({
 
                 {isFailed && (
                     <div className="flex items-center gap-2 mt-1">
-                        <span className="font-brand-mono text-[10px] uppercase tracking-wider text-brand-danger">
+                        <span className="text-[13px] text-brand-danger">
                             Not sent
                         </span>
                         <button
                             type="button"
                             onClick={() => onRetry(message.id)}
-                            className="font-brand-mono text-[10px] uppercase tracking-wider text-brand-accent hover:underline cursor-pointer"
+                            className="text-[13px] text-brand-accent hover:underline underline-offset-2 cursor-pointer"
                         >
-                            Retry
+                            Try again
                         </button>
                     </div>
                 )}

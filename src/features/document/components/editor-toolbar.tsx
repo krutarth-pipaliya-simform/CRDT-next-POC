@@ -499,13 +499,13 @@ export function EditorToolbar({
                                 setIsLinkPromptOpen(false);
                             }
                         }}
-                        className="px-2 py-1 text-xs bg-brand-surface text-brand-ink rounded-brand font-brand-mono outline-none w-44"
+                        className="px-2 py-1 text-xs bg-brand-surface text-brand-ink rounded-brand outline-none w-44"
                         autoFocus
                     />
                     <button
                         type="button"
                         onClick={setLink}
-                        className="px-2 py-1 text-xs font-bold font-brand-mono bg-brand-accent text-brand-on-fill rounded-brand hover:opacity-90"
+                        className="px-2 py-1 text-xs font-bold bg-brand-accent text-brand-on-fill rounded-brand hover:opacity-90"
                     >
                         Save
                     </button>

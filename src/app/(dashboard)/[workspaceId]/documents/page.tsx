@@ -31,9 +31,8 @@ export default async function DocumentsPage({
     return (
         <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 w-full min-w-0">
             <PageHeader
-                eyebrow={workspace.name}
                 title="Documents"
-                description="Collaborative rich text documents with real-time multiplayer CRDT sync and autosave."
+                description="Anyone here can open the same document and type at the same time. Edits save themselves."
             />
 
             <div className="mt-8">

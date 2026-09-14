@@ -189,7 +189,7 @@ export function ImageDialog({
                         setTab("upload");
                         setError(null);
                     }}
-                    className={`flex items-center gap-1.5 px-3 py-2 text-xs font-brand-mono uppercase tracking-wider transition-colors border-b-2 -mb-[2px] ${
+                    className={`flex items-center gap-1.5 px-3 py-2 text-xs transition-colors border-b-2 -mb-[2px] ${
                         tab === "upload"
                             ? "border-brand-ink font-bold text-brand-ink bg-brand-muted"
                             : "border-transparent text-brand-subtle hover:text-brand-ink"
@@ -204,7 +204,7 @@ export function ImageDialog({
                         setTab("url");
                         setError(null);
                     }}
-                    className={`flex items-center gap-1.5 px-3 py-2 text-xs font-brand-mono uppercase tracking-wider transition-colors border-b-2 -mb-[2px] ${
+                    className={`flex items-center gap-1.5 px-3 py-2 text-xs transition-colors border-b-2 -mb-[2px] ${
                         tab === "url"
                             ? "border-brand-ink font-bold text-brand-ink bg-brand-muted"
                             : "border-transparent text-brand-subtle hover:text-brand-ink"
@@ -236,10 +236,10 @@ export function ImageDialog({
                                         aria-hidden="true"
                                     />
                                 </div>
-                                <span className="text-xs font-bold font-brand-mono uppercase tracking-wider text-brand-ink">
+                                <span className="text-xs font-bold text-brand-ink">
                                     Choose an image or drag & drop
                                 </span>
-                                <span className="text-[11px] font-brand-mono text-brand-subtle mt-1">
+                                <span className="text-[11px] text-brand-subtle mt-1">
                                     PNG, JPG, WebP, GIF, SVG (up to 5MB)
                                 </span>
                                 <input
@@ -279,7 +279,7 @@ export function ImageDialog({
                                     </button>
                                 </div>
                                 {selectedFile && (
-                                    <div className="flex items-center justify-between text-xs font-brand-mono text-brand-subtle px-1">
+                                    <div className="flex items-center justify-between text-xs text-brand-subtle px-1">
                                         <span className="truncate max-w-[240px]">
                                             {selectedFile.name}
                                         </span>
@@ -314,10 +314,7 @@ export function ImageDialog({
                 )}
 
                 {error && tab === "upload" && (
-                    <p
-                        className="text-xs font-brand-mono text-brand-danger"
-                        role="alert"
-                    >
+                    <p className="text-xs text-brand-danger" role="alert">
                         {error}
                     </p>
                 )}

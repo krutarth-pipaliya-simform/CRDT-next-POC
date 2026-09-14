@@ -6,9 +6,10 @@ import {
     verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 
+import { Plus } from "lucide-react";
+
 import type { TaskStatus } from "@prisma/client";
 
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/cn";
 
 import type { TaskWithAssignee } from "../types";
@@ -23,16 +24,15 @@ export interface KanbanColumnProps {
     onAddTask?: (status: TaskStatus) => void;
 }
 
+/**
+ * Columns are told apart by their heading and their position, not by a tinted
+ * ground and a coloured stripe. Three saturated bars across the top of the
+ * board competed with the one thing colour is for here: whose card it is.
+ */
 const columnBgStyles: Record<TaskStatus, string> = {
     TODO: "bg-brand-column-todo",
     IN_PROGRESS: "bg-brand-column-progress",
     DONE: "bg-brand-column-done",
-};
-
-const columnAccentBar: Record<TaskStatus, string> = {
-    TODO: "bg-brand-subtle",
-    IN_PROGRESS: "bg-brand-accent",
-    DONE: "bg-brand-success",
 };
 
 export function KanbanColumn({
@@ -54,37 +54,33 @@ export function KanbanColumn({
             aria-label={TASK_STATUS_LABELS[status]}
             data-testid={`kanban-column-${status}`}
             className={cn(
-                "flex flex-col border-2 border-brand-ink rounded-brand shadow-brand-subtle min-h-[480px] transition-all",
+                "flex flex-col border border-brand-border rounded-brand min-h-[480px] transition-colors",
                 columnBgStyles[status],
-                isOver && "ring-2 ring-brand-accent ring-offset-2",
+                isOver && "border-brand-ink",
             )}
         >
-            {/* Top Accent Stripe */}
-            <div className={cn("h-1.5 w-full", columnAccentBar[status])} />
-
-            {/* Column Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b-2 border-brand-ink bg-brand-surface/70">
-                <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-brand-border">
+                <div className="flex items-baseline gap-2">
                     <h2
                         id={`col-heading-${status}`}
-                        className="font-brand-sans font-bold text-sm text-brand-ink uppercase tracking-wider"
+                        className="font-semibold text-sm text-brand-ink"
                     >
                         {TASK_STATUS_LABELS[status]}
                     </h2>
-                    <Badge intent="muted" className="text-[11px] px-1.5 py-0.5">
+                    <span className="text-[13px] text-brand-subtle tabular-nums">
                         {tasks.length}
-                    </Badge>
+                    </span>
                 </div>
 
                 {canEdit && onAddTask && (
                     <button
                         type="button"
                         onClick={() => onAddTask(status)}
-                        aria-label={`Add new task to ${TASK_STATUS_LABELS[status]}`}
-                        className="text-brand-subtle hover:text-brand-ink hover:bg-brand-muted p-1 rounded-brand text-xs font-brand-mono font-bold transition-colors cursor-pointer"
-                        title="Add task"
+                        aria-label={`Add a task to ${TASK_STATUS_LABELS[status]}`}
+                        className="text-brand-subtle hover:text-brand-ink hover:bg-brand-muted w-6 h-6 grid place-items-center rounded-brand transition-colors cursor-pointer"
+                        title="Add a task"
                     >
-                        +
+                        <Plus className="w-3.5 h-3.5" aria-hidden="true" />
                     </button>
                 )}
             </div>
@@ -108,15 +104,14 @@ export function KanbanColumn({
                 {tasks.length === 0 && (
                     <div
                         className={cn(
-                            "flex-1 flex flex-col items-center justify-center border-2 border-dashed border-brand-border rounded-brand p-6 text-center text-xs font-brand-mono text-brand-subtle/70 min-h-[140px]",
-                            isOver &&
-                                "border-brand-accent bg-brand-accent/5 text-brand-accent",
+                            "flex-1 flex flex-col items-center justify-center border border-dashed border-brand-border rounded-brand p-6 text-center text-[13px] text-brand-subtle min-h-[140px] transition-colors",
+                            isOver && "border-brand-ink text-brand-ink",
                         )}
                     >
-                        <span>No tasks</span>
+                        <span>Nothing here yet</span>
                         {canEdit && (
-                            <span className="text-[10px] mt-1 text-brand-subtle/50">
-                                Drag cards here
+                            <span className="mt-0.5 text-brand-subtle">
+                                Drop a card, or add one above
                             </span>
                         )}
                     </div>

@@ -101,21 +101,20 @@ export function BillingPanel({
             )}
 
             <section
-                className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 border-2 border-brand-ink rounded-brand shadow-brand-subtle"
+                className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 border border-brand-line rounded-brand bg-brand-surface"
                 data-testid="current-plan"
                 data-plan={currentPlan}
             >
                 <div className="flex flex-col gap-1">
-                    <span className="font-brand-mono text-[10px] uppercase tracking-widest text-brand-subtle">
+                    <span className="text-[12px] text-brand-subtle">
                         Current plan
                     </span>
                     <div className="flex items-center gap-3">
                         <span className="text-lg font-semibold text-brand-ink">
                             {PLANS[currentPlan].name}
                         </span>
-                        <PlanBadge plan={currentPlan} />
                     </div>
-                    <span className="text-xs font-brand-mono text-brand-subtle">
+                    <span className="text-xs text-brand-subtle">
                         {STATUS_COPY[subscription.status]}
                         {renewsOn &&
                             currentPlan === "PRO" &&
@@ -160,7 +159,7 @@ export function BillingPanel({
                                     <h4 className="text-base font-semibold text-brand-ink">
                                         {plan.name}
                                     </h4>
-                                    <p className="text-xs font-brand-mono text-brand-subtle mt-1">
+                                    <p className="text-xs text-brand-subtle mt-1">
                                         {plan.tagline}
                                     </p>
                                 </div>
@@ -171,7 +170,7 @@ export function BillingPanel({
                                 <span className="text-2xl font-medium text-brand-ink">
                                     {plan.price}
                                 </span>
-                                <span className="text-xs font-brand-mono text-brand-subtle">
+                                <span className="text-xs text-brand-subtle">
                                     {plan.cadence}
                                 </span>
                             </div>

@@ -3,7 +3,7 @@
 import { Fragment, useEffect, useRef } from "react";
 
 import { EmptyState } from "@/components/ui/empty-state";
-import { formatDayLabel } from "@/features/notification/lib/format-relative-time";
+import { formatDayLabel } from "@/lib/format-time";
 
 import { MessageItem } from "./message-item";
 import type { ChatMessage } from "../types";
@@ -92,7 +92,7 @@ export function MessageList({
                                 <span className="h-px flex-1 bg-brand-muted" />
                                 <span
                                     suppressHydrationWarning
-                                    className="font-brand-mono text-[10px] uppercase tracking-widest text-brand-subtle"
+                                    className="text-[13px] text-brand-subtle"
                                 >
                                     {formatDayLabel(message.createdAt)}
                                 </span>

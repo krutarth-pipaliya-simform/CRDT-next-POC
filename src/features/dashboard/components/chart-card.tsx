@@ -31,7 +31,7 @@ export function ChartCard({
                         {title}
                     </h3>
                     {description && (
-                        <p className="text-[11px] font-brand-mono text-brand-subtle mt-1">
+                        <p className="text-[11px] text-brand-subtle mt-1">
                             {description}
                         </p>
                     )}

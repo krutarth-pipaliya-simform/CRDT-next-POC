@@ -35,10 +35,11 @@ export default async function TasksPage({
     ]);
 
     return (
-        <main className="max-w-7xl mx-auto px-6 py-8">
-            <div className="mb-6">
-                <PageHeader eyebrow="Workflow" title="Task Board" />
-            </div>
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 pb-16">
+            <PageHeader
+                title="Tasks"
+                description="Drag a card to move it. Everyone on the board sees the move as it happens."
+            />
 
             <KanbanBoard
                 initialTasks={tasks}

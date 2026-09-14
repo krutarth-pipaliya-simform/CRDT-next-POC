@@ -60,8 +60,7 @@ export default async function DashboardPage({
         <main className="max-w-6xl mx-auto px-6 py-12">
             {/* Header */}
             <PageHeader
-                eyebrow="Workspace Selector"
-                title="Your Workspaces"
+                title="Your workspaces"
                 action={<CreateWorkspaceDialog />}
             />
 
@@ -80,7 +79,7 @@ export default async function DashboardPage({
                 <div>
                     {myWorkspaces.length === 0 ? (
                         <EmptyState
-                            title="No workspaces found"
+                            title="No workspaces yet"
                             description="You are not a member of any workspace yet. Create your first workspace or discover public ones."
                             action={<CreateWorkspaceDialog />}
                         />

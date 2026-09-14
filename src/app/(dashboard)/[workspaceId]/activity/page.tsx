@@ -33,9 +33,8 @@ export default async function ActivityPage({ params }: ActivityPageProps) {
     return (
         <main className="max-w-4xl mx-auto px-6 py-8">
             <PageHeader
-                eyebrow="Activity"
-                title="Activity Feed"
-                description={`Everything happening in ${workspace.name}.`}
+                title="Activity"
+                description="Everything anyone has changed here, newest first."
             />
 
             <ActivityFeed

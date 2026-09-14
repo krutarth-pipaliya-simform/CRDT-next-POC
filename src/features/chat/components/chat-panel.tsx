@@ -63,17 +63,12 @@ export function ChatPanel({
     return (
         <div
             data-testid="chat-panel"
-            className="flex flex-col h-[calc(100vh-20rem)] min-h-[28rem] border-2 border-brand-ink rounded-brand bg-brand-surface shadow-brand-card overflow-hidden"
+            className="flex flex-col h-[calc(100vh-18rem)] min-h-[28rem] border border-brand-border rounded-brand bg-brand-surface overflow-hidden"
         >
-            <header className="flex items-center justify-between gap-4 px-4 py-3 border-b-2 border-brand-muted bg-brand-muted/30">
-                <div className="min-w-0">
-                    <h2 className="text-sm font-semibold text-brand-ink truncate">
-                        #general
-                    </h2>
-                    <p className="font-brand-mono text-[10px] uppercase tracking-widest text-brand-subtle truncate">
-                        {workspaceName}
-                    </p>
-                </div>
+            <header className="flex items-center justify-between gap-4 px-4 py-2.5 border-b border-brand-border">
+                <h2 className="text-sm font-semibold text-brand-ink truncate min-w-0">
+                    Everyone in {workspaceName}
+                </h2>
 
                 <PresenceList
                     participants={participants}

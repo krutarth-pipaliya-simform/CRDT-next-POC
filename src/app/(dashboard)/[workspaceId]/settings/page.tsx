@@ -29,7 +29,7 @@ export default async function SettingsPage({
                     <h3 className="text-lg font-medium text-brand-ink">
                         General Settings
                     </h3>
-                    <p className="text-xs font-brand-mono text-brand-subtle">
+                    <p className="text-xs text-brand-subtle">
                         Manage your workspace display name and details.
                     </p>
                 </div>
@@ -47,7 +47,7 @@ export default async function SettingsPage({
                     <h3 className="text-lg font-medium text-brand-danger">
                         Danger Zone
                     </h3>
-                    <p className="text-xs font-brand-mono text-brand-subtle">
+                    <p className="text-xs text-brand-subtle">
                         Actions that permanently affect your membership or the
                         entire workspace.
                     </p>
@@ -59,7 +59,7 @@ export default async function SettingsPage({
                             <h4 className="text-sm font-semibold text-brand-ink">
                                 Leave Workspace
                             </h4>
-                            <p className="text-xs font-brand-mono text-brand-subtle mt-1">
+                            <p className="text-xs text-brand-subtle mt-1">
                                 Transfer admin ownership to another member and
                                 remove yourself from this workspace.
                             </p>
@@ -84,7 +84,7 @@ export default async function SettingsPage({
                             <h4 className="text-sm font-semibold text-brand-danger">
                                 Delete Workspace
                             </h4>
-                            <p className="text-xs font-brand-mono text-brand-subtle mt-1">
+                            <p className="text-xs text-brand-subtle mt-1">
                                 Permanently delete this workspace and all
                                 associated documents, tasks, and data.
                             </p>

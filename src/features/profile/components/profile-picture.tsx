@@ -59,7 +59,7 @@ export function ProfilePicture({
             </CardHeader>
             <CardBody>
                 <div className="flex flex-col sm:flex-row items-center gap-6">
-                    <div className="flex-shrink-0 relative w-32 h-32 rounded-full overflow-hidden bg-brand-muted border-4 border-brand-accent flex items-center justify-center text-3xl font-brand-mono text-brand-ink">
+                    <div className="flex-shrink-0 relative w-32 h-32 rounded-full overflow-hidden bg-brand-muted border-4 border-brand-accent flex items-center justify-center text-3xl text-brand-ink">
                         {displayUrl && !removeState?.success ? (
                             <Image
                                 src={displayUrl}
@@ -102,12 +102,7 @@ export function ProfilePicture({
                                     accept="image/jpeg,image/png,image/webp"
                                     ref={fileInputRef}
                                     onChange={handleFileChange}
-                                    className="block w-full text-sm text-brand-ink
-                                        file:mr-4 file:py-2 file:px-4
-                                        file:rounded-brand file:border-2 file:border-brand-ink
-                                        file:text-sm file:font-semibold file:font-brand-mono file:uppercase
-                                        file:bg-brand-surface file:text-brand-ink
-                                        hover:file:bg-brand-muted cursor-pointer"
+                                    className="block w-full text-sm text-brand-ink file:mr-4 file:py-2 file:px-4 file:rounded-brand file:border-2 file:border-brand-ink file:text-sm file:font-semibold file: file:uppercase file:bg-brand-surface file:text-brand-ink hover:file:bg-brand-muted cursor-pointer"
                                 />
                                 <Button
                                     type="submit"

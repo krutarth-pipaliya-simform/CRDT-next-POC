@@ -2,6 +2,7 @@
 
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { cn } from "@/lib/cn";
+import { presenceVar } from "@/lib/presence";
 
 import type { ChatConnectionStatus, ChatPresenceUser } from "../types";
 
@@ -32,9 +33,10 @@ export function PresenceList({
     return (
         <div
             data-testid="chat-presence"
+            data-connection={connectionStatus}
             className="flex items-center gap-3 min-w-0"
         >
-            <div className="flex items-center -space-x-2">
+            <div className="flex items-center -space-x-1">
                 {visible.map((participant) => (
                     <span
                         key={participant.id}
@@ -43,28 +45,32 @@ export function PresenceList({
                                 ? `${participant.name} (you)`
                                 : participant.name
                         }
-                        className="relative inline-flex rounded-full"
-                        style={{ boxShadow: `0 0 0 2px ${participant.color}` }}
+                        className="relative inline-flex rounded-brand ring-2 ring-brand-surface"
                     >
                         <UserAvatar
                             user={{
+                                id: participant.id,
                                 name: participant.name,
                                 image: participant.avatarUrl,
                             }}
                             size="sm"
-                            className="shadow-none"
                         />
                         {participant.isTyping && (
                             <span
                                 aria-hidden="true"
-                                className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-brand-accent border-2 border-brand-surface rounded-full"
+                                className="absolute -bottom-1 -right-1 w-2.5 h-2.5 rounded-full ring-2 ring-brand-surface animate-presence-pulse"
+                                style={{
+                                    backgroundColor: presenceVar(
+                                        participant.id,
+                                    ),
+                                }}
                             />
                         )}
                     </span>
                 ))}
 
                 {overflow > 0 && (
-                    <span className="w-7 h-7 flex items-center justify-center bg-brand-muted border-2 border-brand-surface rounded-full font-brand-mono text-[10px] text-brand-subtle">
+                    <span className="w-6 h-6 flex items-center justify-center bg-brand-muted ring-2 ring-brand-surface rounded-brand text-[11px] text-brand-subtle tabular-nums">
                         +{overflow}
                     </span>
                 )}
@@ -74,15 +80,17 @@ export function PresenceList({
                 <span
                     aria-hidden="true"
                     className={cn(
-                        "w-2 h-2",
+                        "w-1.5 h-1.5 rounded-full",
                         isLive ? "bg-brand-success" : "bg-brand-warning",
                         connectionStatus === "disconnected" &&
                             "bg-brand-danger",
                     )}
                 />
-                <span className="font-brand-mono text-[10px] uppercase tracking-widest text-brand-subtle">
-                    {participants.length} online ·{" "}
-                    {STATUS_LABELS[connectionStatus]}
+                <span className="text-[13px] text-brand-subtle">
+                    {participants.length === 1
+                        ? "Just you"
+                        : `${participants.length} here`}
+                    {!isLive && ` · ${STATUS_LABELS[connectionStatus]}`}
                 </span>
             </span>
         </div>

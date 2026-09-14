@@ -5,8 +5,9 @@ import { IndexeddbPersistence } from "y-indexeddb";
 import { WebsocketProvider } from "y-websocket";
 import * as Y from "yjs";
 
+import { getUserColor } from "@/lib/presence";
+
 import { saveDocumentAction } from "../actions/save-document";
-import { getUserColor } from "../lib/user-colors";
 import type {
     ConnectionStatus,
     PresenceUser,
