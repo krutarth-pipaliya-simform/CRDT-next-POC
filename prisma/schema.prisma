@@ -30,6 +30,9 @@ model User {
   sessions      Session[]
   workspaces    WorkspaceMember[]
   invitationsCreated WorkspaceInvitation[]
+  messages      Message[]
+  notifications      Notification[] @relation("NotificationRecipient")
+  notificationsActed Notification[] @relation("NotificationActor")
 }
 
 model Account {
@@ -78,11 +81,32 @@ enum TaskStatus {
   DONE
 }
 
+enum NotificationType {
+  TASK_ASSIGNED
+  TASK_COMPLETED
+  DOCUMENT_CREATED
+  MEMBER_JOINED
+  MENTION
+}
+
 enum TaskPriority {
   LOW
   MEDIUM
   HIGH
   URGENT
+}
+
+enum SubscriptionPlan {
+  FREE
+  PRO
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  TRIALING
+  PAST_DUE
+  CANCELED
+  INCOMPLETE
 }
 
 // --- Domain Models ---
@@ -96,6 +120,9 @@ model Workspace {
   documents   Document[]
   tasks       Task[]
   invitations WorkspaceInvitation[]
+  messages    Message[]
+  notifications Notification[]
+  subscription Subscription?
 }
 
 model WorkspaceInvitation {
@@ -153,3 +180,62 @@ model Task {
   @@index([assigneeId])
 }
 
+model Message {
+  id          String    @id @default(cuid())
+  body        String    @db.Text
+  workspaceId String
+  authorId    String
+  createdAt   DateTime  @default(now())
+
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  author      User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, createdAt])
+}
+
+model Notification {
+  id          String           @id @default(cuid())
+  type        NotificationType
+  title       String
+  body        String?
+  href        String?
+  workspaceId String
+  recipientId String
+  actorId     String?
+  readAt      DateTime?
+  createdAt   DateTime         @default(now())
+
+  workspace   Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  recipient   User             @relation("NotificationRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  actor       User?            @relation("NotificationActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([recipientId, readAt])
+  @@index([recipientId, createdAt])
+  @@index([workspaceId, recipientId, createdAt])
+}
+
+model Subscription {
+  id                   String             @id @default(cuid())
+  workspaceId          String             @unique
+  plan                 SubscriptionPlan   @default(FREE)
+  status               SubscriptionStatus @default(ACTIVE)
+  stripeCustomerId     String?            @unique
+  stripeSubscriptionId String?            @unique
+  stripePriceId        String?
+  cancelAtPeriodEnd    Boolean            @default(false)
+  currentPeriodEnd     DateTime?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([stripeCustomerId])
+}
+
+/// Idempotency ledger for Stripe webhooks. Stripe retries deliveries, so every
+/// event id is recorded before it is applied and replays are dropped on sight.
+model StripeWebhookEvent {
+  id          String   @id
+  type        String
+  processedAt DateTime @default(now())
+}
