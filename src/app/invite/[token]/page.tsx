@@ -25,13 +25,13 @@ export default async function InvitePage({
         return (
             <main className="min-h-screen flex items-center justify-center p-6 bg-brand-surface">
                 <div className="max-w-md w-full flex flex-col items-center text-center gap-6 p-8 border-2 border-brand-ink rounded-brand bg-brand-surface shadow-brand-card">
-                    <span className="font-brand-mono text-xs uppercase tracking-widest text-brand-danger">
+                    <span className="text-xs text-brand-danger">
                         Invalid Link
                     </span>
                     <h1 className="text-2xl font-medium tracking-tight text-brand-ink">
                         Invitation Not Found
                     </h1>
-                    <p className="text-xs font-brand-mono text-brand-subtle">
+                    <p className="text-xs text-brand-subtle">
                         This invitation link is invalid or does not exist.
                         Please request a new invitation from your workspace
                         admin.
@@ -51,7 +51,7 @@ export default async function InvitePage({
         return (
             <main className="min-h-screen flex items-center justify-center p-6 bg-brand-surface">
                 <div className="max-w-md w-full flex flex-col items-center text-center gap-6 p-8 border-2 border-brand-danger rounded-brand bg-brand-surface shadow-brand-card">
-                    <span className="font-brand-mono text-xs uppercase tracking-widest text-brand-danger">
+                    <span className="text-xs text-brand-danger">
                         {isExpired ? "Link Expired" : "Already Used"}
                     </span>
                     <h1 className="text-2xl font-medium tracking-tight text-brand-ink">
@@ -59,7 +59,7 @@ export default async function InvitePage({
                             ? "This Invitation Has Expired"
                             : "This Invitation Has Already Been Used"}
                     </h1>
-                    <p className="text-xs font-brand-mono text-brand-subtle">
+                    <p className="text-xs text-brand-subtle">
                         {isExpired
                             ? "Workspace invitation links expire 24 hours after generation. Please ask the admin for a new link."
                             : "This invitation link was single-use and has already been redeemed."}
@@ -76,7 +76,7 @@ export default async function InvitePage({
         <main className="min-h-screen flex items-center justify-center p-6 bg-brand-surface">
             <div className="max-w-md w-full flex flex-col gap-6 p-8 border-2 border-brand-ink rounded-brand bg-brand-surface shadow-brand-card animate-fade-in-up">
                 <div className="border-b-2 border-brand-muted pb-4">
-                    <span className="font-brand-mono text-xs uppercase tracking-widest text-brand-subtle">
+                    <span className="text-xs text-brand-subtle">
                         Team Invitation
                     </span>
                     <h1 className="text-2xl font-medium tracking-tight text-brand-ink mt-1">
@@ -89,11 +89,7 @@ export default async function InvitePage({
                     <strong className="text-brand-ink">
                         {invitation.workspace.name}
                     </strong>{" "}
-                    as a{" "}
-                    <span className="font-brand-mono font-semibold">
-                        Member
-                    </span>
-                    .
+                    as a <span className="font-semibold">Member</span>.
                 </p>
 
                 <div className="pt-2">
@@ -103,7 +99,7 @@ export default async function InvitePage({
                 <div className="text-center pt-2">
                     <Link
                         href="/dashboard"
-                        className="text-xs font-brand-mono text-brand-subtle hover:text-brand-ink underline underline-offset-4"
+                        className="text-xs text-brand-subtle hover:text-brand-ink underline underline-offset-4"
                     >
                         Decline and go to dashboard
                     </Link>

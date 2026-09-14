@@ -43,14 +43,14 @@ export function LoginForm() {
     };
 
     return (
-        <div className="w-full max-w-sm flex flex-col gap-12">
+        <div className="w-full max-w-sm flex flex-col gap-8">
             <div>
-                <h2 className="font-brand-mono text-xs uppercase tracking-widest text-brand-subtle mb-4">
-                    Welcome Back
-                </h2>
-                <h1 className="text-3xl font-medium tracking-tight text-brand-ink">
-                    Sign In
+                <h1 className="text-[30px] font-semibold tracking-[-0.024em] text-brand-ink">
+                    Welcome back
                 </h1>
+                <p className="text-sm text-brand-subtle mt-1.5">
+                    Pick up wherever your team left off.
+                </p>
             </div>
 
             <form action={formAction} className="flex flex-col gap-6">
@@ -115,23 +115,23 @@ export function LoginForm() {
                 <div className="pt-2">
                     <Button
                         type="submit"
-                        withArrow
-                        className="w-full justify-between"
+                        className="w-full"
+                        pendingText="Signing in…"
                     >
-                        Sign In
+                        Sign in
                     </Button>
                 </div>
             </form>
 
             <SocialAuthButtons callbackUrl={callbackUrl} />
 
-            <div className="font-brand-mono text-xs text-brand-subtle">
-                Don&apos;t have an account?{" "}
+            <div className="text-sm text-brand-subtle">
+                New here?{" "}
                 <Link
                     href="/register"
-                    className="text-brand-accent underline underline-offset-4 hover:text-brand-ink uppercase tracking-wider"
+                    className="text-brand-accent underline underline-offset-4 hover:text-brand-ink"
                 >
-                    Sign Up
+                    Create an account
                 </Link>
             </div>
         </div>

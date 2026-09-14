@@ -13,14 +13,14 @@ export function RegisterForm() {
     const [state, formAction] = useActionState(registerAction, null);
 
     return (
-        <div className="w-full max-w-sm flex flex-col gap-12">
+        <div className="w-full max-w-sm flex flex-col gap-8">
             <div>
-                <h2 className="font-brand-mono text-xs uppercase tracking-widest text-brand-subtle mb-4">
-                    Create Account
-                </h2>
-                <h1 className="text-3xl font-medium tracking-tight text-brand-ink">
-                    Sign Up
+                <h1 className="text-[30px] font-semibold tracking-[-0.024em] text-brand-ink">
+                    Create your account
                 </h1>
+                <p className="text-sm text-brand-subtle mt-1.5">
+                    Then invite the people you write with.
+                </p>
             </div>
 
             {state?.success ? (
@@ -29,12 +29,12 @@ export function RegisterForm() {
                     {state.verifyUrl && (
                         <DevVerifyQuickLink verifyUrl={state.verifyUrl} />
                     )}
-                    <div className="font-brand-mono text-xs text-brand-subtle">
+                    <div className="text-sm text-brand-subtle">
                         <Link
                             href="/login"
-                            className="text-brand-accent underline underline-offset-4 hover:text-brand-ink uppercase tracking-wider"
+                            className="text-brand-accent underline underline-offset-4 hover:text-brand-ink"
                         >
-                            Return to Sign In
+                            Back to sign in
                         </Link>
                     </div>
                 </div>
@@ -74,23 +74,22 @@ export function RegisterForm() {
                         <div className="pt-2">
                             <Button
                                 type="submit"
-                                withArrow
                                 className="w-full justify-between"
                             >
-                                Sign Up
+                                Create account
                             </Button>
                         </div>
                     </form>
 
                     <SocialAuthButtons callbackUrl="/" />
 
-                    <div className="font-brand-mono text-xs text-brand-subtle">
+                    <div className="text-sm text-brand-subtle">
                         Already have an account?{" "}
                         <Link
                             href="/login"
-                            className="text-brand-accent underline underline-offset-4 hover:text-brand-ink uppercase tracking-wider"
+                            className="text-brand-accent underline underline-offset-4 hover:text-brand-ink"
                         >
-                            Sign In
+                            Sign in
                         </Link>
                     </div>
                 </>
