@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/features/auth/lib/auth";
+import { notify } from "@/features/notification/lib/notify";
 import { db } from "@/lib/db";
 
 export async function joinWorkspaceAction(token: string) {
@@ -55,6 +56,17 @@ export async function joinWorkspaceAction(token: string) {
                     data: { usedAt: new Date() },
                 }),
             ]);
+
+            await notify({
+                type: "MEMBER_JOINED",
+                title: `${session.user.name || session.user.email || "Someone"} joined the workspace`,
+                body: null,
+                // Overview, not settings/members — that page is Admin-only
+                href: `/${workspaceId}`,
+                workspaceId,
+                actorId: session.user.id,
+                excludeUserIds: [session.user.id],
+            });
         }
 
         revalidatePath(`/${workspaceId}`);

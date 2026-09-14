@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { auth } from "@/features/auth/lib/auth";
+import { notify } from "@/features/notification/lib/notify";
 import { getWorkspaceRole } from "@/features/workspace/lib/rbac";
 import { db } from "@/lib/db";
 import { createTaskSchema } from "@/schemas/task";
@@ -92,6 +93,18 @@ export async function createTaskAction(
                 },
             },
         });
+
+        if (task.assignee && task.assignee.userId !== session.user.id) {
+            await notify({
+                type: "TASK_ASSIGNED",
+                title: `You were assigned "${task.title}"`,
+                body: task.description,
+                href: `/${workspaceId}/tasks`,
+                workspaceId,
+                actorId: session.user.id,
+                recipientIds: [task.assignee.userId],
+            });
+        }
 
         revalidatePath(`/${workspaceId}/tasks`);
         return { success: true, data: task };

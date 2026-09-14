@@ -32,6 +32,7 @@ export function WorkspaceNav({
         { label: "Documents", href: `/${workspaceId}/documents` },
         { label: "Tasks", href: `/${workspaceId}/tasks` },
         { label: "Chat", href: `/${workspaceId}/chat` },
+        { label: "Activity", href: `/${workspaceId}/activity` },
         { label: "Analytics", href: `/${workspaceId}/analytics` },
         ...(userRole === "ADMIN"
             ? [{ label: "Settings", href: `/${workspaceId}/settings` }]

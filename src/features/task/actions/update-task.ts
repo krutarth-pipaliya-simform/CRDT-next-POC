@@ -7,6 +7,7 @@ import { getWorkspaceRole } from "@/features/workspace/lib/rbac";
 import { db } from "@/lib/db";
 import { updateTaskSchema } from "@/schemas/task";
 
+import { notifyTaskChange } from "../lib/notify-task-change";
 import type { TaskWithAssignee } from "../types";
 
 export type UpdateTaskResult =
@@ -45,7 +46,12 @@ export async function updateTaskAction(
 
     const existing = await db.task.findUnique({
         where: { id: taskId },
-        select: { id: true, workspaceId: true },
+        select: {
+            id: true,
+            workspaceId: true,
+            status: true,
+            assignee: { select: { userId: true } },
+        },
     });
 
     if (!existing) {
@@ -102,6 +108,13 @@ export async function updateTaskAction(
                     },
                 },
             },
+        });
+
+        await notifyTaskChange({
+            task,
+            previousStatus: existing.status,
+            previousAssigneeUserId: existing.assignee?.userId ?? null,
+            actorId: session.user.id,
         });
 
         revalidatePath(`/${existing.workspaceId}/tasks`);

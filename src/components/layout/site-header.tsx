@@ -4,6 +4,9 @@ import { UserDropdown } from "@/components/layout/user-dropdown";
 import { LinkButton } from "@/components/ui/link-button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { auth } from "@/features/auth/lib/auth";
+import { NotificationBell } from "@/features/notification/components/notification-bell";
+import { toNotificationPayload } from "@/features/notification/lib/serialize";
+import { getNotifications } from "@/features/notification/queries/get-notifications";
 import { db } from "@/lib/db";
 
 export async function SiteHeader() {
@@ -20,6 +23,10 @@ export async function SiteHeader() {
             navUser = { ...navUser, ...dbUser };
         }
     }
+
+    const inbox = navUser?.id
+        ? await getNotifications()
+        : { notifications: [], unreadCount: 0 };
 
     return (
         <nav
@@ -40,6 +47,12 @@ export async function SiteHeader() {
                     </Link>
                     <div className="flex-1" />
                     <ThemeToggle />
+                    <NotificationBell
+                        initialNotifications={inbox.notifications.map(
+                            toNotificationPayload,
+                        )}
+                        initialUnreadCount={inbox.unreadCount}
+                    />
                     <UserDropdown user={navUser} />
                 </>
             ) : (

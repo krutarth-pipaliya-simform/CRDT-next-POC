@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { auth } from "@/features/auth/lib/auth";
+import { notify } from "@/features/notification/lib/notify";
 import { getWorkspaceRole } from "@/features/workspace/lib/rbac";
 import { db } from "@/lib/db";
 import { createDocumentSchema } from "@/schemas/document";
@@ -53,6 +54,16 @@ export async function createDocumentAction(
                 createdAt: true,
                 updatedAt: true,
             },
+        });
+
+        await notify({
+            type: "DOCUMENT_CREATED",
+            title: `New document: "${document.title}"`,
+            body: null,
+            href: `/${workspaceId}/documents/${document.id}`,
+            workspaceId,
+            actorId: session.user.id,
+            excludeUserIds: [session.user.id],
         });
 
         revalidatePath(`/${workspaceId}/documents`);

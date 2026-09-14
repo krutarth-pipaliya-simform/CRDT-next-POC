@@ -7,6 +7,8 @@ import { getWorkspaceRole } from "@/features/workspace/lib/rbac";
 import { db } from "@/lib/db";
 import { moveTaskSchema } from "@/schemas/task";
 
+import { notifyTaskChange } from "../lib/notify-task-change";
+
 export type MoveTaskResult =
     { success: true } | { success: false; error: string };
 
@@ -28,7 +30,12 @@ export async function moveTaskAction(input: unknown): Promise<MoveTaskResult> {
 
     const task = await db.task.findUnique({
         where: { id: taskId },
-        select: { id: true, workspaceId: true },
+        select: {
+            id: true,
+            workspaceId: true,
+            status: true,
+            assignee: { select: { userId: true } },
+        },
     });
 
     if (!task) {
@@ -44,9 +51,30 @@ export async function moveTaskAction(input: unknown): Promise<MoveTaskResult> {
     }
 
     try {
-        await db.task.update({
+        const moved = await db.task.update({
             where: { id: taskId },
             data: { status, position },
+            include: {
+                assignee: {
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                name: true,
+                                email: true,
+                                image: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        await notifyTaskChange({
+            task: moved,
+            previousStatus: task.status,
+            previousAssigneeUserId: task.assignee?.userId ?? null,
+            actorId: session.user.id,
         });
 
         revalidatePath(`/${task.workspaceId}/tasks`);
