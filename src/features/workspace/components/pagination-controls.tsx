@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
@@ -34,39 +35,51 @@ export function PaginationControls({
     };
 
     return (
-        <div className="flex items-center justify-between pt-6 border-t-2 border-brand-muted mt-6">
-            <span className="font-brand-mono text-xs text-brand-subtle">
-                Showing page {currentPage} of {totalPages} ({totalCount} total)
+        <div className="flex items-center justify-between gap-4 pt-5 border-t border-brand-border mt-6">
+            <span className="text-[13px] text-brand-subtle">
+                Page {currentPage} of {totalPages} · {totalCount} in total
             </span>
 
             <div className="flex items-center gap-2">
                 {currentPage > 1 ? (
                     <Link
                         href={createPageUrl(currentPage - 1)}
-                        className="px-3 py-1.5 font-brand-mono text-xs uppercase tracking-wider border-2 border-brand-border bg-brand-surface text-brand-ink rounded-brand hover:border-brand-ink transition-colors"
+                        className="inline-flex items-center gap-1 h-8 px-2.5 text-[13px] border border-brand-line bg-brand-surface text-brand-ink rounded-brand hover:border-brand-ink transition-colors"
                     >
-                        ← Prev
+                        <ChevronLeft
+                            className="w-3.5 h-3.5"
+                            aria-hidden="true"
+                        />
+                        Previous
                     </Link>
                 ) : (
-                    <span className="px-3 py-1.5 font-brand-mono text-xs uppercase tracking-wider border-2 border-brand-muted bg-brand-muted text-brand-subtle rounded-brand cursor-not-allowed opacity-50">
-                        ← Prev
+                    <span className="inline-flex items-center gap-1 h-8 px-2.5 text-[13px] border border-brand-border text-brand-subtle rounded-brand opacity-50 cursor-not-allowed">
+                        <ChevronLeft
+                            className="w-3.5 h-3.5"
+                            aria-hidden="true"
+                        />
+                        Previous
                     </span>
                 )}
-
-                <span className="font-brand-mono text-xs px-2 text-brand-ink font-semibold">
-                    {currentPage} / {totalPages}
-                </span>
 
                 {currentPage < totalPages ? (
                     <Link
                         href={createPageUrl(currentPage + 1)}
-                        className="px-3 py-1.5 font-brand-mono text-xs uppercase tracking-wider border-2 border-brand-border bg-brand-surface text-brand-ink rounded-brand hover:border-brand-ink transition-colors"
+                        className="inline-flex items-center gap-1 h-8 px-2.5 text-[13px] border border-brand-line bg-brand-surface text-brand-ink rounded-brand hover:border-brand-ink transition-colors"
                     >
-                        Next →
+                        Next
+                        <ChevronRight
+                            className="w-3.5 h-3.5"
+                            aria-hidden="true"
+                        />
                     </Link>
                 ) : (
-                    <span className="px-3 py-1.5 font-brand-mono text-xs uppercase tracking-wider border-2 border-brand-muted bg-brand-muted text-brand-subtle rounded-brand cursor-not-allowed opacity-50">
-                        Next →
+                    <span className="inline-flex items-center gap-1 h-8 px-2.5 text-[13px] border border-brand-border text-brand-subtle rounded-brand opacity-50 cursor-not-allowed">
+                        Next
+                        <ChevronRight
+                            className="w-3.5 h-3.5"
+                            aria-hidden="true"
+                        />
                     </span>
                 )}
             </div>

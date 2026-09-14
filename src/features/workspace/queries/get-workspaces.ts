@@ -16,7 +16,15 @@ export async function getWorkspacesForUser(providedUserId?: string) {
             members: { some: { userId } },
         },
         include: {
-            members: { select: { role: true, userId: true } },
+            members: {
+                select: {
+                    role: true,
+                    userId: true,
+                    // Names and photos so a workspace card can show who is in it
+                    // rather than only how many people are.
+                    user: { select: { name: true, email: true, image: true } },
+                },
+            },
             _count: { select: { members: true } },
         },
         orderBy: { createdAt: "asc" },

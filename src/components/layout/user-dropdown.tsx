@@ -35,13 +35,13 @@ export function UserDropdown({ user }: UserDropdownProps) {
                         <p className="text-sm font-medium text-brand-ink truncate">
                             {user.name || "User"}
                         </p>
-                        <p className="text-xs font-brand-mono text-brand-subtle truncate">
+                        <p className="text-xs text-brand-subtle truncate">
                             {user.email}
                         </p>
                     </div>
                     <Link
                         href="/profile"
-                        className="block px-4 py-2 text-xs font-brand-mono uppercase tracking-wider text-brand-ink hover:bg-brand-muted/60 transition-colors"
+                        className="block px-4 py-2 text-xs text-brand-ink hover:bg-brand-muted/60 transition-colors"
                         onClick={() => setIsOpen(false)}
                     >
                         Profile Settings
@@ -49,7 +49,7 @@ export function UserDropdown({ user }: UserDropdownProps) {
                     <form action={logoutAction}>
                         <button
                             type="submit"
-                            className="w-full text-left block px-4 py-2 text-xs font-brand-mono uppercase tracking-wider text-brand-danger hover:bg-brand-danger/10 transition-colors cursor-pointer"
+                            className="w-full text-left block px-4 py-2 text-xs text-brand-danger hover:bg-brand-danger/10 transition-colors cursor-pointer"
                         >
                             Log Out
                         </button>

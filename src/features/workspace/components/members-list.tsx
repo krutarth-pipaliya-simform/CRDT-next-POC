@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { WORKSPACE_ROLE_LABELS, type WorkspaceRole } from "@/schemas/workspace";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { LeaveWorkspaceButton } from "@/features/workspace/components/leave-workspace-button";
 import { RemoveMemberButton } from "@/features/workspace/components/remove-member-button";
@@ -31,7 +32,7 @@ export function MembersList({
 }: MembersListProps) {
     if (members.length === 0) {
         return (
-            <p className="text-xs font-brand-mono text-brand-subtle">
+            <p className="text-xs text-brand-subtle">
                 No members found in this workspace.
             </p>
         );
@@ -50,7 +51,7 @@ export function MembersList({
                             <span className="text-sm font-medium text-brand-ink truncate">
                                 {member.user.name || "Unnamed Member"}
                             </span>
-                            <span className="text-xs font-brand-mono text-brand-subtle truncate">
+                            <span className="text-xs text-brand-subtle truncate">
                                 {member.user.email}
                             </span>
                         </div>
@@ -83,7 +84,9 @@ export function MembersList({
                                 member.role === "ADMIN" ? "default" : "muted"
                             }
                         >
-                            {member.role}
+                            {WORKSPACE_ROLE_LABELS[
+                                member.role as WorkspaceRole
+                            ] ?? member.role}
                         </Badge>
                     </div>
                 </li>

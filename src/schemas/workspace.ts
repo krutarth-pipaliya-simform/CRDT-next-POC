@@ -27,6 +27,13 @@ export type WorkspaceVisibility =
 
 export type WorkspaceRole = "ADMIN" | "MEMBER" | "GUEST";
 
+/** How a role is written wherever a person reads one. */
+export const WORKSPACE_ROLE_LABELS: Record<WorkspaceRole, string> = {
+    ADMIN: "Admin",
+    MEMBER: "Member",
+    GUEST: "Guest",
+};
+
 export const leaveWorkspaceSchema = z.object({
     workspaceId: z.string().min(1, "Workspace ID is required"),
     transferToMemberId: z.string().optional(),

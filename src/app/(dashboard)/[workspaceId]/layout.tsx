@@ -47,6 +47,11 @@ export default async function WorkspaceLayout({
                         name: ws.name,
                     }),
                 )}
+                members={workspace.members.map((member) => ({
+                    id: member.user.id,
+                    name: member.user.name || member.user.email || "Member",
+                    image: member.user.image,
+                }))}
             />
             <div className="flex-1 min-w-0 w-full">{children}</div>
         </div>

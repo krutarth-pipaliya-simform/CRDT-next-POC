@@ -1,19 +1,28 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { Check, ChevronDown } from "lucide-react";
 import Link from "next/link";
 
-import { Badge } from "@/components/ui/badge";
 import { NavTabs, type NavTabItem } from "@/components/ui/nav-tabs";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import { useOutsideClick } from "@/hooks/use-outside-click";
 import { cn } from "@/lib/cn";
-import type { WorkspaceRole } from "@/schemas/workspace";
+import { WORKSPACE_ROLE_LABELS, type WorkspaceRole } from "@/schemas/workspace";
+
+export interface WorkspaceNavMember {
+    id: string;
+    name: string;
+    image: string | null;
+}
 
 export interface WorkspaceNavProps {
     workspaceId: string;
     workspaceName: string;
     userRole: WorkspaceRole;
     workspaces?: { id: string; name: string }[];
+    /** Everyone with access, so their hues are learnable from any screen. */
+    members?: WorkspaceNavMember[];
 }
 
 export function WorkspaceNav({
@@ -21,6 +30,7 @@ export function WorkspaceNav({
     workspaceName,
     userRole,
     workspaces = [],
+    members = [],
 }: WorkspaceNavProps) {
     const [switcherOpen, setSwitcherOpen] = useState(false);
     const switcherRef = useRef<HTMLDivElement>(null);
@@ -39,53 +49,39 @@ export function WorkspaceNav({
             : []),
     ];
 
+    const shownMembers = members.slice(0, 6);
+    const overflow = members.length - shownMembers.length;
+
     return (
-        <div className="border-b-2 border-brand-muted bg-brand-surface mb-6 w-full max-w-full overflow-x-hidden">
+        <div className="border-b border-brand-border bg-brand-surface mb-7 w-full max-w-full overflow-x-hidden">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 w-full min-w-0">
-                {/* Workspace Header & Switcher */}
-                <div className="flex items-center justify-between py-4 border-b border-brand-border">
-                    <div className="relative" ref={switcherRef}>
+                <div className="flex items-center justify-between gap-4 py-3">
+                    <div className="relative min-w-0" ref={switcherRef}>
                         <button
                             type="button"
                             onClick={() => setSwitcherOpen(!switcherOpen)}
-                            className="flex items-center gap-3 group focus:outline-none cursor-pointer"
+                            className="flex items-center gap-2.5 group cursor-pointer rounded-brand -m-1 p-1 min-w-0"
                             aria-expanded={switcherOpen}
                             aria-haspopup="true"
                         >
-                            <div className="w-8 h-8 rounded-brand bg-brand-ink text-brand-surface font-brand-mono text-sm font-bold flex items-center justify-center uppercase shadow-brand-subtle">
+                            <span className="w-7 h-7 rounded-brand bg-brand-ink text-brand-paper text-[13px] font-semibold flex items-center justify-center uppercase shrink-0">
                                 {(workspaceName || "W").charAt(0)}
-                            </div>
-                            <div className="text-left">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-base font-semibold text-brand-ink group-hover:text-brand-accent transition-colors">
-                                        {workspaceName || "Workspace"}
-                                    </span>
-                                    <svg
-                                        className={cn(
-                                            "w-4 h-4 text-brand-subtle transition-transform",
-                                            switcherOpen && "rotate-180",
-                                        )}
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth="2"
-                                            d="M19 9l-7 7-7-7"
-                                        />
-                                    </svg>
-                                </div>
-                            </div>
+                            </span>
+                            <span className="text-[15px] font-semibold tracking-[-0.011em] text-brand-ink truncate">
+                                {workspaceName || "Workspace"}
+                            </span>
+                            <ChevronDown
+                                aria-hidden="true"
+                                className={cn(
+                                    "w-4 h-4 text-brand-subtle transition-transform shrink-0",
+                                    switcherOpen && "rotate-180",
+                                )}
+                            />
                         </button>
 
                         {switcherOpen && (
-                            <div className="absolute left-0 mt-2 w-64 bg-brand-surface border-2 border-brand-ink shadow-brand-card rounded-brand py-2 z-50 animate-fade-in-up">
-                                <div className="px-3 py-1.5 font-brand-mono text-[10px] uppercase tracking-widest text-brand-subtle border-b border-brand-border">
-                                    Switch Workspace
-                                </div>
-                                <div className="max-h-56 overflow-y-auto py-1">
+                            <div className="absolute left-0 mt-2 w-64 bg-brand-surface border-2 border-brand-ink shadow-brand-card rounded-brand py-1 z-50 animate-pop-in">
+                                <div className="max-h-56 overflow-y-auto">
                                     {workspaces.map((ws) => (
                                         <Link
                                             key={ws.id}
@@ -94,51 +90,79 @@ export function WorkspaceNav({
                                                 setSwitcherOpen(false)
                                             }
                                             className={cn(
-                                                "flex items-center justify-between px-3 py-2 text-xs font-medium transition-colors",
+                                                "flex items-center justify-between gap-2 px-3 py-2 text-sm transition-colors",
                                                 ws.id === workspaceId
                                                     ? "bg-brand-muted text-brand-ink font-semibold"
-                                                    : "text-brand-ink hover:bg-brand-muted/50",
+                                                    : "text-brand-ink hover:bg-brand-muted",
                                             )}
                                         >
                                             <span className="truncate">
                                                 {ws.name}
                                             </span>
                                             {ws.id === workspaceId && (
-                                                <span className="text-brand-accent text-xs">
-                                                    ✓
-                                                </span>
+                                                <Check
+                                                    aria-hidden="true"
+                                                    className="w-3.5 h-3.5 shrink-0"
+                                                />
                                             )}
                                         </Link>
                                     ))}
                                 </div>
-                                <div className="border-t border-brand-border pt-1 mt-1">
+                                <div className="border-t border-brand-border mt-1 pt-1">
                                     <Link
                                         href="/dashboard"
                                         onClick={() => setSwitcherOpen(false)}
-                                        className="block px-3 py-2 text-xs font-brand-mono text-brand-accent hover:bg-brand-muted/50 transition-colors uppercase tracking-wider"
+                                        className="block px-3 py-2 text-sm text-brand-subtle hover:bg-brand-muted hover:text-brand-ink transition-colors"
                                     >
-                                        ← All Workspaces
+                                        All workspaces
                                     </Link>
                                 </div>
                             </div>
                         )}
                     </div>
 
-                    <div>
-                        <Badge
-                            intent={userRole === "ADMIN" ? "default" : "muted"}
-                        >
-                            {userRole}
-                        </Badge>
+                    {/* The team, each in their own hue. Seeing the same colours
+                        here that appear on cards, carets and messages is what
+                        makes the colour learnable in the first place. */}
+                    <div className="flex items-center gap-3 shrink-0">
+                        {shownMembers.length > 0 && (
+                            <Link
+                                href={`/${workspaceId}/settings/members`}
+                                className="flex items-center gap-1.5 group"
+                                title={`${members.length} ${members.length === 1 ? "person has" : "people have"} access`}
+                            >
+                                <span className="flex items-center -space-x-1">
+                                    {shownMembers.map((member) => (
+                                        <UserAvatar
+                                            key={member.id}
+                                            user={{
+                                                id: member.id,
+                                                name: member.name,
+                                                image: member.image,
+                                            }}
+                                            size="sm"
+                                            className="ring-2 ring-brand-surface transition-transform group-hover:ring-brand-muted"
+                                        />
+                                    ))}
+                                </span>
+                                {overflow > 0 && (
+                                    <span className="text-[13px] text-brand-subtle tabular-nums">
+                                        +{overflow}
+                                    </span>
+                                )}
+                            </Link>
+                        )}
+                        <span className="text-[13px] text-brand-subtle">
+                            {WORKSPACE_ROLE_LABELS[userRole]}
+                        </span>
                     </div>
                 </div>
 
-                {/* Workspace Navigation Tabs */}
                 <NavTabs
                     ariaLabel="Workspace sections"
                     scrollable
                     items={navItems}
-                    className="border-b-0 pt-1"
+                    className="border-b-0"
                 />
             </div>
         </div>

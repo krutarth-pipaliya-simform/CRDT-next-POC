@@ -31,17 +31,26 @@ export async function SiteHeader() {
     return (
         <nav
             aria-label="Main site navigation"
-            className="p-4 border-b border-brand-border mb-4 flex items-center gap-4 bg-brand-surface text-brand-ink flex-wrap"
+            className="h-14 px-4 sm:px-6 border-b border-brand-border flex items-center gap-4 bg-brand-surface text-brand-ink shrink-0"
         >
-            <Link href="/" className="font-bold text-xl">
-                App Logo
+            <Link
+                href="/"
+                className="flex items-center gap-2 text-[15px] font-semibold tracking-[-0.015em] shrink-0"
+            >
+                {/* Two marks resolving into one — the product's whole claim,
+                    at 16px. */}
+                <span aria-hidden="true" className="relative w-4 h-4 shrink-0">
+                    <span className="absolute left-0 top-0 w-2.5 h-2.5 border-2 border-brand-ink" />
+                    <span className="absolute right-0 bottom-0 w-2.5 h-2.5 bg-brand-ink" />
+                </span>
+                Converge
             </Link>
 
             {navUser ? (
                 <>
                     <Link
                         href="/dashboard"
-                        className="text-sm font-medium text-brand-ink hover:text-brand-accent transition-colors"
+                        className="text-sm text-brand-subtle hover:text-brand-ink transition-colors"
                     >
                         Dashboard
                     </Link>
@@ -59,8 +68,14 @@ export async function SiteHeader() {
                 <>
                     <div className="flex-1" />
                     <ThemeToggle />
-                    <LinkButton href="/login" variant="primary" size="sm">
-                        Log In
+                    <Link
+                        href="/login"
+                        className="text-sm text-brand-subtle hover:text-brand-ink transition-colors"
+                    >
+                        Log in
+                    </Link>
+                    <LinkButton href="/register" variant="primary" size="sm">
+                        Start writing
                     </LinkButton>
                 </>
             )}
