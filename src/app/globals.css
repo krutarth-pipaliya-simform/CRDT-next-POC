@@ -3,54 +3,91 @@
 
 /* ─── Brand Tokens ─────────────────────────────────────── */
 @theme {
-    /* Colors */
-    --color-brand-ink: #1a1a1a;
-    --color-brand-accent: #2948ff;
-    --color-brand-surface: #fbfbfb;
-    --color-brand-muted: #f0f0f0;
-    --color-brand-subtle: #555555;
-    --color-brand-danger: #e53e3e;
-    --color-brand-success: #16a34a;
-    --color-brand-warning: #d97706;
-    --color-brand-border: #e8e8e8;
-    --color-brand-shadow: #1a1a1a;
+    /* ── Neutrals ──────────────────────────────────────────
+       Ink on paper. `paper` is the page ground; `surface` is anything that sits
+       on top of it. Keeping them separate is what lets a card read as raised
+       without needing a shadow to say so. */
+    --color-brand-ink: #1b1b19;
+    --color-brand-paper: #f7f7f4;
+    --color-brand-surface: #ffffff;
+    --color-brand-muted: #efefec;
+    --color-brand-subtle: #63635e;
+    --color-brand-border: #e2e2dc;
+    /* A rule with more weight than `border`, for real structural divisions */
+    --color-brand-line: #c9c9c1;
+    --color-brand-shadow: #1b1b19;
+
+    /* ── System signal ─────────────────────────────────────
+       Blue, and only blue, is the interface talking to you: focus, selection,
+       links, the active tab. No presence hue is blue, so a saturated warm tone
+       always means a person and a saturated cool tone always means the system. */
+    --color-brand-accent: #2b54c4;
+    --color-brand-danger: #bc382f;
+    --color-brand-success: #1b7248;
+    --color-brand-warning: #8a6008;
 
     /* Foreground for text sitting on a saturated fill (accent, danger) */
     --color-brand-on-fill: #ffffff;
 
     /* Code blocks stay dark in both themes — the bundled highlight.js theme is dark */
-    --color-brand-code-bg: #1a1a1a;
-    --color-brand-code-fg: #fbfbfb;
+    --color-brand-code-bg: #1b1b19;
+    --color-brand-code-fg: #f7f7f4;
 
-    /* Task Priority Tokens */
-    --color-brand-priority-low: #6b7280;
-    --color-brand-priority-medium: #2948ff;
-    --color-brand-priority-high: #d97706;
-    --color-brand-priority-urgent: #e53e3e;
+    /* Kanban columns. Told apart by their heading, not by hue — three tinted
+       grounds competed with the only thing colour means on that board, which is
+       whose card it is. Done alone recedes, because it is settled. */
+    --color-brand-column-todo: #f3f3f0;
+    --color-brand-column-progress: #f3f3f0;
+    --color-brand-column-done: #ebebe6;
 
-    /* Kanban Column Tokens */
-    --color-brand-column-todo: #f4f4f4;
-    --color-brand-column-progress: #eef2ff;
-    --color-brand-column-done: #f0fdf4;
-
-    /* Analytics Chart Tokens — read at runtime by the ECharts widgets */
-    --color-brand-chart-1: #2948ff;
-    --color-brand-chart-2: #16a34a;
-    --color-brand-chart-3: #d97706;
-    --color-brand-chart-4: #7c3aed;
-    --color-brand-chart-5: #0891b2;
-
-    /* Typography */
-    --font-brand-sans: var(--font-geist-sans);
+    /* ── Typography ────────────────────────────────────────
+       Two voices: a grotesque for product chrome, a serif reserved for the
+       document canvas so a document reads like a document. Mono is for real
+       data only — timestamps, ids, latency — never labels or buttons. */
+    --font-brand-sans: var(--font-schibsted-grotesk);
+    --font-brand-serif: var(--font-newsreader);
     --font-brand-mono: var(--font-geist-mono);
 
-    /* Radius — 0px is the Machined Precision signature */
+    /* Radius — 0px is the signature and it stays */
     --radius-brand: 0px;
 
-    /* Shadows — hard, no blur. The colour is a token so dark mode can restate it */
+    /* Shadows — hard, no blur. Reserved for things that genuinely float:
+       dialogs, dropdowns, a card being dragged. Resting surfaces use a rule. */
     --shadow-brand-subtle: 2px 2px 0px var(--color-brand-shadow);
     --shadow-brand-card: 4px 4px 0px var(--color-brand-shadow);
     --shadow-brand-hover: 6px 6px 0px var(--color-brand-shadow);
+}
+
+/* ─── Runtime-read tokens ──────────────────────────────────
+   These are deliberately NOT in `@theme`. Tailwind only emits a theme variable
+   whose name it can find spelled out in the source, and every name here is
+   composed at runtime: `presenceVar()` builds `--color-brand-presence-N` from a
+   hash of a user id, and `readChartPalette()` pulls the chart values out of the
+   cascade with `getComputedStyle`. Left in `@theme` they were silently dropped
+   from the light build — the chart palette had no light values at all.
+
+   Declaring them as ordinary custom properties also means they cannot be
+   reached as `bg-brand-presence-3`, which is the intent: a presence hue is
+   assigned to a person, never picked by hand. */
+:root {
+    /* The only saturated colour that means "a person". No blue among them —
+       blue belongs to the system, so warm means someone and cool means the UI. */
+    --color-brand-presence-1: #bc382f;
+    --color-brand-presence-2: #ad4c1c;
+    --color-brand-presence-3: #8a6008;
+    --color-brand-presence-4: #5f6b10;
+    --color-brand-presence-5: #1b7248;
+    --color-brand-presence-6: #0f6878;
+    --color-brand-presence-7: #6339ba;
+    --color-brand-presence-8: #a82a6b;
+
+    /* Chart series. Where a series is a person these match the presence hues,
+       so someone is the same colour in a chart as on their avatar. */
+    --color-brand-chart-1: #bc382f;
+    --color-brand-chart-2: #1b7248;
+    --color-brand-chart-3: #8a6008;
+    --color-brand-chart-4: #6339ba;
+    --color-brand-chart-5: #0f6878;
 }
 
 /* ─── Dark Theme ───────────────────────────────────────────
@@ -60,36 +97,43 @@
    `data-theme` is always resolved to a concrete value by the init script in
    `src/lib/theme.ts`, so no `prefers-color-scheme` query is needed here.      */
 [data-theme="dark"] {
-    --color-brand-ink: #ededed;
-    --color-brand-accent: #6c86ff;
-    --color-brand-surface: #141414;
-    --color-brand-muted: #1f1f1f;
-    --color-brand-subtle: #a3a3a3;
-    --color-brand-danger: #ff6b6b;
-    --color-brand-success: #4ade80;
-    --color-brand-warning: #fbbf24;
-    --color-brand-border: #2e2e2e;
+    --color-brand-ink: #edede8;
+    --color-brand-paper: #121211;
+    --color-brand-surface: #1a1a18;
+    --color-brand-muted: #232320;
+    --color-brand-subtle: #9a9a93;
+    --color-brand-border: #2e2e2b;
+    --color-brand-line: #3c3c38;
     --color-brand-shadow: #000000;
+
+    --color-brand-accent: #8fa8ff;
+    --color-brand-danger: #ff8c84;
+    --color-brand-success: #5fd08f;
+    --color-brand-warning: #e3b44c;
     /* The dark palette's accent and danger are lighter, so their foreground inverts */
-    --color-brand-on-fill: #101010;
+    --color-brand-on-fill: #121211;
 
-    --color-brand-code-bg: #0d0d0d;
-    --color-brand-code-fg: #ededed;
+    --color-brand-code-bg: #0d0d0c;
+    --color-brand-code-fg: #edede8;
 
-    --color-brand-priority-low: #9ca3af;
-    --color-brand-priority-medium: #6c86ff;
-    --color-brand-priority-high: #fbbf24;
-    --color-brand-priority-urgent: #ff6b6b;
+    --color-brand-presence-1: #ff8c84;
+    --color-brand-presence-2: #ff9e63;
+    --color-brand-presence-3: #e3b44c;
+    --color-brand-presence-4: #c3d14f;
+    --color-brand-presence-5: #5fd08f;
+    --color-brand-presence-6: #4fcde0;
+    --color-brand-presence-7: #b79bff;
+    --color-brand-presence-8: #ff8fc0;
 
-    --color-brand-column-todo: #1a1a1a;
-    --color-brand-column-progress: #171c33;
-    --color-brand-column-done: #12231a;
+    --color-brand-column-todo: #191917;
+    --color-brand-column-progress: #191917;
+    --color-brand-column-done: #141413;
 
-    --color-brand-chart-1: #6c86ff;
-    --color-brand-chart-2: #4ade80;
-    --color-brand-chart-3: #fbbf24;
-    --color-brand-chart-4: #a78bfa;
-    --color-brand-chart-5: #22d3ee;
+    --color-brand-chart-1: #ff8c84;
+    --color-brand-chart-2: #5fd08f;
+    --color-brand-chart-3: #e3b44c;
+    --color-brand-chart-4: #b79bff;
+    --color-brand-chart-5: #4fcde0;
 }
 
 /* ─── Base Reset ────────────────────────────────────────── */
@@ -102,14 +146,28 @@
 }
 
 /* Theme changes animate, so the switch reads as a transition rather than a jump.
+   Scoped to the properties that actually carry the palette — a blanket
+   transition on `*` also animates transforms and catches every hover.
    Honoured only when the visitor has not asked for reduced motion. */
 @media (prefers-reduced-motion: no-preference) {
     html[data-theme] body,
     html[data-theme] body * {
         transition:
-            background-color 150ms ease-out,
-            border-color 150ms ease-out,
-            color 150ms ease-out;
+            background-color 160ms ease-out,
+            border-color 160ms ease-out,
+            color 160ms ease-out;
+    }
+}
+
+/* Nothing animates for a visitor who asked for stillness. */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
     }
 }
 
@@ -120,35 +178,47 @@ body {
 }
 
 body {
-    background-color: var(--color-brand-surface);
+    background-color: var(--color-brand-paper);
     color: var(--color-brand-ink);
     font-family: var(--font-brand-sans), ui-sans-serif, system-ui, sans-serif;
+    font-size: 0.9375rem;
+    line-height: 1.55;
+    /* Schibsted Grotesk carries its personality in the details; let them render */
+    font-feature-settings: "kern", "liga", "calt";
+    -webkit-font-smoothing: antialiased;
 }
 
-/* Global Selection Color */
+/* Numbers that sit in columns or update in place should not jitter */
+.tabular-nums,
+time,
+[data-numeric] {
+    font-variant-numeric: tabular-nums;
+}
+
+/* Selection is the system talking, so it takes the system colour */
 ::selection {
     background-color: var(--color-brand-accent);
-    color: var(--color-brand-surface);
+    color: var(--color-brand-on-fill);
 }
 
-/* ─── Animations ────────────────────────────────────────── */
-@keyframes fadeInUp {
+/* One focus treatment for the whole product: a system-blue ring with a paper
+   gap, which stays visible on ink fills and on paper alike. */
+:focus-visible {
+    outline: 2px solid var(--color-brand-accent);
+    outline-offset: 2px;
+}
+
+/* ─── Motion ────────────────────────────────────────────────
+   Motion answers an action. The only unprompted motion in the product is the
+   merge demo on the landing page, which is the one thing worth watching. */
+@keyframes popIn {
     from {
         opacity: 0;
-        transform: translateY(20px);
+        transform: translateY(-4px) scale(0.98);
     }
     to {
         opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes drawLine {
-    from {
-        width: 0;
-    }
-    to {
-        width: 100%;
+        transform: translateY(0) scale(1);
     }
 }
 
@@ -165,36 +235,45 @@ body {
     }
 }
 
+@keyframes caretBlink {
+    0%,
+    45% {
+        opacity: 1;
+    }
+    55%,
+    100% {
+        opacity: 0.15;
+    }
+}
+
+/* A presence dot breathing — slow enough to read as "alive", not as a warning */
+@keyframes presencePulse {
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.55;
+        transform: scale(0.86);
+    }
+}
+
 @utility animate-chat-typing {
     animation: chatTypingPulse 1.2s ease-in-out infinite;
 }
 
-@utility animate-fade-in-up {
-    animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    opacity: 0;
+/* Menus, popovers and dropdowns: fast, because the person just asked for them */
+@utility animate-pop-in {
+    animation: popIn 120ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-@utility animate-draw-line {
-    animation: drawLine 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+@utility animate-caret {
+    animation: caretBlink 1.05s steps(1, end) infinite;
 }
 
-.delay-100 {
-    animation-delay: 100ms;
-}
-.delay-200 {
-    animation-delay: 200ms;
-}
-.delay-300 {
-    animation-delay: 300ms;
-}
-.delay-400 {
-    animation-delay: 400ms;
-}
-.delay-500 {
-    animation-delay: 500ms;
-}
-.delay-600 {
-    animation-delay: 600ms;
+@utility animate-presence-pulse {
+    animation: presencePulse 2.4s ease-in-out infinite;
 }
 
 /* ─── Utilities ─────────────────────────────────────────── */
@@ -206,6 +285,13 @@ body {
     }
 }
 
+/* The one structural device in the product: a rail that always encodes *who*.
+   Segments stack for multiple people, so a document edited by three shows
+   three bands. Set `--rail-1…n` from `presenceVar()` at the call site. */
+@utility presence-rail {
+    position: relative;
+}
+
 /* ─── Rich Text & ProseMirror Editor ───────────────────── */
 .ProseMirror {
     outline: none;
@@ -213,6 +299,19 @@ body {
     max-width: 100%;
     word-break: break-word;
     overflow-wrap: break-word;
+    /* The canvas is the one place a serif is right: this is prose being read,
+       not chrome being operated. Headings stay in the grotesque so structure
+       still reads as interface. */
+    font-family: var(--font-brand-serif), ui-serif, Georgia, serif;
+    font-size: 1.0625rem;
+    line-height: 1.72;
+}
+
+.ProseMirror h1,
+.ProseMirror h2,
+.ProseMirror h3,
+.ProseMirror h4 {
+    font-family: var(--font-brand-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
 .ProseMirror p.is-editor-empty:first-child::before {
