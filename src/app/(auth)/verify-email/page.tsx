@@ -13,16 +13,16 @@ export default async function VerifyEmailPage({
 
     if (!token || typeof token !== "string") {
         return (
-            <div className="flex flex-col items-center justify-center space-y-4 p-8 bg-white rounded-lg shadow-sm">
-                <h1 className="text-2xl font-bold text-red-600">
+            <div className="flex flex-col items-center justify-center space-y-4 p-8 bg-brand-surface border-2 border-brand-ink rounded-brand shadow-brand-card">
+                <h1 className="text-2xl font-bold text-brand-danger">
                     Missing Token
                 </h1>
-                <p className="text-gray-600">
+                <p className="text-brand-subtle">
                     No verification token was provided in the URL.
                 </p>
                 <Link
                     href="/login"
-                    className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors"
+                    className="px-4 py-2 bg-brand-ink text-brand-surface rounded-brand hover:bg-brand-accent transition-colors"
                 >
                     Back to Login
                 </Link>
@@ -34,14 +34,14 @@ export default async function VerifyEmailPage({
 
     if (result.error) {
         return (
-            <div className="flex flex-col items-center justify-center space-y-4 p-8 bg-white rounded-lg shadow-sm">
-                <h1 className="text-2xl font-bold text-red-600">
+            <div className="flex flex-col items-center justify-center space-y-4 p-8 bg-brand-surface border-2 border-brand-ink rounded-brand shadow-brand-card">
+                <h1 className="text-2xl font-bold text-brand-danger">
                     Verification Failed
                 </h1>
-                <p className="text-gray-600">{result.error}</p>
+                <p className="text-brand-subtle">{result.error}</p>
                 <Link
                     href="/login"
-                    className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors"
+                    className="px-4 py-2 bg-brand-ink text-brand-surface rounded-brand hover:bg-brand-accent transition-colors"
                 >
                     Back to Login
                 </Link>
@@ -50,14 +50,14 @@ export default async function VerifyEmailPage({
     }
 
     return (
-        <div className="flex flex-col items-center justify-center space-y-4 p-8 bg-white rounded-lg shadow-sm">
-            <h1 className="text-2xl font-bold text-green-600">
+        <div className="flex flex-col items-center justify-center space-y-4 p-8 bg-brand-surface border-2 border-brand-ink rounded-brand shadow-brand-card">
+            <h1 className="text-2xl font-bold text-brand-success">
                 Email Verified!
             </h1>
-            <p className="text-gray-600">{result.success}</p>
+            <p className="text-brand-subtle">{result.success}</p>
             <Link
                 href="/login"
-                className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors"
+                className="px-4 py-2 bg-brand-ink text-brand-surface rounded-brand hover:bg-brand-accent transition-colors"
             >
                 Proceed to Login
             </Link>

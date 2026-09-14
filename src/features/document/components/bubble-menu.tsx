@@ -77,7 +77,7 @@ export function EditorBubbleMenu({
                     <button
                         type="button"
                         onClick={setLink}
-                        className="px-2 py-1 text-xs font-bold font-brand-mono bg-brand-accent text-white rounded-brand hover:opacity-90"
+                        className="px-2 py-1 text-xs font-bold font-brand-mono bg-brand-accent text-brand-on-fill rounded-brand hover:opacity-90"
                     >
                         Set
                     </button>
@@ -98,7 +98,7 @@ export function EditorBubbleMenu({
                         }
                         className={`p-1.5 rounded-brand hover:bg-brand-surface/20 transition-colors ${
                             editor.isActive("bold")
-                                ? "bg-brand-surface/30 text-white"
+                                ? "bg-brand-surface/30 text-brand-surface"
                                 : "text-brand-surface/80"
                         }`}
                         title="Bold (Mod-B)"
@@ -114,7 +114,7 @@ export function EditorBubbleMenu({
                         }
                         className={`p-1.5 rounded-brand hover:bg-brand-surface/20 transition-colors ${
                             editor.isActive("italic")
-                                ? "bg-brand-surface/30 text-white"
+                                ? "bg-brand-surface/30 text-brand-surface"
                                 : "text-brand-surface/80"
                         }`}
                         title="Italic (Mod-I)"
@@ -130,7 +130,7 @@ export function EditorBubbleMenu({
                         }
                         className={`p-1.5 rounded-brand hover:bg-brand-surface/20 transition-colors ${
                             editor.isActive("underline")
-                                ? "bg-brand-surface/30 text-white"
+                                ? "bg-brand-surface/30 text-brand-surface"
                                 : "text-brand-surface/80"
                         }`}
                         title="Underline (Mod-U)"
@@ -146,7 +146,7 @@ export function EditorBubbleMenu({
                         }
                         className={`p-1.5 rounded-brand hover:bg-brand-surface/20 transition-colors ${
                             editor.isActive("strike")
-                                ? "bg-brand-surface/30 text-white"
+                                ? "bg-brand-surface/30 text-brand-surface"
                                 : "text-brand-surface/80"
                         }`}
                         title="Strikethrough"
@@ -165,7 +165,7 @@ export function EditorBubbleMenu({
                         }
                         className={`p-1.5 rounded-brand hover:bg-brand-surface/20 transition-colors ${
                             editor.isActive("code")
-                                ? "bg-brand-surface/30 text-white"
+                                ? "bg-brand-surface/30 text-brand-surface"
                                 : "text-brand-surface/80"
                         }`}
                         title="Inline Code"
@@ -181,7 +181,7 @@ export function EditorBubbleMenu({
                         }
                         className={`p-1.5 rounded-brand hover:bg-brand-surface/20 transition-colors ${
                             editor.isActive("highlight")
-                                ? "bg-brand-accent text-white"
+                                ? "bg-brand-accent text-brand-on-fill"
                                 : "text-brand-surface/80"
                         }`}
                         title="Highlight"
@@ -203,7 +203,7 @@ export function EditorBubbleMenu({
                         }}
                         className={`p-1.5 rounded-brand hover:bg-brand-surface/20 transition-colors ${
                             editor.isActive("link")
-                                ? "bg-brand-accent text-white"
+                                ? "bg-brand-accent text-brand-on-fill"
                                 : "text-brand-surface/80"
                         }`}
                         title="Link"
@@ -224,7 +224,7 @@ export function EditorBubbleMenu({
                         }
                         className={`p-1.5 rounded-brand hover:bg-brand-surface/20 transition-colors ${
                             editor.isActive({ textAlign: "left" })
-                                ? "bg-brand-surface/30 text-white"
+                                ? "bg-brand-surface/30 text-brand-surface"
                                 : "text-brand-surface/80"
                         }`}
                         title="Align Left"
@@ -240,7 +240,7 @@ export function EditorBubbleMenu({
                         }
                         className={`p-1.5 rounded-brand hover:bg-brand-surface/20 transition-colors ${
                             editor.isActive({ textAlign: "center" })
-                                ? "bg-brand-surface/30 text-white"
+                                ? "bg-brand-surface/30 text-brand-surface"
                                 : "text-brand-surface/80"
                         }`}
                         title="Align Center"
@@ -259,7 +259,7 @@ export function EditorBubbleMenu({
                         }
                         className={`p-1.5 rounded-brand hover:bg-brand-surface/20 transition-colors ${
                             editor.isActive({ textAlign: "right" })
-                                ? "bg-brand-surface/30 text-white"
+                                ? "bg-brand-surface/30 text-brand-surface"
                                 : "text-brand-surface/80"
                         }`}
                         title="Align Right"

@@ -264,7 +264,7 @@ export function EditorToolbar({
                 onClick={() => editor.chain().focus().toggleHighlight().run()}
                 className={`p-1.5 rounded-brand hover:bg-brand-muted transition-colors ${
                     editor.isActive("highlight")
-                        ? "bg-brand-accent text-white"
+                        ? "bg-brand-accent text-brand-on-fill"
                         : "text-brand-ink"
                 }`}
                 title="Highlight (Mod-Shift-H)"
@@ -282,7 +282,7 @@ export function EditorToolbar({
                 }}
                 className={`p-1.5 rounded-brand hover:bg-brand-muted transition-colors ${
                     editor.isActive("link")
-                        ? "bg-brand-accent text-white"
+                        ? "bg-brand-accent text-brand-on-fill"
                         : "text-brand-ink"
                 }`}
                 title="Link (Mod-K)"
@@ -505,7 +505,7 @@ export function EditorToolbar({
                     <button
                         type="button"
                         onClick={setLink}
-                        className="px-2 py-1 text-xs font-bold font-brand-mono bg-brand-accent text-white rounded-brand hover:opacity-90"
+                        className="px-2 py-1 text-xs font-bold font-brand-mono bg-brand-accent text-brand-on-fill rounded-brand hover:opacity-90"
                     >
                         Save
                     </button>

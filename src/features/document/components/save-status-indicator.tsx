@@ -60,7 +60,7 @@ export function SaveStatusIndicator({
                     <button
                         type="button"
                         onClick={onSaveNow}
-                        className="flex items-center gap-1 px-1.5 py-0.5 ml-1 text-[10px] font-bold uppercase bg-brand-danger text-white hover:opacity-90 rounded-brand focus-visible:outline-2 focus-visible:outline-brand-ink"
+                        className="flex items-center gap-1 px-1.5 py-0.5 ml-1 text-[10px] font-bold uppercase bg-brand-danger text-brand-on-fill hover:opacity-90 rounded-brand focus-visible:outline-2 focus-visible:outline-brand-ink"
                     >
                         <RefreshCw className="w-2.5 h-2.5" aria-hidden="true" />
                         Retry

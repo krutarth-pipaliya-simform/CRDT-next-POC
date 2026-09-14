@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { UserDropdown } from "@/components/layout/user-dropdown";
 import { LinkButton } from "@/components/ui/link-button";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { auth } from "@/features/auth/lib/auth";
 import { db } from "@/lib/db";
 
@@ -38,11 +39,13 @@ export async function SiteHeader() {
                         Dashboard
                     </Link>
                     <div className="flex-1" />
+                    <ThemeToggle />
                     <UserDropdown user={navUser} />
                 </>
             ) : (
                 <>
                     <div className="flex-1" />
+                    <ThemeToggle />
                     <LinkButton href="/login" variant="primary" size="sm">
                         Log In
                     </LinkButton>

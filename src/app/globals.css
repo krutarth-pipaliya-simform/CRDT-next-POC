@@ -13,6 +13,14 @@
     --color-brand-success: #16a34a;
     --color-brand-warning: #d97706;
     --color-brand-border: #e8e8e8;
+    --color-brand-shadow: #1a1a1a;
+
+    /* Foreground for text sitting on a saturated fill (accent, danger) */
+    --color-brand-on-fill: #ffffff;
+
+    /* Code blocks stay dark in both themes — the bundled highlight.js theme is dark */
+    --color-brand-code-bg: #1a1a1a;
+    --color-brand-code-fg: #fbfbfb;
 
     /* Task Priority Tokens */
     --color-brand-priority-low: #6b7280;
@@ -25,6 +33,13 @@
     --color-brand-column-progress: #eef2ff;
     --color-brand-column-done: #f0fdf4;
 
+    /* Analytics Chart Tokens — read at runtime by the ECharts widgets */
+    --color-brand-chart-1: #2948ff;
+    --color-brand-chart-2: #16a34a;
+    --color-brand-chart-3: #d97706;
+    --color-brand-chart-4: #7c3aed;
+    --color-brand-chart-5: #0891b2;
+
     /* Typography */
     --font-brand-sans: var(--font-geist-sans);
     --font-brand-mono: var(--font-geist-mono);
@@ -32,15 +47,70 @@
     /* Radius — 0px is the Machined Precision signature */
     --radius-brand: 0px;
 
-    /* Shadows — hard, no blur */
-    --shadow-brand-subtle: 2px 2px 0px #1a1a1a;
-    --shadow-brand-card: 4px 4px 0px #1a1a1a;
-    --shadow-brand-hover: 6px 6px 0px #1a1a1a;
+    /* Shadows — hard, no blur. The colour is a token so dark mode can restate it */
+    --shadow-brand-subtle: 2px 2px 0px var(--color-brand-shadow);
+    --shadow-brand-card: 4px 4px 0px var(--color-brand-shadow);
+    --shadow-brand-hover: 6px 6px 0px var(--color-brand-shadow);
+}
+
+/* ─── Dark Theme ───────────────────────────────────────────
+   Only the token values are restated; every component keeps using the same
+   semantic classes (bg-brand-surface, text-brand-ink, …) and flips with them.
+   `@theme` emits into Tailwind's `theme` layer, so this unlayered block wins.
+   `data-theme` is always resolved to a concrete value by the init script in
+   `src/lib/theme.ts`, so no `prefers-color-scheme` query is needed here.      */
+[data-theme="dark"] {
+    --color-brand-ink: #ededed;
+    --color-brand-accent: #6c86ff;
+    --color-brand-surface: #141414;
+    --color-brand-muted: #1f1f1f;
+    --color-brand-subtle: #a3a3a3;
+    --color-brand-danger: #ff6b6b;
+    --color-brand-success: #4ade80;
+    --color-brand-warning: #fbbf24;
+    --color-brand-border: #2e2e2e;
+    --color-brand-shadow: #000000;
+    /* The dark palette's accent and danger are lighter, so their foreground inverts */
+    --color-brand-on-fill: #101010;
+
+    --color-brand-code-bg: #0d0d0d;
+    --color-brand-code-fg: #ededed;
+
+    --color-brand-priority-low: #9ca3af;
+    --color-brand-priority-medium: #6c86ff;
+    --color-brand-priority-high: #fbbf24;
+    --color-brand-priority-urgent: #ff6b6b;
+
+    --color-brand-column-todo: #1a1a1a;
+    --color-brand-column-progress: #171c33;
+    --color-brand-column-done: #12231a;
+
+    --color-brand-chart-1: #6c86ff;
+    --color-brand-chart-2: #4ade80;
+    --color-brand-chart-3: #fbbf24;
+    --color-brand-chart-4: #a78bfa;
+    --color-brand-chart-5: #22d3ee;
 }
 
 /* ─── Base Reset ────────────────────────────────────────── */
 :root {
     color-scheme: light;
+}
+
+[data-theme="dark"] {
+    color-scheme: dark;
+}
+
+/* Theme changes animate, so the switch reads as a transition rather than a jump.
+   Honoured only when the visitor has not asked for reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+    html[data-theme] body,
+    html[data-theme] body * {
+        transition:
+            background-color 150ms ease-out,
+            border-color 150ms ease-out,
+            color 150ms ease-out;
+    }
 }
 
 html,
@@ -80,6 +150,23 @@ body {
     to {
         width: 100%;
     }
+}
+
+@keyframes chatTypingPulse {
+    0%,
+    60%,
+    100% {
+        opacity: 0.25;
+        transform: translateY(0);
+    }
+    30% {
+        opacity: 1;
+        transform: translateY(-2px);
+    }
+}
+
+@utility animate-chat-typing {
+    animation: chatTypingPulse 1.2s ease-in-out infinite;
 }
 
 @utility animate-fade-in-up {
@@ -240,8 +327,8 @@ body {
 }
 
 .ProseMirror pre {
-    background-color: var(--color-brand-ink);
-    color: var(--color-brand-surface);
+    background-color: var(--color-brand-code-bg);
+    color: var(--color-brand-code-fg);
     font-family: var(--font-brand-mono), monospace;
     padding: 1rem;
     margin: 1rem 0;
@@ -296,7 +383,7 @@ body {
     right: 0;
     top: 0;
     bottom: 0;
-    background: rgba(41, 72, 255, 0.15);
+    background: color-mix(in srgb, var(--color-brand-accent) 15%, transparent);
     pointer-events: none;
 }
 

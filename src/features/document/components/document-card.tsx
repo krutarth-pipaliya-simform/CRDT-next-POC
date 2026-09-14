@@ -57,7 +57,7 @@ export function DocumentCard({
             <Card className="flex flex-col justify-between p-5 hover:border-brand-accent transition-all duration-150 group min-w-0 w-full overflow-hidden">
                 <div className="flex items-start justify-between gap-3">
                     <div className="flex items-start gap-3 min-w-0">
-                        <div className="p-2.5 bg-brand-muted border-2 border-brand-ink rounded-brand text-brand-ink group-hover:bg-brand-accent group-hover:text-white transition-colors">
+                        <div className="p-2.5 bg-brand-muted border-2 border-brand-ink rounded-brand text-brand-ink group-hover:bg-brand-accent group-hover:text-brand-on-fill transition-colors">
                             <FileText className="w-5 h-5" aria-hidden="true" />
                         </div>
                         <div className="flex flex-col min-w-0">

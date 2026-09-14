@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { Toaster } from "sonner";
+import { AppToaster } from "@/components/theme/app-toaster";
+import { ThemeProvider } from "@/components/theme/theme-provider";
+import { THEME_INIT_SCRIPT } from "@/lib/theme";
+
 import "./globals.css";
 
 const geistSans = Geist({
@@ -22,13 +25,24 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     return (
         <html
             lang="en"
+            data-theme="light"
+            suppressHydrationWarning
             className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
         >
+            <head>
+                {/* Runs while the HTML is parsed, before the first paint, so a
+                    dark-mode visitor never sees a flash of the light default. */}
+                <script
+                    dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }}
+                />
+            </head>
             <body className="min-h-full flex flex-col max-w-full overflow-x-hidden">
-                <div className="flex-1 flex flex-col w-full max-w-full overflow-x-hidden min-w-0">
-                    {children}
-                </div>
-                <Toaster position="bottom-right" />
+                <ThemeProvider>
+                    <div className="flex-1 flex flex-col w-full max-w-full overflow-x-hidden min-w-0">
+                        {children}
+                    </div>
+                    <AppToaster />
+                </ThemeProvider>
             </body>
         </html>
     );
