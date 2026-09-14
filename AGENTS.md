@@ -35,6 +35,16 @@ The file `docs/architecture-review.md` is the **authoritative technical specific
 - **Semantic Tokens**: You MUST use semantic brand tokens defined in the design system (e.g., `bg-brand-accent`, `text-brand-danger`).
 - **Extending the System**: If a required color or design token does not exist, you must first define it in `src/app/globals.css` inside the `@theme` block as a `--color-brand-*` variable (or similar brand token), and then consume it in the UI.
 
+### Theming & Dark Mode Conventions (Binding)
+
+- **Two Palettes, One Component Tree**: Dark mode is a restatement of token _values_ under `[data-theme="dark"]` in `src/app/globals.css`, never a second set of styles. Do NOT use Tailwind's `dark:` variant, and do not branch component markup on the theme — if a surface needs a `dark:` class, the colour it uses should have been a token.
+- **Every New Token Needs Both Values**: A `--color-brand-*` added to the `@theme` block MUST also be given a dark value in the `[data-theme="dark"]` block. A token defined in only one place silently breaks one theme.
+- **Text on Saturated Fills Uses `--color-brand-on-fill`**: The dark palette's accent and danger are lighter than the light palette's, so white text on them fails contrast. Never hardcode `text-white` on a filled element.
+- **The Theme Is Resolved Before Paint**: `THEME_INIT_SCRIPT` in `src/lib/theme.ts` runs synchronously in `<head>` and is the only thing that decides the initial theme. `<html>` keeps `suppressHydrationWarning` because that script rewrites the server-rendered attribute.
+- **Never Derive Theme State From the DOM During Render**: `ThemeProvider` reads the preference via `useSyncExternalStore` with a server snapshot so the hydrating render matches the server. Reading `localStorage` or `document.documentElement` in a render (or seeding `useState` from them) reintroduces the hydration mismatch this is built to avoid.
+- **Theme Writes Happen Outside the Render Cycle**: A preference change writes `data-theme` synchronously in the handler, before React re-renders. Anything reading resolved tokens back out of the cascade during render would otherwise be one frame stale.
+- **Colour Read in JavaScript Takes the Theme as an Argument**: `readChartPalette(theme)` — the resolved theme is an explicit input with a per-theme fallback, so memoising on it declares a real dependency instead of an unused one.
+
 ---
 
 ### Reusable Components & DRY Architecture (Binding)
@@ -105,12 +115,45 @@ All TypeScript/React source files MUST strictly follow these ordering and naming
 - **Session Takeover Protocol**: Read-only sessions display `<ReadOnlyBanner>` allowing the user to click "Take Over Editing", which updates awareness timestamps, promoting that session to active editor and cleanly demoting earlier sessions to read-only.
 - **Autosave Suppression**: Secondary/read-only sessions must NEVER trigger autosaves or write to the database to prevent stale overwrites.
 
+### Realtime Chat & Notification Conventions (Binding)
+
+- **PostgreSQL Is the Source of Truth for Chat**: A chat message MUST be persisted by `sendMessageAction` _before_ it is appended to the shared `Y.Array`. The CRDT room (`chat:<workspaceId>`) is a fan-out channel, never the system of record. Clients de-duplicate by database id so the server-rendered history and the CRDT replay converge.
+- **One Collaboration Server**: Chat and documents share the standalone Yjs WebSocket server and the `NEXT_PUBLIC_COLLAB_WS_URL` variable. Do NOT introduce a second realtime transport or a bespoke JSON WebSocket protocol.
+- **Notifications Are Best-Effort**: All notification emission goes through `notify()` in `src/features/notification/lib/notify.ts`, which writes one row per recipient and then publishes to `notificationBus`. `notify()` logs and swallows its own failures — a notification problem must NEVER fail the mutation that triggered it, so never wrap a mutation's success path in its error handling.
+- **Never Notify the Actor**: Every trigger must exclude the user who caused it, via `excludeUserIds` or an explicit `recipientIds` list.
+- **Task Notifications Are Centralized**: Every task write path (create, update, move/drag) MUST emit through `notifyTaskChange()` in `src/features/task/lib/notify-task-change.ts` so a task reaching `DONE` or landing on someone's plate is announced identically regardless of entry point.
+- **SSE Recipients Come From the Session**: `/api/notifications/stream` MUST derive the recipient from `auth()`, never from a query parameter or header. The stream must send an opening frame, heartbeat regularly, and unsubscribe on `request.signal` abort.
+- **Realtime State Must Not Break Hydration**: Client hooks that create a provider only in the browser MUST seed their connection status to a constant (e.g. `"connecting"`) rather than deriving it from the provider. Deriving it produces a server/client mismatch that makes React discard and re-render the tree, which silently drops in-flight user input. See `useWorkspaceChat`.
+
+### Billing, Subscriptions & Stripe Conventions (Binding)
+
+- **Stripe Is the Source of Truth for Entitlement**: The `Subscription` row is a projection of Stripe state, never the origin of it. Plan changes are written by the webhook (`syncSubscriptionToWorkspace` / `downgradeWorkspaceToFree`), never by a client-triggered action optimistically flipping a workspace to `PRO`.
+- **Never Trust the Return URL**: A Checkout success URL proves nothing. Attribution comes from the `workspaceId` stamped into the session metadata, the subscription metadata, and `client_reference_id`, and the checkout branch re-fetches the subscription from Stripe rather than trusting the session snapshot.
+- **Webhooks Verify the Raw Body**: The handler must read `await request.text()` and pass those exact bytes to `stripe.webhooks.constructEventAsync`. Parsing to JSON first invalidates the signature. `api/webhooks` must stay excluded from the `proxy.ts` matcher so Stripe is never redirected to `/login`.
+- **Webhook Delivery Is At-Least-Once**: Every event id is claimed in `StripeWebhookEvent` before any work is done; a duplicate returns 200 without re-applying. A handler failure must release the claim and return 500 so Stripe retries.
+- **Entitlement Is Resolved Server-Side, Every Request**: Gate features through `resolveEffectivePlan()` (plan + status), never on `plan === "PRO"` alone, and never on a client-supplied value. A search param that requests a paid capability (e.g. `?range=90d`) must fall back on the server, not merely be hidden in the UI.
+- **One Plan Catalog**: Plan names, prices, copy, and per-plan limits live only in `src/features/billing/lib/plans.ts`. UI and entitlement checks both read from it, so a new limit is added in one place.
+- **Read Subscription Fields From the Pinned API Version, Not From Memory**: On the version stripe-node pins here (`2026-08-26.dahlia`), the billing period lives on `subscription.items.data[].current_period_end`, and a cancellation booked through the billing portal arrives as a `cancel_at` timestamp with `cancel_at_period_end` still `false`. Both are handled in `sync-subscription.ts`; check the shipped `.d.ts` before trusting an older field name.
+- **Stripe Config Is Optional at Boot**: `src/lib/env.ts` keeps the Stripe variables optional and `getStripeContext()` returns a discriminated union. The app must start, build, and run without billing configured — surfaces degrade with a readable notice instead of throwing.
+
+### Analytics & Charting Conventions (Binding)
+
+- **Charts Read the Design System**: ECharts colors come from `readChartPalette()`, which reads the `--color-brand-chart-*` tokens out of the cascade at runtime. Never hardcode hex values in a chart option; add a token in `globals.css` first, exactly as with Tailwind classes.
+- **ECharts Is Always Dynamically Imported**: The library loads inside `src/features/dashboard/components/echart.tsx` via `import("echarts")` so its payload never reaches routes that draw nothing. Charts are created once per mount; option changes go through `setOption(option, true)`.
+- **Every Chart Carries a Text Summary**: Charts render as `role="img"` with an `aria-label` stating the actual numbers, and headline figures are duplicated in server-rendered `<StatTile>`s so the page is useful before (and without) hydration.
+- **Aggregation Queries Guard Themselves**: `getWorkspaceAnalytics` re-checks membership via `getWorkspaceRole` and returns `null` for non-members, independently of the page's own guard.
+
 ### Server & Monorepo Build Isolation Convention (Binding)
 
 - **Standalone `server/` Directory**: The Node.js Express collaboration server lives in `server/` with its own `package.json` and `tsconfig.json`.
 - **Root `tsconfig.json` Exclusion**: The root `tsconfig.json` MUST exclude `"server"` so Next.js / Vercel builds do not attempt to typecheck Express/Helmet/CORS dependencies from the root Next.js build environment.
 
 ---
+
+### Dependency Hygiene (Binding)
+
+- **Install With `--legacy-peer-deps`**: Tiptap's strict `@tiptap/core` peer range means a plain `npm install` fails. Every install in this repo uses `--legacy-peer-deps`.
+- **Peer Dependencies Must Be Explicit**: `--legacy-peer-deps` prunes hoisted peers that nothing declares directly. `y-prosemirror` and `highlight.js` were silently removed by an unrelated install and broke the document editor build, so both are now explicit `dependencies`. If an install reports "removed N packages", check the lockfile diff before moving on.
 
 ### API Design & Refactoring Instructions
 

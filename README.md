@@ -8,6 +8,8 @@ An enterprise-grade collaborative SaaS workspace built with Next.js 16 and React
 - **Language**: TypeScript (Strict Mode)
 - **Styling**: Tailwind CSS v4 with a custom "Machined Precision" aesthetic
 - **Database**: PostgreSQL with Prisma ORM
+- **Billing**: Stripe Checkout + Billing Portal, verified webhooks at `/api/webhooks/stripe`
+- **Charts**: Apache ECharts, dynamically imported on the analytics route only
 - **Authentication**: NextAuth v5 (Auth.js) supporting Google OAuth & Email/Password Credentials
 - **Formatting**: Prettier (4 spaces, enforced via `.prettierrc`)
 - **Git Hooks**: Husky & lint-staged (Formats code, checks types on commit, runs build on push)
@@ -19,6 +21,7 @@ An enterprise-grade collaborative SaaS workspace built with Next.js 16 and React
 1. **Design System & Component Library**
     - Built a robust, centralized design system utilizing Tailwind v4 `@theme` block in `globals.css`.
     - **Strict Styling Convention**: Usage of raw Tailwind colors (e.g. `bg-blue-500`) is prohibited. All UI must be styled using semantic brand tokens (e.g. `bg-brand-accent`). New colors must be added to the design system first.
+    - **Light & Dark Themes**: Every colour is a semantic token, so dark mode is a second set of token values rather than a second set of components — no `dark:` variants anywhere in the tree. `src/app/globals.css` defines the light palette in `@theme` and restates only the values under `[data-theme="dark"]`.
     - Base primitives (Button, LinkButton, Input, FormField, Card, Badge, Alert, Dialog, NavTabs, etc.) established in `src/components/ui/`.
     - **Reusable Navigation Primitive (`NavTabs`)**: Extracted a unified, accessible, and fully configurable navigation tabs component (`src/components/ui/nav-tabs.tsx`) serving as the single source of truth for tabbed routing, workspace sections, settings sub-navigation, and dashboard workspace filter bars with automatic `usePathname()` route matching, explicit `activeValue` support, and WAI-ARIA compliance.
 
@@ -31,7 +34,7 @@ An enterprise-grade collaborative SaaS workspace built with Next.js 16 and React
     - Password hashing with `bcryptjs`.
 
 3. **Database (Prisma)**
-    - Configured `schema.prisma` for NextAuth integration (User, Account, Session, VerificationToken) alongside base domain models (Workspace, Document, Task).
+    - Configured `schema.prisma` for NextAuth integration (User, Account, Session, VerificationToken) alongside the domain models (Workspace, WorkspaceMember, WorkspaceInvitation, Document, Task, Message, Notification) and the billing models (Subscription, StripeWebhookEvent).
 
 4. **User Profile & Account Settings**
     - Comprehensive profile page at `/profile` for users to manage personal details and account preferences.
@@ -116,6 +119,40 @@ An enterprise-grade collaborative SaaS workspace built with Next.js 16 and React
     - **Strict Role-Based Access Control (RBAC)**: Admins and Members can create, edit, move, and delete tasks; Guests are restricted to view-only mode with disabled drag, non-interactive badges, and hidden action triggers.
     - **E2E Test Suite**: Comprehensive Playwright test suite (`e2e/task.spec.ts`) with 8 scenarios verifying empty state, task creation, priority cycling, detail editing, search filtering, drag-and-drop column transition, deletion confirmation, and guest RBAC enforcement.
 
+10. **Team Chat, Presence & Notifications (Phase 5 / FR-13, FR-14)**
+    - **Realtime Workspace Chat**: A `#general` channel per workspace at `/[workspaceId]/chat`, backed by the same standalone Yjs collaboration server as the document editor (room `chat:<workspaceId>`). PostgreSQL is the source of truth — `sendMessageAction` persists the message first, then the author appends it to a shared `Y.Array` that fans it out to every connected client. Messages are de-duplicated by database id, so the server-rendered history and the CRDT replay converge on one list.
+    - **Optimistic Message Delivery**: Messages render immediately in a `sending` state, swap to the persisted row on success, and fall back to an inline `Not sent / Retry` affordance on failure — no message is ever silently lost.
+    - **Online Presence & Typing Indicators**: Yjs awareness drives a live participant bar (deterministic per-user colors via the shared `getUserColor` palette, overflow chip, and connection status) plus a debounced typing indicator. Typing flags are re-derived on a timer so a peer who goes quiet expires correctly instead of appearing stuck.
+    - **Composer Ergonomics**: Auto-growing textarea, `Enter` to send / `Shift+Enter` for a newline, a 2000-character limit with a counter that appears near the threshold, and `@mention` support.
+    - **SSE Notification Stream**: `GET /api/notifications/stream` is an authenticated Server-Sent Events route handler. The recipient is taken from the session — never the request — so a client cannot subscribe to another user's notifications. It sends an opening `ready` frame, 25-second heartbeat comments to defeat proxy buffering, and unsubscribes cleanly on `request.signal` abort. The client reconnects automatically on error.
+    - **Notification Bell & Activity Feed**: A bell in the site header shows a live unread badge, a dropdown of recent notifications with a per-item read state, `Mark all read`, and a live-connection dot. Each workspace also has an `/[workspaceId]/activity` feed listing that user's workspace activity, read and unread alike.
+    - **Notification Triggers**: `TASK_ASSIGNED` (on creation and on reassignment, never to the actor), `TASK_COMPLETED` (any path into the `Done` column, including a drag), `DOCUMENT_CREATED`, `MEMBER_JOINED` (invite link and public self-join), and `MENTION` (chat `@mentions` resolved against workspace display names and email handles).
+    - **Best-Effort Delivery**: `notify()` fans out one persisted row per recipient and then publishes to an in-process bus. Failures are logged and swallowed, so a notification problem can never fail the mutation that triggered it.
+    - **Strict RBAC**: Admins and Members can post; Guests read the channel with the composer replaced by a join prompt. `getWorkspaceMessages` and `getWorkspaceActivity` each re-verify membership independently of the calling page.
+    - **E2E Test Suite**: Playwright coverage (`e2e/chat.spec.ts`) with 8 scenarios verifying channel rendering, message persistence across reloads, Enter/Shift+Enter behaviour, guest read-only mode, cross-session realtime broadcast, cross-session typing indicators, SSE-driven mention notifications reaching the bell and the activity feed, and workspace-scoped `Mark all read`.
+
+11. **Billing & Analytics Dashboard (Phase 6 / FR-15, FR-16)**
+    - **Stripe Checkout (Free / Pro)**: Each workspace carries its own subscription. `createCheckoutSessionAction` (admin-only) creates or reuses the workspace's Stripe customer, then opens a hosted Checkout Session for the Pro price. The workspace id is stamped into the session metadata, the subscription metadata, and `client_reference_id`, so the payment is attributed server-side rather than from the success URL.
+    - **Stripe Billing Portal**: Once a workspace has a Stripe customer, admins get a `Manage Billing` action that opens the hosted portal for card updates, invoices, and cancellation. Cancellations return as webhooks.
+    - **Webhook Handler (`POST /api/webhooks/stripe`)**: Verifies the `stripe-signature` header against the raw request body (`await request.text()` — parsing first would invalidate the signature). It handles `checkout.session.completed`, `customer.subscription.updated`, and `customer.subscription.deleted`; the checkout branch re-fetches the subscription from Stripe rather than trusting the session snapshot. `api/webhooks` is excluded from the `proxy.ts` matcher so Stripe is never redirected to `/login`.
+    - **Verified Against Live Test-Mode Stripe**: The full lifecycle was exercised end to end — hosted Checkout paid with test card `4242…`, `checkout.session.completed` flipping the workspace to `PRO/ACTIVE`, a portal-booked cancellation landing as `customer.subscription.updated`, and an immediate cancellation landing as `customer.subscription.deleted` and dropping the workspace back to Free with the 90-day analytics range re-locked.
+    - **Replay-Safe by Construction**: Every event id is claimed in the `StripeWebhookEvent` table before any work happens, so Stripe's retries become no-ops; if a handler throws, the claim is released and a 500 invites Stripe to retry.
+    - **Entitlement Is Server-Resolved**: `resolveEffectivePlan()` collapses plan + status into the plan a workspace may actually use, so a `PAST_DUE` or `CANCELED` Pro workspace silently reads as Free everywhere. `getWorkspaceSubscription` re-verifies membership independently of the calling page.
+    - **ECharts Analytics Dashboard**: `/[workspaceId]/analytics` renders a completion-rate gauge, a daily activity series (tasks created, tasks completed, documents, messages), a status donut, a priority bar chart, and a contributor leaderboard. ECharts is imported dynamically inside the chart host, so its ~300KB payload only loads on this route, and each chart is a `role="img"` with a summary label for assistive technology.
+    - **Design-System-Driven Charts**: Chart colors are read out of the `--color-brand-chart-*` tokens at runtime via `readChartPalette()` instead of being hardcoded, so the charts follow the design system rather than duplicating it.
+    - **Plan Gating on Analytics History**: Free workspaces get the 7-day window; the 30- and 90-day tabs render disabled with a `Pro` badge. A hand-typed `?range=90d` is refused on the server and falls back to 7 days, so the gate is not merely a UI affordance.
+    - **E2E Test Suite**: Playwright coverage (`e2e/billing.spec.ts`) with 7 scenarios verifying the Free plan view with its upgrade path, an active Pro subscription with a portal entry point, non-admin lockout from billing settings, analytics tiles plus all five ECharts widgets reaching a ready state, Free-plan range locking with server-side fallback, the 90-day range unlocked on Pro, and the empty-activity state.
+
+12. **Theming & Dark Mode**
+    - **Three-State Preference**: A header control offers Light, Dark, and System. `system` is a first-class stored choice, not a hidden default, and follows the OS live — changing the system appearance while `system` is selected re-themes the open page without a reload.
+    - **No Flash Before Hydration**: `THEME_INIT_SCRIPT` (`src/lib/theme.ts`) runs synchronously in `<head>`, reading `localStorage` and stamping `data-theme` on `<html>` before the browser paints, following the Next.js 16 [preventing-flash-before-hydration](./node_modules/next/dist/docs/01-app/02-guides/preventing-flash-before-hydration.md) guide. `<html>` carries `suppressHydrationWarning` because the script changes the attribute the server rendered.
+    - **Hydration-Safe State**: `ThemeProvider` reads the preference through `useSyncExternalStore` with a server snapshot, so the hydrating render matches the server exactly and the real value is adopted immediately afterwards — no `setState` in an effect, no mismatch.
+    - **Theme Applied Outside the Render Cycle**: A change writes `data-theme` to the document synchronously in the event handler before React re-renders, so consumers that read resolved tokens back out of the cascade during render (the ECharts widgets) never paint one frame behind.
+    - **Charts Follow the Theme**: `readChartPalette(theme)` takes the resolved theme as an explicit input and carries a per-theme fallback set, so every chart re-derives its colours from the live tokens when the theme flips.
+    - **Cross-Surface Coverage**: Sonner toasts receive the resolved theme explicitly (`AppToaster`); Kanban column tints, task priority badges, the collaborative editor, code blocks (which stay dark in both themes to match the bundled highlight.js theme), and hard-edged shadows all have dark values. Shadows are tokenised via `--color-brand-shadow` so the "Machined Precision" hard shadow stays visible on a dark ground.
+    - **Cross-Tab Sync**: A change in one tab propagates through the `storage` event; other tabs re-theme without a reload.
+    - **E2E Test Suite**: Playwright coverage (`e2e/theme.spec.ts`) with 6 scenarios verifying OS-default resolution in both directions, switching and persistence across a hard reload, an explicit choice overriding the OS, the init script shipping inside `<head>` ahead of any body content, returning to `system` and picking up a live OS change, and the control exposing an accessible radio group.
+
 ## Getting Started
 
 1. **Environment Setup**
@@ -129,12 +166,65 @@ An enterprise-grade collaborative SaaS workspace built with Next.js 16 and React
     ```
 
 3. **Run the Development & Collaboration Servers**
+
+    `npm run dev` starts both the Next.js app and the collaboration WebSocket server (port 1234) via `concurrently`. The collaboration server backs both the document editor and workspace chat, so real-time features need it running.
+
     ```bash
-    # Terminal 1: Run the Next.js web application
+    # Runs Next.js and the collaboration WebSocket server together
     npm run dev
 
-    # Terminal 2 (Optional for real-time multiplayer WebSocket sync):
+    # Or run them separately
+    npm run dev:next
     npm run collab:dev
     ```
 
+    Point the browser at the collaboration server with `NEXT_PUBLIC_COLLAB_WS_URL` (defaults to `ws://<current-host>:1234` when unset).
+
+4. **Billing (Stripe)**
+
+    Checkout, the billing portal, and the webhook stay disabled until all three variables are set in `.env`:
+
+    ```bash
+    STRIPE_SECRET_KEY="sk_test_..."
+    STRIPE_WEBHOOK_SECRET="whsec_..."   # printed by `stripe listen`
+    STRIPE_PRO_PRICE_ID="price_..."     # a recurring price on the Pro product
+    ```
+
+    Forward webhooks to the app while developing:
+
+    ```bash
+    stripe listen --forward-to localhost:3000/api/webhooks/stripe
+    ```
+
+    Without these, the billing page renders a "Stripe is not configured" notice and the upgrade button is disabled — the rest of the app is unaffected.
+
 Open [http://localhost:3000](http://localhost:3000) with your browser. You will be automatically redirected to the `/login` screen due to the `proxy.ts` auth guard.
+
+## Known Limitations (Theming)
+
+- **The preference is per-browser, not per-account.** It lives in `localStorage`, so a new device or a cleared profile starts from the OS setting. Storing it on the `User` row would let the server render the right theme on the first byte, at the cost of a session read in the root layout.
+- **No `prefers-color-scheme` fallback in CSS.** The dark palette is keyed entirely to `[data-theme="dark"]`, which the init script always resolves. If that script is blocked (a strict CSP without a nonce), the app stays light for a dark-mode visitor rather than degrading to their OS preference.
+- **No high-contrast or dimmed variants.** Two themes only; the token layer would support more without touching components.
+
+## Known Limitations (Phase 6)
+
+- **Plan gating is limited to analytics history.** Pro unlocks the 30- and 90-day windows; nothing else in the product is metered. Member seats, document counts, and storage are deliberately unlimited on both plans, so the entitlement surface stays small enough to reason about.
+- **`checkout.session.completed` is not the only handled event.** The phase called for one webhook, but adding the Stripe billing portal means a cancellation arrives as `customer.subscription.deleted` and a card change as `customer.subscription.updated`. All three are handled on the single endpoint; without the latter two the portal could silently desync the database from Stripe.
+- **No proration, seats, or annual pricing.** One recurring price, one subscription per workspace. Upgrading a workspace that already has an active Pro subscription is refused rather than modified.
+- **"Task completed" is inferred from `updatedAt`.** The schema has no completion timestamp, so a `DONE` task edited later re-dates its completion in the activity series. The completion rate and status mix, which read the current board, are exact.
+- **Charts are client-rendered.** ECharts needs a DOM, so the widgets draw after hydration and are not present in the server HTML. The stat tiles above them are server-rendered and carry the same headline numbers.
+- **No billing notifications.** A plan change is not announced through the `notify()` bus; adding it would mean a new `NotificationType` enum value and icon mapping, which was out of scope for this phase.
+
+## Known Limitations (Phase 5)
+
+Deliberate scope cuts, recorded so the trade-offs are explicit rather than accidental:
+
+- **Single-process notification fan-out.** `src/lib/notification-bus.ts` is an in-memory pub/sub hub, so an SSE reader only receives events published by the _same_ Node process. Notifications are always persisted to PostgreSQL first, so nothing is lost — a reader on another instance simply sees them on next render instead of instantly. Horizontal scaling needs a shared broker (Redis pub/sub, Postgres `LISTEN/NOTIFY`) behind the same `notificationBus` interface.
+- **SSE needs a long-lived server.** The stream route sets `maxDuration = 300` and heartbeats every 25s, which suits a Node server. On a platform that caps request duration more aggressively, the client's auto-reconnect covers the gap but delivery becomes near-realtime rather than realtime.
+- **Chat history is not paginated.** The channel loads the most recent 50 messages and the shared CRDT array is capped at 300 entries. There is no infinite scroll into older history; the full record lives in PostgreSQL.
+- **`@mentions` resolve by display name, not by a picker.** Mentions match a member's display name, their name's first word, or their email's local part. There is no autocomplete UI and no disambiguation between two members with the same first name — the first registered match wins.
+- **No per-user notification preferences.** Every trigger notifies every eligible member; there is no muting, digesting, or per-type opt-out.
+
+### Pre-existing issue (not introduced by Phase 5 or Phase 6)
+
+`e2e/document.spec.ts` → _"should prevent simultaneous editing from multiple sessions and enforce read-only mode with takeover capability"_ fails against a local collaboration server. Verified to fail identically at commit `c8a424c`, before any Phase 5 work. A likely contributor is that `useDocumentCollab` seeds `connectionStatus` from `provider`, which is `null` during SSR and non-null on the client, producing a hydration mismatch that discards and re-renders the tree. The equivalent bug in `useWorkspaceChat` was fixed by always seeding `"connecting"`; the document hook was left alone as out of scope for both phases. It was re-confirmed as the only failing test after Phase 6 (41 passed, 1 failed).
