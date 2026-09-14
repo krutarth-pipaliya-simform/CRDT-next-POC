@@ -35,6 +35,25 @@ The file `docs/architecture-review.md` is the **authoritative technical specific
 - **Semantic Tokens**: You MUST use semantic brand tokens defined in the design system (e.g., `bg-brand-accent`, `text-brand-danger`).
 - **Extending the System**: If a required color or design token does not exist, you must first define it in `src/app/globals.css` inside the `@theme` block as a `--color-brand-*` variable (or similar brand token), and then consume it in the UI.
 
+### Visual Language: "Presence First" (Binding)
+
+The product has exactly one organising idea, and every other visual decision is downstream of it.
+
+- **Saturated Colour Means a Person.** The eight `--color-brand-presence-*` hues are the only saturated colour in the product, and they are assigned to people. Anything that is not a person — a status, a category, a button, a chart of counts — is set in ink, paper and the neutral scale.
+- **Blue Belongs to the System, and Nothing Else.** `--color-brand-accent` is focus, selection and links. No presence hue is blue, so a warm saturated tone always means "someone" and a cool one always means "the interface is talking to you". The only other exceptions are `--color-brand-danger` for destructive intent and `--color-brand-warning` for attention.
+- **Never Pick a Presence Hue by Hand.** Call `presenceVar(userId)` / `presenceTint(userId)` from `src/lib/presence.ts`. The hash guarantees one person keeps one colour across every surface and session, which is the only reason the colour is learnable. `getUserColor()` exists solely for CRDT awareness payloads, which must be theme-independent because a peer renders them on their own screen.
+- **Tokens Read at Runtime MUST NOT Live in `@theme`.** Tailwind v4 only emits a theme variable whose name it can find spelled out in the source. `presenceVar()` composes names from a hash and `readChartPalette()` reads values with `getComputedStyle`, so both were silently tree-shaken out of the light build. They are declared as plain custom properties in the `:root` block below `@theme`; put any future runtime-read token there too.
+- **One Structural Device: the Rail.** `<PresenceRail>` is a 3px edge that always answers "who?" — never status, never category, never decoration. It segments for multiple people. Do not invent a second ornament that carries the same job.
+- **Elevation Is Rationed.** `--shadow-brand-*` is for surfaces that genuinely float: dialogs, menus, a card mid-drag. A resting card sits flat on a `border-brand-border` rule. When every card carries a hard shadow, the shadow stops meaning "raised" and starts meaning "card".
+- **Two Voices, and Mono Is Not a Label Font.** Schibsted Grotesk is the product chrome; Newsreader (`font-brand-serif`) is scoped to the document canvas so a document reads like a document. `font-brand-mono` is for real data only — timestamps, ids, counters, tabular figures — and never for buttons, tabs, eyebrows or labels.
+- **Sentence Case, No Tracked Caps.** `uppercase tracking-widest` on a label is banned; it made nine different pages share one silhouette. Write UI text the way a person would say it, and name an action by what it does ("Delete document", not "Confirm").
+- **Motion Answers an Action.** Menus, dialogs and confirmations may animate because someone asked for them (`animate-pop-in`). The only unprompted motion in the product is the merge demo on the landing page. Do not reintroduce a staggered page-load cascade. Everything honours `prefers-reduced-motion`, and a component that animates must read the preference as a subscription (`useSyncExternalStore`), never with a `setState` inside an effect.
+- **Role and Time Labels Come From One Place.** `WORKSPACE_ROLE_LABELS` in `src/schemas/workspace.ts` and the helpers in `src/lib/format-time.ts` are shared. Do not re-declare either inside a feature.
+
+### Server/Client Module Boundaries for Shared Styles (Binding)
+
+- **Style Constants Must Not Live in a `"use client"` Module.** `Button` needs `useFormStatus`, so it is a client component; when a server component imports a value from a client module the bundler returns a client reference and the value arrives `undefined`. This silently rendered every `<LinkButton>` with `class=""`. Shared class maps live in `src/components/ui/button-styles.ts`, which has no `"use client"` directive.
+
 ### Theming & Dark Mode Conventions (Binding)
 
 - **Two Palettes, One Component Tree**: Dark mode is a restatement of token _values_ under `[data-theme="dark"]` in `src/app/globals.css`, never a second set of styles. Do NOT use Tailwind's `dark:` variant, and do not branch component markup on the theme — if a surface needs a `dark:` class, the colour it uses should have been a token.

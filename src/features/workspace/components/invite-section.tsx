@@ -41,7 +41,7 @@ export function InviteSection({ workspaceId }: InviteSectionProps) {
 
     return (
         <div className="flex flex-col gap-4 max-w-md">
-            <p className="text-xs font-brand-mono text-brand-subtle">
+            <p className="text-xs text-brand-subtle">
                 Generate a secure invitation link. Links expire in 24 hours and
                 can be used once.
             </p>
@@ -60,7 +60,7 @@ export function InviteSection({ workspaceId }: InviteSectionProps) {
                 <div className="flex flex-col gap-3 p-4 bg-brand-muted border-2 border-brand-border rounded-brand animate-fade-in-up">
                     <label
                         htmlFor="shareable-link"
-                        className="font-brand-mono text-xs uppercase tracking-widest text-brand-subtle"
+                        className="text-xs text-brand-subtle"
                     >
                         Shareable Link
                     </label>
@@ -70,7 +70,7 @@ export function InviteSection({ workspaceId }: InviteSectionProps) {
                         type="text"
                         readOnly
                         value={link}
-                        className="w-full bg-brand-surface text-brand-ink font-brand-mono text-xs px-3 py-2 border border-brand-border outline-none select-all"
+                        className="w-full bg-brand-surface text-brand-ink text-xs px-3 py-2 border border-brand-border outline-none select-all"
                         onClick={(e) => e.currentTarget.select()}
                     />
                     <div className="flex items-center justify-between gap-4 pt-1">
@@ -82,7 +82,7 @@ export function InviteSection({ workspaceId }: InviteSectionProps) {
                         >
                             {copied ? "Copied to Clipboard!" : "Copy Link"}
                         </Button>
-                        <span className="text-[11px] font-brand-mono text-brand-subtle">
+                        <span className="text-[11px] text-brand-subtle">
                             ⏱ Valid for 24 hours
                         </span>
                     </div>

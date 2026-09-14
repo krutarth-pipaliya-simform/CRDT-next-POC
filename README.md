@@ -6,15 +6,38 @@ An enterprise-grade collaborative SaaS workspace built with Next.js 16 and React
 
 - **Framework**: Next.js 16.3.1 (App Router), React 19
 - **Language**: TypeScript (Strict Mode)
-- **Styling**: Tailwind CSS v4 with a custom "Machined Precision" aesthetic
+- **Styling**: Tailwind CSS v4 with the custom "Presence First" design system (see below)
 - **Database**: PostgreSQL with Prisma ORM
 - **Billing**: Stripe Checkout + Billing Portal, verified webhooks at `/api/webhooks/stripe`
 - **Charts**: Apache ECharts, dynamically imported on the analytics route only
+- **Typography**: Schibsted Grotesk for product chrome, Newsreader for the document canvas, Geist Mono for data
 - **Authentication**: NextAuth v5 (Auth.js) supporting Google OAuth & Email/Password Credentials
 - **Formatting**: Prettier (4 spaces, enforced via `.prettierrc`)
 - **Git Hooks**: Husky & lint-staged (Formats code, checks types on commit, runs build on push)
 - **Workflow**: Strict Git Flow (`feature/`, `chore/`, `docs/`, `bugfix/` branch from `develop`)
 - **AI Tooling**: Uses custom Antigravity skills (`.agents/skills/`) for automated branch management, UI design, and agent tuning.
+
+## Design System: "Presence First"
+
+The product is multiplayer, so the interface is built around one rule: **a saturated colour always means a person.**
+
+| Role            | Colour                                                                                                        |
+| --------------- | ------------------------------------------------------------------------------------------------------------- |
+| People          | Eight earth/jewel `--color-brand-presence-*` hues — crimson, rust, ochre, olive, green, teal, violet, magenta |
+| The system      | Blue (`--color-brand-accent`) — focus, selection, links, and nothing else                                     |
+| Everything else | Ink on paper, plus red for destructive and amber for attention                                                |
+
+Because people are warm and the system is cool, the two can never be mistaken for each other.
+
+- **One hue per person, everywhere.** `presenceVar(userId)` in `src/lib/presence.ts` hashes a user id onto a slot, so the same person is the same colour on their avatar, their caret in a document, their chat messages, and the cards assigned to them. `getUserColor()` returns a theme-independent literal used only for CRDT awareness, which peers render on their own screens.
+- **One structural device.** `<PresenceRail>` is a 3px edge that always answers "who?" and segments for several people — a workspace card wears the colours of everyone in it.
+- **Elevation is rationed.** The hard offset shadow is reserved for things that genuinely float (dialogs, menus, a card mid-drag). Resting surfaces are flat on a rule.
+- **Two voices.** The grotesque operates the interface; the serif is scoped to the document canvas so a document reads like a document. Mono is for real data only — never buttons or labels.
+- **Motion answers an action.** The only unprompted animation in the product is the merge demo on the landing page, which shows two people typing into one document. Everything honours `prefers-reduced-motion`.
+
+`/design-system` renders the live palette and primitives.
+
+> **Note on tokens read at runtime.** Tailwind v4 only emits an `@theme` variable whose name appears literally in the source. The presence and chart palettes are composed at runtime (`presenceVar()`, `readChartPalette()`), so they are declared as plain custom properties in the `:root` block beneath `@theme`. Left in `@theme` they were tree-shaken out of the light build entirely — which is why the analytics charts previously had no light-mode colours. Any future runtime-read token belongs there too.
 
 ## Current State / Implemented Features
 
@@ -26,7 +49,7 @@ An enterprise-grade collaborative SaaS workspace built with Next.js 16 and React
     - **Reusable Navigation Primitive (`NavTabs`)**: Extracted a unified, accessible, and fully configurable navigation tabs component (`src/components/ui/nav-tabs.tsx`) serving as the single source of truth for tabbed routing, workspace sections, settings sub-navigation, and dashboard workspace filter bars with automatic `usePathname()` route matching, explicit `activeValue` support, and WAI-ARIA compliance.
 
 2. **Authentication Flow (Frontend & Backend)**
-    - Custom `login` and `register` pages matching the "Machined Precision" design specification.
+    - Custom `login` and `register` pages carrying the "Presence First" design language.
     - Robust Next.js 16 Server Actions (`loginAction`, `registerAction`) for handling credentials securely.
     - Full email verification flow using Nodemailer, generating secure 24-hour verification tokens. Users cannot log in until their email is verified.
     - Route protection established via `proxy.ts` (Next.js 16 middleware replacement).
@@ -199,6 +222,12 @@ An enterprise-grade collaborative SaaS workspace built with Next.js 16 and React
     Without these, the billing page renders a "Stripe is not configured" notice and the upgrade button is disabled — the rest of the app is unaffected.
 
 Open [http://localhost:3000](http://localhost:3000) with your browser. You will be automatically redirected to the `/login` screen due to the `proxy.ts` auth guard.
+
+## Known Limitations (Design System)
+
+- **Document cards show no editors.** A document card carries no presence rail because the schema records no author or last-editor on `Document` — only `updatedAt`. Adding `lastEditedById` (written on save) would let a document wear the hues of the people who touched it, which is the one place the language is currently silent.
+- **The workspace nav shows the roster, not live presence.** The avatars in the workspace bar are everyone with access, not everyone currently online, because workspace-wide awareness would mean a second CRDT connection on every route. Live presence is shown where it is real: the document editor and chat.
+- **Collaborator carets use a shared mid-tone.** Awareness payloads are theme-independent, so a peer's caret is drawn from one literal that reads acceptably on both grounds rather than from the viewer's own palette.
 
 ## Known Limitations (Theming)
 

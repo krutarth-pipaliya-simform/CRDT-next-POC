@@ -83,10 +83,10 @@ test.describe("Team Chat, Presence & Notifications (Phase 5)", () => {
         await page.getByLabel("Email").fill(email);
         await page.getByLabel("Password").fill(testPassword);
         await page
-            .getByRole("button", { name: "Sign In", exact: true })
+            .getByRole("button", { name: "Sign in", exact: true })
             .click();
         await expect(
-            page.getByRole("heading", { name: "Your Workspaces" }),
+            page.getByRole("heading", { name: "Your workspaces" }),
         ).toBeVisible({ timeout: 15000 });
     }
 
@@ -97,7 +97,7 @@ test.describe("Team Chat, Presence & Notifications (Phase 5)", () => {
         await page.goto(`/${workspaceId}/chat`);
 
         await expect(
-            page.getByRole("heading", { name: "Team Chat" }),
+            page.getByRole("heading", { name: "Chat", exact: true }),
         ).toBeVisible();
         await expect(page.getByTestId("chat-panel")).toBeVisible();
         await expect(page.getByTestId("chat-presence")).toBeVisible();
@@ -179,14 +179,16 @@ test.describe("Team Chat, Presence & Notifications (Phase 5)", () => {
             await memberPage.goto(`/${workspaceId}/chat`);
 
             // Both sessions must be attached to the CRDT room before broadcasting
-            await expect(adminPage.getByTestId("chat-presence")).toContainText(
-                /Live|Connected/,
-                { timeout: 20000 },
-            );
-            await expect(memberPage.getByTestId("chat-presence")).toContainText(
-                /Live|Connected/,
-                { timeout: 20000 },
-            );
+            await expect(
+                adminPage.getByTestId("chat-presence"),
+            ).toHaveAttribute("data-connection", /connected|synced/, {
+                timeout: 20000,
+            });
+            await expect(
+                memberPage.getByTestId("chat-presence"),
+            ).toHaveAttribute("data-connection", /connected|synced/, {
+                timeout: 20000,
+            });
 
             const broadcastBody = `Realtime ping ${Date.now()}`;
             await adminPage
@@ -217,7 +219,7 @@ test.describe("Team Chat, Presence & Notifications (Phase 5)", () => {
             await memberPage.goto(`/${workspaceId}/chat`);
 
             await expect(memberPage.getByTestId("chat-presence")).toContainText(
-                /Live|Connected/,
+                /here|Just you/,
                 { timeout: 20000 },
             );
 

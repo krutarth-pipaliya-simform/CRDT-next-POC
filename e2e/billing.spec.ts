@@ -161,10 +161,10 @@ test.describe("Billing & Analytics Dashboard", () => {
         await page.getByLabel("Email").fill(email);
         await page.getByLabel("Password").fill(testPassword);
         await page
-            .getByRole("button", { name: "Sign In", exact: true })
+            .getByRole("button", { name: "Sign in", exact: true })
             .click();
         await expect(
-            page.getByRole("heading", { name: "Your Workspaces" }),
+            page.getByRole("heading", { name: "Your workspaces" }),
         ).toBeVisible({ timeout: 15000 });
     }
 
@@ -218,7 +218,7 @@ test.describe("Billing & Analytics Dashboard", () => {
         await page.goto(`/${freeWorkspaceId}/analytics`);
 
         await expect(
-            page.getByRole("heading", { name: "Workspace Analytics" }),
+            page.getByRole("heading", { name: "Analytics", exact: true }),
         ).toBeVisible();
         await expect(page.getByTestId("analytics-totals")).toBeVisible();
         await expect(page.getByTestId("stat-completion-rate")).toContainText(

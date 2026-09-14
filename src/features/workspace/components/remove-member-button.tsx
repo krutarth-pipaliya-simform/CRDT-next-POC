@@ -39,7 +39,7 @@ export function RemoveMemberButton({
             <Button
                 variant="ghost"
                 size="sm"
-                className="text-brand-danger hover:bg-brand-danger/10 hover:text-brand-danger font-brand-mono text-xs"
+                className="text-brand-danger hover:bg-brand-danger/10 hover:text-brand-danger text-xs"
                 onClick={() => {
                     setError(null);
                     setOpen(true);

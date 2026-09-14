@@ -14,9 +14,7 @@ export function CreateWorkspaceDialog() {
 
     return (
         <>
-            <Button onClick={() => setOpen(true)} withArrow>
-                New Workspace
-            </Button>
+            <Button onClick={() => setOpen(true)}>New Workspace</Button>
             <Dialog
                 open={open}
                 onClose={() => setOpen(false)}

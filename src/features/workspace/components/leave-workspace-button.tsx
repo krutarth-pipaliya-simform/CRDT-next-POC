@@ -135,7 +135,7 @@ export function LeaveWorkspaceButton({
                 size={size}
                 className={cn(
                     variant === "ghost" &&
-                        "text-brand-danger hover:bg-brand-danger/10 hover:text-brand-danger font-brand-mono text-xs cursor-pointer",
+                        "text-brand-danger hover:bg-brand-danger/10 hover:text-brand-danger  text-xs cursor-pointer",
                     className,
                 )}
                 onClick={handleOpen}
@@ -189,7 +189,7 @@ export function LeaveWorkspaceButton({
                                         cannot leave without first appointing
                                         another member as admin.
                                     </p>
-                                    <p className="text-xs font-brand-mono text-brand-subtle">
+                                    <p className="text-xs text-brand-subtle">
                                         To remove this workspace, you can delete
                                         it permanently from Workspace Settings,
                                         or invite another team member before
@@ -212,7 +212,7 @@ export function LeaveWorkspaceButton({
                                     <div className="flex flex-col gap-2">
                                         <label
                                             htmlFor="new-admin-select"
-                                            className="font-brand-mono text-xs uppercase tracking-wider text-brand-ink font-semibold"
+                                            className="text-xs text-brand-ink font-semibold"
                                         >
                                             Select New Workspace Admin
                                         </label>
@@ -254,7 +254,7 @@ export function LeaveWorkspaceButton({
                                                                         .name ||
                                                                         "Unnamed Member"}
                                                                 </span>
-                                                                <span className="text-[11px] font-brand-mono text-brand-subtle truncate">
+                                                                <span className="text-[11px] text-brand-subtle truncate">
                                                                     {
                                                                         candidate
                                                                             .user
@@ -268,7 +268,7 @@ export function LeaveWorkspaceButton({
                                                                 {candidate.role}
                                                             </Badge>
                                                             {isSelected && (
-                                                                <span className="text-brand-accent text-xs font-brand-mono font-bold">
+                                                                <span className="text-brand-accent text-xs font-bold">
                                                                     ✓
                                                                 </span>
                                                             )}
@@ -279,7 +279,7 @@ export function LeaveWorkspaceButton({
                                         </div>
                                     </div>
 
-                                    <p className="text-xs font-brand-mono text-brand-subtle bg-brand-muted/30 p-2.5 border border-brand-border rounded-brand">
+                                    <p className="text-xs text-brand-subtle bg-brand-muted/30 p-2.5 border border-brand-border rounded-brand">
                                         Once confirmed, the selected member will
                                         receive Admin privileges, and your
                                         membership will be removed immediately.
@@ -289,7 +289,7 @@ export function LeaveWorkspaceButton({
 
                         {/* Loading candidates state */}
                         {isAdmin && isLoadingCandidates && (
-                            <div className="py-6 text-center font-brand-mono text-xs text-brand-subtle animate-pulse">
+                            <div className="py-6 text-center text-xs text-brand-subtle animate-pulse">
                                 Loading eligible workspace members...
                             </div>
                         )}

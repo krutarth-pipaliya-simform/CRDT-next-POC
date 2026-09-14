@@ -7,7 +7,7 @@ test.describe("Authentication", () => {
         await page.goto("/register");
 
         await expect(
-            page.getByRole("heading", { name: "Sign Up" }),
+            page.getByRole("heading", { name: "Create your account" }),
         ).toBeVisible();
 
         await page.getByLabel("Name").fill("Test User");
@@ -15,7 +15,7 @@ test.describe("Authentication", () => {
         await page.getByLabel("Password").fill("password123");
 
         await page
-            .getByRole("button", { name: "Sign Up", exact: true })
+            .getByRole("button", { name: "Create account", exact: true })
             .click();
 
         // After successful registration, verification email notice is displayed
@@ -31,7 +31,7 @@ test.describe("Authentication", () => {
         await page.getByLabel("Password").fill("wrongpassword");
 
         await page
-            .getByRole("button", { name: "Sign In", exact: true })
+            .getByRole("button", { name: "Sign in", exact: true })
             .click();
 
         // Should display the invalid credentials error

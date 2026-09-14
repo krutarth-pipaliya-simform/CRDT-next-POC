@@ -31,7 +31,6 @@ export function JoinWorkspaceButton({ token }: JoinWorkspaceButtonProps) {
                 type="button"
                 onClick={handleJoin}
                 disabled={isPending}
-                withArrow
                 className="w-full justify-between"
             >
                 {isPending ? "Joining Workspace..." : "Accept Invitation"}

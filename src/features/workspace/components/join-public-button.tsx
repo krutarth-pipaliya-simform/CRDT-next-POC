@@ -23,9 +23,9 @@ export function JoinPublicButton({
         return (
             <Link
                 href={`/${workspaceId}`}
-                className="font-brand-mono text-xs text-brand-accent uppercase tracking-widest hover:underline"
+                className="text-xs text-brand-accent hover:underline"
             >
-                Open Workspace →
+                Open workspace
             </Link>
         );
     }
@@ -53,9 +53,7 @@ export function JoinPublicButton({
                 {isPending ? "Joining..." : "Join Workspace"}
             </Button>
             {error && (
-                <span className="text-[10px] font-brand-mono text-brand-danger">
-                    {error}
-                </span>
+                <span className="text-[12px] text-brand-danger">{error}</span>
             )}
         </div>
     );

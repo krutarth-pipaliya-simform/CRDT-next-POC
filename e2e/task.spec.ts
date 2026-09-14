@@ -83,10 +83,10 @@ test.describe("Task Management & Kanban Board", () => {
         await page.getByLabel("Email").fill(email);
         await page.getByLabel("Password").fill(testPassword);
         await page
-            .getByRole("button", { name: "Sign In", exact: true })
+            .getByRole("button", { name: "Sign in", exact: true })
             .click();
         await expect(
-            page.getByRole("heading", { name: "Your Workspaces" }),
+            page.getByRole("heading", { name: "Your workspaces" }),
         ).toBeVisible({ timeout: 15000 });
     }
 
@@ -97,13 +97,13 @@ test.describe("Task Management & Kanban Board", () => {
         await page.goto(`/${workspaceId}/tasks`);
 
         await expect(
-            page.getByRole("heading", { name: "Task Board" }),
+            page.getByRole("heading", { name: "Tasks", exact: true }),
         ).toBeVisible();
         await expect(
-            page.getByRole("heading", { name: "To Do" }),
+            page.getByRole("heading", { name: "To do" }),
         ).toBeVisible();
         await expect(
-            page.getByRole("heading", { name: "In Progress" }),
+            page.getByRole("heading", { name: "In progress" }),
         ).toBeVisible();
         await expect(page.getByRole("heading", { name: "Done" })).toBeVisible();
         await expect(page.getByText("No tasks on the board yet")).toBeVisible();
@@ -116,7 +116,7 @@ test.describe("Task Management & Kanban Board", () => {
         await page.goto(`/${workspaceId}/tasks`);
 
         // Click New Task
-        await page.getByRole("button", { name: "+ New Task" }).click();
+        await page.getByRole("button", { name: "New task" }).click();
         const dialog = page.locator("dialog[open]");
         await expect(
             dialog.getByRole("heading", { name: "Create Task" }),
@@ -196,7 +196,7 @@ test.describe("Task Management & Kanban Board", () => {
         await page.goto(`/${workspaceId}/tasks`);
 
         // Create a second task
-        await page.getByRole("button", { name: "+ New Task" }).click();
+        await page.getByRole("button", { name: "New task" }).click();
         const createDialog = page.locator("dialog[open]");
         await createDialog
             .getByLabel("Task Title")
@@ -306,15 +306,15 @@ test.describe("Task Management & Kanban Board", () => {
 
         // Guest can see the board and headings
         await expect(
-            page.getByRole("heading", { name: "Task Board" }),
+            page.getByRole("heading", { name: "Tasks", exact: true }),
         ).toBeVisible();
         await expect(
-            page.getByRole("heading", { name: "To Do" }),
+            page.getByRole("heading", { name: "To do" }),
         ).toBeVisible();
 
-        // Guest cannot see "+ New Task" button
+        // Guest cannot see "New task" button
         await expect(
-            page.getByRole("button", { name: "+ New Task" }),
+            page.getByRole("button", { name: "New task" }),
         ).not.toBeVisible();
 
         // If a task exists, clicking opens view-only dialog

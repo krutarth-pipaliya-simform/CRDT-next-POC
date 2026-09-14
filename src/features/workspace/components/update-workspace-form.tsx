@@ -53,7 +53,7 @@ export function UpdateWorkspaceForm({
             />
 
             <div className="flex flex-col gap-3">
-                <label className="font-brand-mono text-xs uppercase tracking-widest text-brand-subtle">
+                <label className="text-xs text-brand-subtle">
                     Workspace Visibility
                 </label>
                 <input type="hidden" name="visibility" value={visibility} />
@@ -95,7 +95,7 @@ export function UpdateWorkspaceForm({
                                     </p>
                                 </div>
                             </div>
-                            <span className="font-brand-mono text-[10px] uppercase tracking-wider px-2 py-0.5 border border-brand-border bg-brand-muted text-brand-subtle rounded-brand shrink-0">
+                            <span className="text-[12px] px-2 py-0.5 border border-brand-border bg-brand-muted text-brand-subtle rounded-brand shrink-0">
                                 {opt.badge}
                             </span>
                         </button>
