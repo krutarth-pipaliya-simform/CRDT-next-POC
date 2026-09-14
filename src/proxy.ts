@@ -38,6 +38,6 @@ export const proxy = auth((req) => {
 
 export const config = {
     matcher: [
-        "/((?!api/auth|api/uploads|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+        "/((?!api/auth|api/uploads|api/webhooks|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
     ],
 };
