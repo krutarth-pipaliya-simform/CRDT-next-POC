@@ -61,7 +61,7 @@ export function Dialog({
                         type="button"
                         onClick={onClose}
                         aria-label="Close dialog"
-                        className="text-brand-subtle hover:text-brand-ink transition-colors p-1 cursor-pointer font-brand-mono text-base"
+                        className="text-brand-subtle hover:text-brand-ink transition-colors p-1 cursor-pointer text-base"
                     >
                         ✕
                     </button>

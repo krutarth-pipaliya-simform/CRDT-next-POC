@@ -20,10 +20,7 @@ export function FormField({
 }: FormFieldProps) {
     return (
         <div className={cn("flex flex-col gap-2 w-full", className)} {...props}>
-            <label
-                htmlFor={htmlFor}
-                className="font-brand-mono text-xs uppercase tracking-wider text-brand-ink"
-            >
+            <label htmlFor={htmlFor} className="text-xs text-brand-ink">
                 {label}
                 {required && (
                     <span aria-hidden="true" className="text-brand-danger ml-1">
@@ -36,7 +33,7 @@ export function FormField({
                 <span
                     id={`${htmlFor}-error`}
                     role="alert"
-                    className="text-brand-danger text-xs font-brand-mono uppercase tracking-wider"
+                    className="text-brand-danger text-xs"
                 >
                     {error}
                 </span>

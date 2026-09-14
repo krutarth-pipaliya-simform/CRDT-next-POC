@@ -22,20 +22,16 @@ export function StatTile({
         <div
             data-testid={testId}
             className={cn(
-                "flex flex-col gap-1 p-4 border-2 border-brand-border bg-brand-surface rounded-brand",
+                "flex flex-col gap-0.5 p-4 border border-brand-border bg-brand-surface rounded-brand",
                 className,
             )}
         >
-            <span className="font-brand-mono text-[10px] uppercase tracking-widest text-brand-subtle">
-                {label}
-            </span>
-            <span className="text-2xl font-medium text-brand-ink tabular-nums">
+            <span className="text-[13px] text-brand-subtle">{label}</span>
+            <span className="text-[28px] leading-tight font-semibold tracking-[-0.02em] text-brand-ink tabular-nums">
                 {value}
             </span>
             {hint && (
-                <span className="text-[11px] font-brand-mono text-brand-subtle">
-                    {hint}
-                </span>
+                <span className="text-[13px] text-brand-subtle">{hint}</span>
             )}
         </div>
     );
