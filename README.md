@@ -17,45 +17,26 @@ An enterprise-grade collaborative SaaS workspace built with Next.js 16 and React
 - **Workflow**: Strict Git Flow (`feature/`, `chore/`, `docs/`, `bugfix/` branch from `develop`)
 - **AI Tooling**: Uses custom Antigravity skills (`.agents/skills/`) for automated branch management, UI design, and agent tuning.
 
-## Design System: "Presence First"
+## Design System: "Paddock"
 
-The product is multiplayer, so the interface is built around one rule: **a saturated colour always means a person.**
+Every page of the product is built in Paddock: off-white paper, olive ink, one acid-lime accent, faint contour-line backgrounds, two-voice display headings (Instrument Serif caps over heavy wide Mona Sans caps), notched-corner cards and a hand-drawn scribble. The pages follow the "Converge — every page in the Paddock style" design canvas, one artboard per route. `/design-system/v2` renders every primitive; `/design-system` (v1) is kept as a record of the previous "Presence First" direction, which Paddock replaced.
 
-| Role            | Colour                                                                                                        |
-| --------------- | ------------------------------------------------------------------------------------------------------------- |
-| People          | Eight earth/jewel `--color-brand-presence-*` hues — crimson, rust, ochre, olive, green, teal, violet, magenta |
-| The system      | Blue (`--color-brand-accent`) — focus, selection, links, and nothing else                                     |
-| Everything else | Ink on paper, plus red for destructive and amber for attention                                                |
+| Where                                         | What                                                                                                                                                                                            |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/app/layout.tsx`                          | Wraps every route (and the toaster) in `<PaddockRoot>`, which attaches the Paddock fonts and turns on the scoped `.paddock-*` classes                                                           |
+| `src/components/paddock/`                     | The primitives: Wordmark, DisplayHeading, Tag, buttons, fields, RadioCardGroup, NotchedCard, ContourBackground, Scribble, WorkspaceTabs, PillTabs, MenuOverlay, avatars, pills, dialog and more |
+| `src/components/layout/`                      | The shell: `SiteHeader` (wordmark, workspace switcher, notification bell, avatar, burger + full-screen menu), `WorkspaceNav` (section tabs + the team), and `PageHeader` (the contour hero)     |
+| `src/components/layout/workspace-sections.ts` | The one list of workspace sections, shared by the tab bar and the menu                                                                                                                          |
+| `src/app/globals.css` (Paddock block)         | `--color-paddock-*` (with dark values), `--font-paddock-*`, `--radius-paddock*`, `--shadow-paddock-*`, runtime-read people and chart colours in `:root`, and the `.paddock-*` devices           |
+| `src/hooks/`                                  | `usePrefersReducedMotion`, `useScrollLock`, `useModalDialog` (native `<dialog>` as a controlled modal; a `data-autofocus` field takes first focus) and `useCurrentWorkspace`                    |
 
-Because people are warm and the system is cool, the two can never be mistaken for each other.
+- **Lime is the system.** Primary actions, selection and the focus ring (lime with an ink outline, because lime is about 1.1:1 on paper). Lime is a fill with dark `on-fill` text, or text on the always-dark `night` / `deep` grounds only.
+- **People keep their colour.** Four people hues (coral, amber, cyan, violet), hashed from the user id by `paddockPresenceVar()`, appear on avatars, card rails, chat rails and collaborator carets. Statuses, priorities and charts of counts use ink, neutrals and lime instead.
+- **Uppercase is CSS.** Tags and display headings are uppercased by `text-transform`; source text stays in sentence case, so screen readers and tests read words.
+- **Motion stops on request.** The menu reveal, drifting recent documents, scribbles, marquee and word reveal all stop under `prefers-reduced-motion`, and the marquee has a pause control.
+- **Charts sit on a night band.** Analytics reads `--color-paddock-chart-*` (lime, paper and neutrals) through `readChartPalette(theme)`.
 
-- **One hue per person, everywhere.** `presenceVar(userId)` in `src/lib/presence.ts` hashes a user id onto a slot, so the same person is the same colour on their avatar, their caret in a document, their chat messages, and the cards assigned to them. `getUserColor()` returns a theme-independent literal used only for CRDT awareness, which peers render on their own screens.
-- **One structural device.** `<PresenceRail>` is a 3px edge that always answers "who?" and segments for several people — a workspace card wears the colours of everyone in it.
-- **Elevation is rationed.** The hard offset shadow is reserved for things that genuinely float (dialogs, menus, a card mid-drag). Resting surfaces are flat on a rule.
-- **Two voices.** The grotesque operates the interface; the serif is scoped to the document canvas so a document reads like a document. Mono is for real data only — never buttons or labels.
-- **Motion answers an action.** The only unprompted animation in the product is the merge demo on the landing page, which shows two people typing into one document. Everything honours `prefers-reduced-motion`.
-
-`/design-system` renders the live palette and primitives. It links to `/design-system/v2`, which shows the proposed next direction.
-
-## Design System v2: "Paddock" (proposal, showcase only)
-
-`/design-system/v2` renders the full component set of the Paddock direction: off-white paper, olive ink, one acid-lime accent, faint contour-line backgrounds, two-voice display headings (Instrument Serif caps over heavy wide Mona Sans caps), notched-corner cards and a hand-drawn lime scribble. Nothing in the product uses it yet. The current "Presence First" system is unchanged, and the two pages link to each other ("Paddock (v2)" and "Current (v1)").
-
-| Where                                      | What                                                                                                                                                                                                  |
-| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/components/paddock/`                  | The reusable Paddock primitives. They sit next to `ui/`, not inside it, so the v1 primitives are untouched and adopting Paddock later is a folder-level decision                                      |
-| `src/components/paddock/paddock-styles.ts` | Shared class maps (buttons, fields, pills) and the `CssVariableStyle` type. No `"use client"`, for the same reason as `button-styles.ts`                                                              |
-| `src/components/paddock/paddock-fonts.ts`  | Mona Sans (with the `wdth` axis) and Instrument Serif via `next/font/google`, attached only by `<PaddockRoot>`, so other routes do not load them                                                      |
-| `src/features/design-system/`              | Showcase-only composition: section layout, interactive demos and sample data                                                                                                                          |
-| `src/app/design-system/v2/page.tsx`        | The route. A server component; client islands only where something is interactive                                                                                                                     |
-| `src/app/globals.css` (end of file)        | The `--color-paddock-*`, `--font-paddock-*`, `--radius-paddock*` and `--shadow-paddock-*` tokens, with dark values, plus the `.paddock-*` voices, devices and keyframes, scoped under `.paddock-root` |
-| `src/hooks/`                               | `usePrefersReducedMotion` (now also used by the landing merge demo), `useScrollLock`, and `useModalDialog`, which drives a native `<dialog>` as a controlled modal                                    |
-
-Components: Wordmark, DisplayHeading, Tag, PaddockButton / PaddockLinkButton / PaddockIconButton / BurgerButton, PaddockInput / PaddockTextarea / PaddockSelect, RadioCardGroup, NotchedCard, ContourBackground, Scribble, Marquee, WordReveal, WorkspaceTabs, PillTabs, MenuOverlay, PaddockAvatar / AvatarStack, CursorFlag / CollaboratorHighlight, StatusPill / PriorityLabel / RolePill, PaddockStatTile, PaddockDialog, FloatingToolbar, ChatMessage / Mention, ChatComposer / ComposerTool, NotificationRow, PlanCard and LoaderScreen.
-
-Paddock conflicts with three "Presence First" rules: lime instead of blue as the system colour, uppercase labels, and motion nobody asked for. It also uses four people colours instead of eight, one of them cyan. These are recorded as an **open decision** in `AGENTS.md`. The old rules have not been rewritten.
-
-> **Note on tokens read at runtime.** Tailwind v4 only emits an `@theme` variable whose name appears literally in the source. The presence and chart palettes are composed at runtime (`presenceVar()`, `readChartPalette()`), so they are declared as plain custom properties in the `:root` block beneath `@theme`. Left in `@theme` they were tree-shaken out of the light build entirely — which is why the analytics charts previously had no light-mode colours. Any future runtime-read token belongs there too.
+> **Note on tokens read at runtime.** Tailwind v4 only emits an `@theme` variable whose name appears literally in the source. The people and chart palettes are composed or read at runtime (`paddockPresenceVar()`, `readChartPalette()`), so they are declared as plain custom properties in `:root`, outside `@theme`. Any future runtime-read token belongs there too.
 
 ## Current State / Implemented Features
 
@@ -245,14 +226,18 @@ Open [http://localhost:3000](http://localhost:3000) with your browser. You will 
 
 - **Document cards show no editors.** A document card carries no presence rail because the schema records no author or last-editor on `Document` — only `updatedAt`. Adding `lastEditedById` (written on save) would let a document wear the hues of the people who touched it, which is the one place the language is currently silent.
 - **The workspace nav shows the roster, not live presence.** The avatars in the workspace bar are everyone with access, not everyone currently online, because workspace-wide awareness would mean a second CRDT connection on every route. Live presence is shown where it is real: the document editor and chat.
-- **Collaborator carets use a shared mid-tone.** Awareness payloads are theme-independent, so a peer's caret is drawn from one literal that reads acceptably on both grounds rather than from the viewer's own palette.
+- **Carets are coloured on the viewer's screen.** Awareness payloads stay theme-independent (`getUserColor()`), but the editor draws each peer's caret and selection in that person's Paddock hue, looked up from the user id in the payload, so the caret matches their avatar. A payload without an id falls back to the colour it carried.
 
-## Known Limitations (Paddock v2 showcase)
+## Known Limitations (Paddock)
 
+- Paddock has four people colours. With more than four people, two will share a colour.
+- Some artboard details have no data behind them yet and were left out rather than faked: plan names and edit times on workspace cards, faces on discover-public cards, collaborators and live counts on document cards, the editor's "next deadline", the chat's "mentioned in this chat" panel and its formatting tools, and member counts on the invite card. Contributor bars on analytics are neutral because the analytics query exposes member ids, not user ids.
+- The document toolbar is sticky at 89px, which assumes the header stays 81px tall.
 - `/design-system/v2` is in `publicRoutes` (`src/lib/routes.ts`), so it opens without signing in. `/design-system` (v1) still needs a signed-in session.
-- Paddock has four people colours. With more than four people, two will share a colour. The sample people use ids chosen to land on four different hues.
 - The word reveal starts words at 18% opacity until they scroll into view. This only happens where scroll-driven animations are supported and reduced motion is off. A contrast audit taken mid-scroll can flag those words.
 - Native `<dialog>` keeps focus inside the page, but Tab can still reach the browser's own controls. This is the platform's behaviour and satisfies the WAI-ARIA dialog pattern.
+- **Pre-existing test failure:** `e2e/document.spec.ts` › "should prevent simultaneous editing…" fails on this branch and on the commit before the reskin alike. `use-document-collab.ts` starts every session editable, so a second session always resolves to `taken_over` and shows "Editing session taken over", never "Read-only mode active". Starting a session read-only until the first awareness sync would fix it.
+- `html` always reserves the scrollbar gutter, so a full-screen overlay leaves a paper-coloured strip where the scrollbar would be.
 
 ## Known Limitations (Theming)
 
