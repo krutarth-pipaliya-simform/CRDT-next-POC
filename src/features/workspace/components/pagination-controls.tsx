@@ -1,8 +1,10 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+
+import { PaddockLinkButton } from "@/components/paddock/paddock-button";
+import { paddockButtonClasses } from "@/components/paddock/paddock-styles";
 
 export interface PaginationControlsProps {
     currentPage: number;
@@ -11,6 +13,13 @@ export interface PaginationControlsProps {
     basePath?: string;
     tabName: string;
 }
+
+/** A page that does not exist is shown, but cannot be reached. */
+const DISABLED_PAGE = paddockButtonClasses({
+    variant: "outline",
+    voice: "plain",
+    size: "sm",
+});
 
 export function PaginationControls({
     currentPage,
@@ -35,54 +44,49 @@ export function PaginationControls({
     };
 
     return (
-        <div className="flex items-center justify-between gap-4 pt-5 border-t border-brand-border mt-6">
-            <span className="text-[13px] text-brand-subtle">
+        <nav
+            aria-label="Pagination"
+            className="mt-9 flex flex-wrap items-center justify-between gap-3 border-t border-paddock-rule pt-4.5"
+        >
+            <span className="paddock-mono text-[0.78125rem] text-paddock-subtle">
                 Page {currentPage} of {totalPages} · {totalCount} in total
             </span>
 
-            <div className="flex items-center gap-2">
+            <span className="flex items-center gap-2">
                 {currentPage > 1 ? (
-                    <Link
+                    <PaddockLinkButton
                         href={createPageUrl(currentPage - 1)}
-                        className="inline-flex items-center gap-1 h-8 px-2.5 text-[13px] border border-brand-line bg-brand-surface text-brand-ink rounded-brand hover:border-brand-ink transition-colors"
+                        variant="outline"
+                        voice="plain"
+                        size="sm"
                     >
-                        <ChevronLeft
-                            className="w-3.5 h-3.5"
-                            aria-hidden="true"
-                        />
+                        <ChevronLeft className="size-4" aria-hidden="true" />
                         Previous
-                    </Link>
+                    </PaddockLinkButton>
                 ) : (
-                    <span className="inline-flex items-center gap-1 h-8 px-2.5 text-[13px] border border-brand-border text-brand-subtle rounded-brand opacity-50 cursor-not-allowed">
-                        <ChevronLeft
-                            className="w-3.5 h-3.5"
-                            aria-hidden="true"
-                        />
+                    <span aria-disabled="true" className={DISABLED_PAGE}>
+                        <ChevronLeft className="size-4" aria-hidden="true" />
                         Previous
                     </span>
                 )}
 
                 {currentPage < totalPages ? (
-                    <Link
+                    <PaddockLinkButton
                         href={createPageUrl(currentPage + 1)}
-                        className="inline-flex items-center gap-1 h-8 px-2.5 text-[13px] border border-brand-line bg-brand-surface text-brand-ink rounded-brand hover:border-brand-ink transition-colors"
+                        variant="outline"
+                        voice="plain"
+                        size="sm"
                     >
                         Next
-                        <ChevronRight
-                            className="w-3.5 h-3.5"
-                            aria-hidden="true"
-                        />
-                    </Link>
+                        <ChevronRight className="size-4" aria-hidden="true" />
+                    </PaddockLinkButton>
                 ) : (
-                    <span className="inline-flex items-center gap-1 h-8 px-2.5 text-[13px] border border-brand-border text-brand-subtle rounded-brand opacity-50 cursor-not-allowed">
+                    <span aria-disabled="true" className={DISABLED_PAGE}>
                         Next
-                        <ChevronRight
-                            className="w-3.5 h-3.5"
-                            aria-hidden="true"
-                        />
+                        <ChevronRight className="size-4" aria-hidden="true" />
                     </span>
                 )}
-            </div>
-        </div>
+            </span>
+        </nav>
     );
 }

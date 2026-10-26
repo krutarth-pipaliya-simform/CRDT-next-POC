@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
 
+import { PAGE_CONTAINER } from "@/components/layout/layout-styles";
+import { PageHeader } from "@/components/layout/page-header";
 import { auth } from "@/features/auth/lib/auth";
 import { PasswordForm } from "@/features/profile/components/password-form";
 import { ProfileForm } from "@/features/profile/components/profile-form";
@@ -30,22 +32,33 @@ export default async function ProfilePage() {
               .toUpperCase()
         : user.email?.substring(0, 2).toUpperCase() || "U";
 
+    const identity = [user.name, user.email].filter(Boolean).join(" · ");
+
     return (
-        <main className="max-w-4xl mx-auto space-y-8 p-6">
-            <div>
-                <h1 className="text-3xl font-bold text-brand-ink uppercase tracking-tight">
-                    Account Settings
-                </h1>
-                <p className="text-brand-ink/70 mt-2 font-brand-sans">
-                    Manage your personal information and account preferences.
-                </p>
+        <main className="pb-24">
+            <PageHeader
+                eyebrow={identity || undefined}
+                serif="Account"
+                heavy="Settings"
+                action={
+                    <p className="m-0 max-w-[21.25rem] text-paddock-subtle">
+                        Manage your personal information and account
+                        preferences.
+                    </p>
+                }
+            />
+
+            <div className={`${PAGE_CONTAINER} flex flex-col`}>
+                <ProfilePicture
+                    initialImageUrl={user.image}
+                    initials={initials}
+                    userId={user.id}
+                />
+
+                <ProfileForm initialName={user.name || ""} />
+
+                <PasswordForm />
             </div>
-
-            <ProfilePicture initialImageUrl={user.image} initials={initials} />
-
-            <ProfileForm initialName={user.name || ""} />
-
-            <PasswordForm />
         </main>
     );
 }

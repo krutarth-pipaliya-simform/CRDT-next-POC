@@ -1,12 +1,15 @@
 import Link from "next/link";
 
-import { Badge } from "@/components/ui/badge";
-import { Card, CardTitle } from "@/components/ui/card";
-import { PresenceRail } from "@/components/ui/presence-rail";
-import { UserAvatar } from "@/components/ui/user-avatar";
+import { NotchedCard } from "@/components/paddock/notched-card";
+import { AvatarStack } from "@/components/paddock/paddock-avatar";
+import { PaddockLinkButton } from "@/components/paddock/paddock-button";
+import { RolePill } from "@/components/paddock/paddock-pills";
+import { paddockPresenceVar } from "@/components/paddock/paddock-presence";
+import { paddockPillBase } from "@/components/paddock/paddock-styles";
 import { JoinPublicButton } from "@/features/workspace/components/join-public-button";
 import { LeaveWorkspaceButton } from "@/features/workspace/components/leave-workspace-button";
-import { WORKSPACE_ROLE_LABELS, type WorkspaceRole } from "@/schemas/workspace";
+import { cn } from "@/lib/cn";
+import { toWorkspaceRole } from "@/schemas/workspace";
 
 export interface WorkspaceCardMember {
     role: string;
@@ -17,6 +20,8 @@ export interface WorkspaceCardMember {
 export interface WorkspaceCardItem {
     id: string;
     name: string;
+    /** `PUBLIC` or `PRIVATE`; optional so older callers still type-check. */
+    visibility?: string;
     _count: { members: number };
     members: WorkspaceCardMember[];
 }
@@ -27,6 +32,28 @@ export interface WorkspaceCardProps {
     mode?: "my" | "public";
 }
 
+export interface SplitDisplayName {
+    serif: string;
+    heavy: string;
+}
+
+/**
+ * Splits a name across Paddock's two voices: the first word in the serif,
+ * the rest in the heavy caps. A one-word name is set in the heavy alone.
+ */
+export function splitDisplayName(name: string): SplitDisplayName {
+    const trimmed = name.trim();
+    const gap = trimmed.search(/\s/);
+    if (gap === -1) return { serif: "", heavy: trimmed };
+    return {
+        serif: trimmed.slice(0, gap),
+        heavy: trimmed.slice(gap + 1).trim(),
+    };
+}
+
+/** How many people the rail is split between before it stops reading as faces. */
+const RAIL_SEGMENTS = 8;
+
 export function WorkspaceCard({
     workspace,
     currentUserId,
@@ -36,122 +63,145 @@ export function WorkspaceCard({
         (member) => member.userId === currentUserId,
     );
     const isMember = Boolean(memberRecord);
-    const myRole = memberRecord?.role ?? "MEMBER";
+    const myRole = toWorkspaceRole(memberRecord?.role ?? "MEMBER");
+    const memberCount = workspace._count.members;
+    const href = `/${workspace.id}`;
+    const { serif, heavy } = splitDisplayName(workspace.name);
 
-    const shown = workspace.members.slice(0, 5);
-    const overflow = workspace._count.members - shown.length;
-    const names = workspace.members
-        .map((member) => member.user?.name || member.user?.email)
-        .filter(Boolean)
-        .join(", ");
+    // Discovery cards carry ids only, so they show the rail but no faces.
+    const people = workspace.members.flatMap((member) =>
+        member.user
+            ? [
+                  {
+                      id: member.userId,
+                      name: member.user.name || member.user.email || "Member",
+                      image: member.user.image,
+                  },
+              ]
+            : [],
+    );
+
+    const peopleLabel =
+        memberCount === 1 && isMember
+            ? "Just you"
+            : `${memberCount} ${memberCount === 1 ? "person" : "people"}`;
+
+    const tab =
+        mode === "public"
+            ? isMember
+                ? "You are a member"
+                : undefined
+            : workspace.visibility === "PUBLIC"
+              ? "Public"
+              : workspace.visibility === "PRIVATE"
+                ? "Private"
+                : undefined;
 
     return (
-        <Card
-            interactive
-            className="relative h-full flex gap-3 p-0 overflow-hidden"
+        <NotchedCard
+            as="li"
+            tab={tab}
+            className="paddock-lift"
+            bodyClassName="flex flex-col p-0 pb-7"
         >
             {/* Everyone in this workspace, in their own colours — the same hues
                 they will wear on every card and message inside it. */}
-            <PresenceRail
-                userIds={workspace.members.map((member) => member.userId)}
-            />
+            <div aria-hidden="true" className="flex h-1 shrink-0">
+                {workspace.members.slice(0, RAIL_SEGMENTS).map((member) => (
+                    <span
+                        key={member.userId}
+                        className="flex-1"
+                        style={{
+                            backgroundColor: paddockPresenceVar(member.userId),
+                        }}
+                    />
+                ))}
+            </div>
 
-            <div className="flex-1 min-w-0 flex flex-col p-4 pl-1">
+            <div className="flex flex-1 flex-col gap-4.5 px-5.5 pt-5.5 pb-4.5">
                 <div className="flex items-start justify-between gap-3">
-                    <CardTitle className="truncate min-w-0">
+                    <h2 className="m-0 min-w-0 leading-[0.88] break-words">
                         <Link
-                            href={`/${workspace.id}`}
-                            className={
-                                mode === "my"
-                                    ? "block truncate after:absolute after:inset-0 after:content-['']"
-                                    : "block truncate hover:underline underline-offset-2"
-                            }
+                            href={href}
+                            className="text-paddock-ink no-underline hover:underline hover:decoration-2 hover:underline-offset-4"
                         >
-                            {workspace.name}
+                            {serif ? (
+                                <>
+                                    <span className="paddock-serif block text-[1.875rem]">
+                                        {serif}
+                                    </span>{" "}
+                                </>
+                            ) : null}
+                            <span className="paddock-heavy block text-[1.625rem]">
+                                {heavy}
+                            </span>
                         </Link>
-                    </CardTitle>
-                    <Badge
-                        intent={
-                            mode === "public" && !isMember
-                                ? "success"
-                                : myRole === "ADMIN"
-                                  ? "default"
-                                  : "muted"
-                        }
-                        className="shrink-0"
-                    >
-                        {mode === "public" && !isMember
-                            ? "Public"
-                            : (WORKSPACE_ROLE_LABELS[myRole as WorkspaceRole] ??
-                              myRole)}
-                    </Badge>
+                    </h2>
+                    {mode === "public" && !isMember ? (
+                        <span
+                            className={cn(
+                                paddockPillBase,
+                                "shrink-0 border-[1.5px] border-paddock-inverse bg-paddock-inverse py-1.5 text-paddock-on-inverse",
+                            )}
+                        >
+                            Public
+                        </span>
+                    ) : myRole ? (
+                        <RolePill role={myRole} className="shrink-0" />
+                    ) : null}
                 </div>
 
-                <div className="flex items-center gap-2 mt-3">
-                    <span className="flex items-center -space-x-1">
-                        {shown.map((member) => (
-                            <UserAvatar
-                                key={member.userId}
-                                user={{
-                                    id: member.userId,
-                                    name: member.user?.name,
-                                    email: member.user?.email,
-                                    image: member.user?.image,
-                                }}
-                                size="sm"
-                                className="ring-2 ring-brand-surface"
-                            />
-                        ))}
+                <div className="flex min-w-0 items-center gap-3">
+                    {people.length > 0 ? (
+                        <AvatarStack people={people} size="md" ring="sheet" />
+                    ) : null}
+                    <span className="truncate text-[0.84375rem] text-paddock-subtle">
+                        {peopleLabel}
                     </span>
-                    <span className="text-[13px] text-brand-subtle truncate">
-                        {overflow > 0
-                            ? `+${overflow} more`
-                            : workspace._count.members === 1
-                              ? "Just you"
-                              : `${workspace._count.members} people`}
-                    </span>
-                    {names && <span className="sr-only">Members: {names}</span>}
                 </div>
 
-                <div className="mt-auto pt-4 flex items-center justify-between gap-2">
+                <div className="mt-auto flex flex-wrap items-center gap-2">
                     {mode === "public" ? (
                         <>
-                            <Link
-                                href={`/${workspace.id}`}
-                                className="relative z-10 text-[13px] text-brand-accent hover:underline underline-offset-2"
+                            <PaddockLinkButton
+                                href={href}
+                                variant="outline"
+                                voice="plain"
+                                size="sm"
                             >
                                 {isMember ? "Open workspace" : "View as guest"}
-                            </Link>
+                            </PaddockLinkButton>
                             {!isMember && (
-                                <span className="relative z-10">
-                                    <JoinPublicButton
-                                        workspaceId={workspace.id}
-                                        isMember={false}
-                                    />
-                                </span>
+                                <JoinPublicButton
+                                    workspaceId={workspace.id}
+                                    isMember={false}
+                                />
                             )}
                         </>
                     ) : (
                         <>
-                            <span />
-                            {
-                                <span className="relative z-10">
-                                    <LeaveWorkspaceButton
-                                        workspaceId={workspace.id}
-                                        workspaceName={workspace.name}
-                                        userRole={myRole}
-                                        currentUserId={currentUserId}
-                                        variant="ghost"
-                                        size="sm"
-                                    >
-                                        Leave
-                                    </LeaveWorkspaceButton>
-                                </span>
-                            }
+                            <PaddockLinkButton
+                                href={href}
+                                size="sm"
+                                aria-label={`Open workspace ${workspace.name}`}
+                                className="bg-paddock-inverse text-paddock-on-inverse"
+                            >
+                                Open workspace
+                            </PaddockLinkButton>
+                            <LeaveWorkspaceButton
+                                workspaceId={workspace.id}
+                                workspaceName={workspace.name}
+                                userRole={memberRecord?.role ?? "MEMBER"}
+                                currentUserId={currentUserId}
+                                variant="ghost"
+                                size="sm"
+                            >
+                                Leave
+                            </LeaveWorkspaceButton>
                         </>
                     )}
                 </div>
             </div>
-        </Card>
+        </NotchedCard>
     );
 }

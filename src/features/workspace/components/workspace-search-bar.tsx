@@ -3,8 +3,9 @@
 import { useState, useTransition, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { PaddockButton } from "@/components/paddock/paddock-button";
+import { paddockFieldClasses } from "@/components/paddock/paddock-styles";
+import { cn } from "@/lib/cn";
 
 export interface WorkspaceSearchBarProps {
     tabName: string;
@@ -54,38 +55,42 @@ export function WorkspaceSearchBar({
 
     return (
         <form
+            role="search"
             onSubmit={handleSubmit}
-            className="flex items-center gap-3 w-full max-w-lg mb-6"
+            className="mb-7 flex w-full max-w-160 flex-wrap items-center gap-2.5"
         >
-            <div className="flex-1">
-                <Input
-                    id="search-workspaces"
-                    name="query"
-                    type="search"
-                    placeholder={placeholder}
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    aria-label="Search workspaces"
-                />
-            </div>
-            <Button
+            <label htmlFor="search-workspaces" className="sr-only">
+                Search workspaces
+            </label>
+            <input
+                id="search-workspaces"
+                name="query"
+                type="search"
+                placeholder={placeholder}
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className={cn(
+                    paddockFieldClasses,
+                    "h-13 min-w-0 flex-[1_1_20rem]",
+                )}
+            />
+            <PaddockButton
                 type="submit"
-                variant="secondary"
-                size="md"
+                variant="outline"
+                className="h-13"
                 disabled={isPending}
             >
                 {isPending ? "..." : "Search"}
-            </Button>
+            </PaddockButton>
             {initialQuery && (
-                <Button
-                    type="button"
+                <PaddockButton
                     variant="ghost"
-                    size="md"
+                    className="h-13"
                     onClick={handleClear}
                     disabled={isPending}
                 >
                     Clear
-                </Button>
+                </PaddockButton>
             )}
         </form>
     );

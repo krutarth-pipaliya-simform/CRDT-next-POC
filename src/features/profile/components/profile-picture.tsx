@@ -1,35 +1,48 @@
 "use client";
 
-import { useActionState, useRef, useState, type ChangeEvent } from "react";
+import {
+    useActionState,
+    useId,
+    useRef,
+    useState,
+    type ChangeEvent,
+} from "react";
 import Image from "next/image";
 
-import { Alert } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
+import { PaddockButton } from "@/components/paddock/paddock-button";
+import { paddockPresenceVar } from "@/components/paddock/paddock-presence";
 import {
     removeProfilePicture,
     uploadProfilePicture,
 } from "@/features/profile/actions/upload-image";
+import { cn } from "@/lib/cn";
+
+import { ProfileNotice, ProfileSection } from "./profile-section";
 
 export interface ProfilePictureProps {
     initialImageUrl?: string | null;
     initials: string;
+    /** Colours the initials in the person's own hue. Optional for older callers. */
+    userId?: string;
 }
 
 export function ProfilePicture({
     initialImageUrl,
     initials,
+    userId,
 }: ProfilePictureProps) {
-    const [uploadState, uploadAction] = useActionState(
+    const [uploadState, uploadAction, isUploading] = useActionState(
         uploadProfilePicture,
         null,
     );
-    const [removeState, removeAction] = useActionState(
+    const [removeState, removeAction, isRemoving] = useActionState(
         removeProfilePicture,
         null,
     );
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const fileInputId = useId();
+    const hintId = useId();
 
     const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -42,100 +55,130 @@ export function ProfilePicture({
     const displayUrl =
         previewUrl || uploadState?.data?.imageUrl || initialImageUrl;
     const isBlobUrl = displayUrl?.startsWith("blob:");
-
-    // Clear preview if remove succeeds
-    if (removeState?.success && displayUrl === initialImageUrl) {
-        // This is a bit tricky with React 19, we might just rely on server revalidation to refresh initialImageUrl
-        // but we can clear preview here
-    }
+    const showImage = Boolean(displayUrl) && !removeState?.success;
 
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Profile Picture</CardTitle>
-                <p className="text-sm text-brand-ink/70 font-brand-sans">
-                    Upload a new profile picture or remove the existing one.
-                </p>
-            </CardHeader>
-            <CardBody>
-                <div className="flex flex-col sm:flex-row items-center gap-6">
-                    <div className="flex-shrink-0 relative w-32 h-32 rounded-full overflow-hidden bg-brand-muted border-4 border-brand-accent flex items-center justify-center text-3xl text-brand-ink">
-                        {displayUrl && !removeState?.success ? (
-                            <Image
-                                src={displayUrl}
-                                alt="Profile"
-                                fill
-                                className="object-cover"
-                                unoptimized={isBlobUrl}
-                            />
-                        ) : (
-                            <span>{initials}</span>
-                        )}
-                    </div>
+        <ProfileSection
+            serif="Profile"
+            heavy="picture"
+            description="Upload a new profile picture or remove the existing one."
+        >
+            <div className="flex flex-wrap items-center gap-7">
+                <span
+                    role="img"
+                    aria-label={
+                        showImage
+                            ? "Your profile picture"
+                            : `Your avatar, initials ${initials}`
+                    }
+                    style={
+                        userId
+                            ? { backgroundColor: paddockPresenceVar(userId) }
+                            : undefined
+                    }
+                    className={cn(
+                        "paddock-heavy relative flex size-32 shrink-0 items-center justify-center overflow-hidden rounded-full text-[2.75rem]",
+                        userId
+                            ? "text-paddock-on-fill"
+                            : "bg-paddock-inverse text-paddock-on-inverse",
+                    )}
+                >
+                    {showImage && displayUrl ? (
+                        <Image
+                            src={displayUrl}
+                            alt=""
+                            fill
+                            sizes="128px"
+                            className="object-cover"
+                            unoptimized={isBlobUrl}
+                        />
+                    ) : (
+                        <span aria-hidden="true">{initials}</span>
+                    )}
+                </span>
 
-                    <div className="flex-grow space-y-4 w-full">
-                        {uploadState?.error && (
-                            <Alert intent="danger">{uploadState.error}</Alert>
-                        )}
-                        {removeState?.error && (
-                            <Alert intent="danger">{removeState.error}</Alert>
-                        )}
-                        {uploadState?.success && (
-                            <Alert intent="success">
-                                {uploadState.data?.message}
-                            </Alert>
-                        )}
-                        {removeState?.success && (
-                            <Alert intent="success">
-                                {removeState.data?.message}
-                            </Alert>
-                        )}
+                <div className="flex min-w-0 flex-[1_1_16.25rem] flex-col gap-3.5">
+                    {uploadState?.error && (
+                        <ProfileNotice intent="danger">
+                            {uploadState.error}
+                        </ProfileNotice>
+                    )}
+                    {removeState?.error && (
+                        <ProfileNotice intent="danger">
+                            {removeState.error}
+                        </ProfileNotice>
+                    )}
+                    {uploadState?.success && (
+                        <ProfileNotice intent="success">
+                            {uploadState.data?.message}
+                        </ProfileNotice>
+                    )}
+                    {removeState?.success && (
+                        <ProfileNotice intent="success">
+                            {removeState.data?.message}
+                        </ProfileNotice>
+                    )}
 
-                        <div className="flex flex-wrap gap-4">
-                            <form
-                                action={uploadAction}
-                                className="flex flex-col gap-2"
+                    <div className="flex flex-wrap items-end gap-2.5">
+                        <form
+                            action={uploadAction}
+                            className="flex min-w-0 flex-[1_1_16rem] flex-col gap-2.5"
+                        >
+                            <label
+                                htmlFor={fileInputId}
+                                className="text-sm font-semibold text-paddock-ink"
                             >
-                                <input
-                                    type="file"
-                                    name="file"
-                                    accept="image/jpeg,image/png,image/webp"
-                                    ref={fileInputRef}
-                                    onChange={handleFileChange}
-                                    className="block w-full text-sm text-brand-ink file:mr-4 file:py-2 file:px-4 file:rounded-brand file:border-2 file:border-brand-ink file:text-sm file:font-semibold file: file:uppercase file:bg-brand-surface file:text-brand-ink hover:file:bg-brand-muted cursor-pointer"
-                                />
-                                <Button
+                                Choose an image
+                            </label>
+                            <input
+                                id={fileInputId}
+                                type="file"
+                                name="file"
+                                accept="image/jpeg,image/png,image/webp"
+                                ref={fileInputRef}
+                                onChange={handleFileChange}
+                                aria-describedby={hintId}
+                                className={cn(
+                                    "block w-full min-w-0 cursor-pointer text-sm font-medium text-paddock-subtle",
+                                    "file:mr-3 file:h-11 file:cursor-pointer file:rounded-paddock file:border-[1.5px] file:border-solid file:border-paddock-ink",
+                                    "file:bg-transparent file:px-4 file:text-sm file:font-semibold file:text-paddock-ink hover:file:bg-paddock-ink/8",
+                                )}
+                            />
+                            <div>
+                                <PaddockButton
                                     type="submit"
                                     size="sm"
-                                    pendingText="Uploading..."
+                                    disabled={isUploading}
                                 >
-                                    Upload
-                                </Button>
-                            </form>
+                                    {isUploading ? "Uploading..." : "Upload"}
+                                </PaddockButton>
+                            </div>
+                        </form>
 
-                            {(initialImageUrl || displayUrl) &&
-                                !removeState?.success && (
-                                    <form
-                                        action={removeAction}
-                                        className="mt-auto"
+                        {(initialImageUrl || displayUrl) &&
+                            !removeState?.success && (
+                                <form action={removeAction}>
+                                    <PaddockButton
+                                        type="submit"
+                                        variant="outline"
+                                        voice="plain"
+                                        size="sm"
+                                        disabled={isRemoving}
+                                        className="border-paddock-danger text-paddock-danger"
                                     >
-                                        <Button
-                                            type="submit"
-                                            variant="danger"
-                                            size="sm"
-                                            pendingText="Removing..."
-                                        >
-                                            Remove
-                                        </Button>
-                                    </form>
-                                )}
-                        </div>
-                        <p className="text-xs text-brand-ink/70">
-                            Allowed formats: JPEG, PNG, WebP. Max size: 5MB.
-                        </p>
+                                        {isRemoving ? "Removing..." : "Remove"}
+                                    </PaddockButton>
+                                </form>
+                            )}
                     </div>
+                    <p
+                        id={hintId}
+                        className="m-0 text-[0.78125rem] text-paddock-subtle"
+                    >
+                        Allowed formats: JPEG, PNG, WebP. Max size: 5MB.
+                    </p>
                 </div>
-            </CardBody>
-        </Card>
+            </div>
+        </ProfileSection>
     );
 }

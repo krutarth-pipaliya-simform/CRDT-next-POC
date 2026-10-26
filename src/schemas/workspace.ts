@@ -34,6 +34,23 @@ export const WORKSPACE_ROLE_LABELS: Record<WorkspaceRole, string> = {
     GUEST: "Guest",
 };
 
+/**
+ * Narrows a role read from the database to the roles the product knows.
+ * Lives here, not in a component, so server and client modules can both call
+ * it: a function imported from a `"use client"` module is a client reference
+ * on the server, and calling it throws.
+ */
+export function toWorkspaceRole(role: string): WorkspaceRole | null {
+    switch (role) {
+        case "ADMIN":
+        case "MEMBER":
+        case "GUEST":
+            return role;
+        default:
+            return null;
+    }
+}
+
 export const leaveWorkspaceSchema = z.object({
     workspaceId: z.string().min(1, "Workspace ID is required"),
     transferToMemberId: z.string().optional(),

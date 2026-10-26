@@ -1,52 +1,52 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useId } from "react";
 
-import { Alert } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
-import { FormField } from "@/components/ui/form-field";
-import { Input } from "@/components/ui/input";
+import { PaddockButton } from "@/components/paddock/paddock-button";
+import { PaddockInput } from "@/components/paddock/paddock-field";
 import { updateProfile } from "@/features/profile/actions/update-profile";
+
+import { ProfileNotice, ProfileSection } from "./profile-section";
 
 export interface ProfileFormProps {
     initialName?: string;
 }
 
 export function ProfileForm({ initialName }: ProfileFormProps) {
-    const [state, action] = useActionState(updateProfile, null);
+    const [state, action, isPending] = useActionState(updateProfile, null);
+    const nameId = useId();
 
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Profile Information</CardTitle>
-                <p className="text-sm text-brand-ink/70 font-brand-sans">
-                    Update your personal details here.
-                </p>
-            </CardHeader>
-            <CardBody>
-                <form action={action} className="space-y-6">
-                    {state?.success && (
-                        <Alert intent="success">{state.data?.message}</Alert>
-                    )}
-                    {!state?.success && state?.error && (
-                        <Alert intent="danger">{state.error}</Alert>
-                    )}
+        <ProfileSection
+            serif="Profile"
+            heavy="information"
+            description="Update your personal details here."
+        >
+            <form action={action} className="flex flex-col gap-4">
+                <PaddockInput
+                    id={nameId}
+                    name="name"
+                    label="Full Name"
+                    defaultValue={initialName}
+                    placeholder="John Doe"
+                    autoComplete="name"
+                />
 
-                    <FormField label="Full Name" htmlFor="name">
-                        <Input
-                            name="name"
-                            id="name"
-                            defaultValue={initialName}
-                            placeholder="John Doe"
-                        />
-                    </FormField>
+                {state?.success && (
+                    <ProfileNotice intent="success">
+                        {state.data?.message}
+                    </ProfileNotice>
+                )}
+                {!state?.success && state?.error && (
+                    <ProfileNotice intent="danger">{state.error}</ProfileNotice>
+                )}
 
-                    <Button type="submit" pendingText="Saving...">
-                        Save Profile
-                    </Button>
-                </form>
-            </CardBody>
-        </Card>
+                <div>
+                    <PaddockButton type="submit" disabled={isPending}>
+                        {isPending ? "Saving..." : "Save Profile"}
+                    </PaddockButton>
+                </div>
+            </form>
+        </ProfileSection>
     );
 }
