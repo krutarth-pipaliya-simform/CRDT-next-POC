@@ -1,9 +1,24 @@
 import type { ReactNode } from "react";
 
+import { ContourBackground } from "@/components/paddock/contour-background";
+import { DisplayHeading } from "@/components/paddock/display-heading";
+import { Tag } from "@/components/paddock/tag";
 import { cn } from "@/lib/cn";
 
+import { PAGE_CONTAINER } from "./layout-styles";
+
 export interface PageHeaderProps {
-    title: string;
+    /** The light half of the two-voice title: "Your". */
+    serif?: string;
+    /** The weighted half: "workspaces". */
+    heavy?: string;
+    /**
+     * A one-voice title, set in the heavy caps. Kept for callers that have
+     * not been given a two-voice title; prefer `serif` and `heavy`.
+     */
+    title?: string;
+    /** A small label above the title: who is signed in, a count, a state. */
+    eyebrow?: ReactNode;
     /** One plain sentence about what this page is for. Optional, and usually is. */
     description?: string;
     /** Live context that belongs to the page — a presence cluster, a count. */
@@ -13,39 +28,54 @@ export interface PageHeaderProps {
 }
 
 /**
- * The tracked-caps eyebrow is gone. It labelled every page with the name of
- * the section the person had just clicked, which they already knew, and it
- * gave nine different pages the same silhouette.
+ * The page hero: faint contour lines behind a two-voice display heading, with
+ * the page's primary action on the right. It spans the full width, so render
+ * it outside the page's content container.
  */
 export function PageHeader({
+    serif,
+    heavy,
     title,
+    eyebrow,
     description,
     meta,
     action,
     className,
 }: PageHeaderProps) {
     return (
-        <div
-            className={cn(
-                "flex flex-col sm:flex-row sm:items-end justify-between gap-4",
-                "pb-4 border-b border-brand-border mb-7 w-full min-w-0",
-                className,
-            )}
-        >
-            <div className="min-w-0 flex-1">
-                <h1 className="text-[26px] sm:text-[30px] font-semibold tracking-[-0.022em] leading-[1.15] text-brand-ink">
-                    {title}
-                </h1>
-                {description && (
-                    <p className="text-sm text-brand-subtle mt-1.5 max-w-[62ch] leading-relaxed">
-                        {description}
-                    </p>
+        <section className={cn("relative overflow-hidden", className)}>
+            <ContourBackground pattern="hero" />
+            <div
+                className={cn(
+                    PAGE_CONTAINER,
+                    "relative flex flex-wrap items-end justify-between gap-6 pt-12 pb-10 sm:pt-14 sm:pb-11",
                 )}
-                {meta && <div className="mt-2.5">{meta}</div>}
+            >
+                <div className="min-w-0">
+                    {eyebrow ? (
+                        <Tag as="p" className="mb-4">
+                            {eyebrow}
+                        </Tag>
+                    ) : null}
+                    <DisplayHeading
+                        as="h1"
+                        size="lg"
+                        serif={serif ?? ""}
+                        heavy={heavy ?? title ?? ""}
+                    />
+                    {description ? (
+                        <p className="m-0 mt-4 max-w-[62ch] text-paddock-subtle">
+                            {description}
+                        </p>
+                    ) : null}
+                    {meta ? <div className="mt-4">{meta}</div> : null}
+                </div>
+                {action ? (
+                    <div className="flex flex-wrap items-center gap-2.5">
+                        {action}
+                    </div>
+                ) : null}
             </div>
-            {action && (
-                <div className="shrink-0 flex items-center gap-2">{action}</div>
-            )}
-        </div>
+        </section>
     );
 }

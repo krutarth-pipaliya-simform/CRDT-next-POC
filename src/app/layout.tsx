@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist_Mono, Newsreader, Schibsted_Grotesk } from "next/font/google";
 
+import { PaddockRoot } from "@/components/paddock/paddock-root";
 import { AppToaster } from "@/components/theme/app-toaster";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
@@ -63,11 +64,13 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
                     dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }}
                 />
             </head>
-            <body className="min-h-full flex flex-col max-w-full overflow-x-hidden">
+            <body className="min-h-full flex flex-col max-w-full overflow-x-hidden bg-paddock-paper">
                 <ThemeProvider>
-                    <div className="flex-1 flex flex-col w-full max-w-full overflow-x-hidden min-w-0">
+                    {/* Paddock is the product's design language: every route
+                        renders inside its scope, fonts and tokens. */}
+                    <PaddockRoot className="flex-1 flex flex-col w-full max-w-full min-w-0">
                         {children}
-                    </div>
+                    </PaddockRoot>
                     <AppToaster />
                 </ThemeProvider>
             </body>

@@ -1,9 +1,11 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState, type KeyboardEvent } from "react";
+import { Bell } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 
+import { Tag } from "@/components/paddock/tag";
 import { useOutsideClick } from "@/hooks/use-outside-click";
 import { cn } from "@/lib/cn";
 
@@ -16,14 +18,24 @@ export interface NotificationBellProps {
     initialUnreadCount: number;
 }
 
+const STREAM_STATUS = {
+    live: { label: "Live updates connected", dot: "bg-paddock-lime" },
+    connecting: {
+        label: "Connecting to live updates",
+        dot: "border-[1.5px] border-dashed border-paddock-ink",
+    },
+    offline: { label: "Live updates disconnected", dot: "bg-paddock-danger" },
+} as const;
+
 export function NotificationBell({
     initialNotifications,
     initialUnreadCount,
 }: NotificationBellProps) {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const close = useCallback(() => setIsOpen(false), []);
 
-    useOutsideClick(dropdownRef, () => setIsOpen(false), isOpen);
+    useOutsideClick(dropdownRef, close, isOpen);
 
     const handleIncoming = useCallback((notification: NotificationPayload) => {
         toast(notification.title, {
@@ -47,10 +59,18 @@ export function NotificationBell({
         [markRead],
     );
 
+    function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+        if (event.key === "Escape" && isOpen) {
+            event.stopPropagation();
+            setIsOpen(false);
+        }
+    }
+
     const badgeLabel = unreadCount > 9 ? "9+" : String(unreadCount);
+    const streamStatus = STREAM_STATUS[status];
 
     return (
-        <div className="relative" ref={dropdownRef}>
+        <div className="relative" ref={dropdownRef} onKeyDown={handleKeyDown}>
             <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
@@ -62,27 +82,14 @@ export function NotificationBell({
                         : "Notifications"
                 }
                 data-testid="notification-bell"
-                className="relative flex items-center justify-center w-10 h-10 border-2 border-brand-ink bg-brand-surface text-brand-ink rounded-brand transition-colors hover:bg-brand-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 cursor-pointer"
+                className="paddock-press relative flex size-12 cursor-pointer items-center justify-center rounded-paddock border-[1.5px] border-paddock-ink bg-transparent text-paddock-ink"
             >
-                <svg
-                    aria-hidden="true"
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                >
-                    <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                    />
-                </svg>
+                <Bell aria-hidden="true" className="size-5" strokeWidth={1.8} />
 
                 {unreadCount > 0 && (
                     <span
                         data-testid="notification-unread-count"
-                        className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-brand-accent text-brand-surface text-[12px] font-bold border-2 border-brand-surface"
+                        className="paddock-mono absolute -top-[7px] -right-[7px] flex h-5 min-w-5 items-center justify-center rounded-full bg-paddock-lime px-[5px] text-[0.6875rem] font-medium text-paddock-on-fill"
                     >
                         {badgeLabel}
                     </span>
@@ -92,28 +99,18 @@ export function NotificationBell({
             {isOpen && (
                 <div
                     data-testid="notification-dropdown"
-                    className="absolute right-0 mt-2 w-[min(22rem,calc(100vw-2rem))] bg-brand-surface border-2 border-brand-ink shadow-brand-card rounded-brand z-50 animate-fade-in-up"
+                    className="paddock-in absolute right-0 z-50 mt-2 w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-paddock-card border-[1.5px] border-paddock-ink bg-paddock-sheet shadow-paddock-float"
                 >
-                    <div className="flex items-center justify-between gap-2 px-4 py-3 border-b-2 border-brand-muted">
-                        <div className="flex items-center gap-2 min-w-0">
-                            <span className="text-[12px] text-brand-subtle">
-                                Notifications
-                            </span>
+                    <div className="flex items-center justify-between gap-2 border-b border-paddock-rule px-4 py-3">
+                        <div className="flex min-w-0 items-center gap-2">
+                            <Tag tone="ink">Notifications</Tag>
                             <span
-                                title={
-                                    status === "live"
-                                        ? "Live updates connected"
-                                        : status === "connecting"
-                                          ? "Connecting to live updates"
-                                          : "Live updates disconnected"
-                                }
+                                role="img"
+                                aria-label={streamStatus.label}
+                                title={streamStatus.label}
                                 className={cn(
-                                    "w-2 h-2 shrink-0",
-                                    status === "live"
-                                        ? "bg-brand-success"
-                                        : status === "connecting"
-                                          ? "bg-brand-warning"
-                                          : "bg-brand-danger",
+                                    "size-2 shrink-0 rounded-full",
+                                    streamStatus.dot,
                                 )}
                             />
                         </div>
@@ -122,16 +119,16 @@ export function NotificationBell({
                             <button
                                 type="button"
                                 onClick={() => void markAllRead()}
-                                className="text-[12px] text-brand-accent hover:underline cursor-pointer"
+                                className="cursor-pointer border-0 bg-transparent p-0 text-[0.8125rem] font-semibold text-paddock-ink underline decoration-[1.5px] underline-offset-[3px] hover:decoration-transparent"
                             >
                                 Mark all read
                             </button>
                         )}
                     </div>
 
-                    <div className="max-h-96 overflow-y-auto divide-y divide-brand-border">
+                    <div className="max-h-96 divide-y divide-paddock-rule overflow-y-auto">
                         {notifications.length === 0 ? (
-                            <p className="px-4 py-10 text-center text-xs text-brand-subtle">
+                            <p className="m-0 px-4 py-10 text-center text-sm text-paddock-subtle">
                                 Nothing here yet.
                             </p>
                         ) : (
@@ -146,11 +143,11 @@ export function NotificationBell({
                     </div>
 
                     {notifications.length > 0 && (
-                        <div className="border-t-2 border-brand-muted px-4 py-2.5">
+                        <div className="border-t border-paddock-rule px-4 py-3">
                             <Link
                                 href={`/${notifications[0].workspaceId}/activity`}
-                                onClick={() => setIsOpen(false)}
-                                className="text-[12px] text-brand-accent hover:underline"
+                                onClick={close}
+                                className="text-[0.8125rem] font-semibold text-paddock-ink underline decoration-[1.5px] underline-offset-[3px] hover:decoration-transparent"
                             >
                                 View all activity
                             </Link>

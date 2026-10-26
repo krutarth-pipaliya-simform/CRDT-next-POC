@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 import { cn } from "@/lib/cn";
 
 import {
@@ -38,7 +40,8 @@ const RINGS: Record<PaddockAvatarRing, string> = {
 /**
  * Round, filled with the person's own hue — the same colour as their cursor
  * flag, chat rail and highlight. Text on the hue is `on-fill`, which stays
- * dark in both themes because the hues stay light in both.
+ * dark in both themes because the hues stay light in both. An uploaded photo
+ * covers the hue; the hue stays behind it while the image loads.
  */
 export function PaddockAvatar({
     person,
@@ -56,13 +59,23 @@ export function PaddockAvatar({
             aria-hidden={decorative ? true : undefined}
             style={{ backgroundColor: paddockPresenceVar(person.id) }}
             className={cn(
-                "inline-flex shrink-0 items-center justify-center rounded-full font-extrabold text-paddock-on-fill",
+                "relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full font-extrabold text-paddock-on-fill",
                 box,
                 RINGS[ring],
                 className,
             )}
         >
-            {initialsOf(person.name, initials)}
+            {person.image ? (
+                <Image
+                    src={person.image}
+                    alt=""
+                    fill
+                    sizes="48px"
+                    className="object-cover"
+                />
+            ) : (
+                initialsOf(person.name, initials)
+            )}
         </span>
     );
 }

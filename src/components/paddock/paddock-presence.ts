@@ -13,6 +13,8 @@ export const PADDOCK_PRESENCE_SLOT_COUNT = 4;
 export interface PaddockPerson {
     id: string;
     name: string;
+    /** An uploaded photo. Without one the avatar is the person's own hue. */
+    image?: string | null;
 }
 
 function paddockSlot(userId: string): number {
