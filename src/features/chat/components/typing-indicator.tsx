@@ -24,23 +24,20 @@ export function TypingIndicator({ typingUsers }: TypingIndicatorProps) {
         <div
             aria-live="polite"
             data-testid="typing-indicator"
-            className="h-5 px-4 flex items-center gap-2"
+            className="flex h-6.5 min-w-0 items-center gap-2.5 pl-1 text-[0.78125rem] text-paddock-subtle"
         >
             {isActive && (
                 <>
-                    <span
-                        aria-hidden="true"
-                        className="flex items-center gap-0.5"
-                    >
+                    <span aria-hidden="true" className="flex gap-1">
                         {[0, 150, 300].map((delay) => (
                             <span
                                 key={delay}
                                 style={{ animationDelay: `${delay}ms` }}
-                                className="w-1 h-1 bg-brand-accent animate-chat-typing"
+                                className="size-1.5 rounded-full bg-paddock-ink animate-chat-typing"
                             />
                         ))}
                     </span>
-                    <span className="text-[12px] text-brand-subtle truncate">
+                    <span className="truncate">
                         {describeTyping(typingUsers)}
                     </span>
                 </>

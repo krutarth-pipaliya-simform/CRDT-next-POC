@@ -4,7 +4,8 @@ import { useState, type CSSProperties, type MouseEvent } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-import { PresenceRail } from "@/components/ui/presence-rail";
+import { PaddockAvatar } from "@/components/paddock/paddock-avatar";
+import { paddockPresenceVar } from "@/components/paddock/paddock-presence";
 import { cn } from "@/lib/cn";
 
 import type { TaskWithAssignee } from "../types";
@@ -67,9 +68,15 @@ export function TaskCard({
           })
         : null;
 
-    const assigneeUserId = task.assignee?.user?.id ?? null;
-    const assigneeName = task.assignee?.user
-        ? (task.assignee.user.name ?? task.assignee.user.email ?? "Member")
+    const assignee = task.assignee?.user
+        ? {
+              id: task.assignee.user.id,
+              name:
+                  task.assignee.user.name ??
+                  task.assignee.user.email ??
+                  "Member",
+              image: task.assignee.user.image,
+          }
         : null;
 
     const isPastDue =
@@ -100,57 +107,83 @@ export function TaskCard({
                 }
             }}
             className={cn(
-                // Flat at rest on a rule; the hard shadow is saved for the card
-                // that is genuinely floating under the cursor mid-drag.
-                "group relative flex gap-3 bg-brand-surface border border-brand-border p-3 pl-0 rounded-brand transition-[transform,box-shadow,border-color] duration-100 select-none",
+                // Flat at rest on a rule. Only the card genuinely floating
+                // under the cursor mid-drag is raised.
+                "group relative flex flex-col gap-1.5 overflow-hidden rounded-[10px] border border-paddock-rule bg-paddock-sheet py-3.5 pr-4 pl-5.5 select-none",
                 canEdit
-                    ? "cursor-grab active:cursor-grabbing hover:border-brand-ink hover:-translate-y-[2px] hover:shadow-brand-subtle"
-                    : "cursor-pointer hover:border-brand-line",
+                    ? "paddock-lift cursor-grab active:cursor-grabbing"
+                    : "paddock-lift cursor-pointer",
                 isOverlay &&
-                    "rotate-1 shadow-brand-card border-brand-ink cursor-grabbing z-50",
+                    "z-50 rotate-1 cursor-grabbing border-paddock-ink shadow-paddock-float",
             )}
         >
-            {/* Whose task this is, readable before the title. */}
-            <PresenceRail
-                userIds={assigneeUserId ? [assigneeUserId] : []}
-                className="ml-0"
+            {/* Whose task this is, readable before the title. An unassigned
+                card keeps a neutral rail rather than borrowing a hue. */}
+            <span
+                aria-hidden="true"
+                className={cn(
+                    "absolute inset-y-0 left-0 w-1.5",
+                    !assignee && "bg-paddock-rule",
+                )}
+                style={
+                    assignee
+                        ? { backgroundColor: paddockPresenceVar(assignee.id) }
+                        : undefined
+                }
             />
 
-            <div className="min-w-0 flex-1">
-                <h3 className="font-semibold text-sm text-brand-ink leading-snug line-clamp-2">
-                    {task.title}
-                </h3>
+            <h3 className="m-0 line-clamp-2 text-[0.96875rem] leading-[1.35] font-bold decoration-[1.5px] underline-offset-[3px] group-hover:underline">
+                {task.title}
+            </h3>
 
-                {task.description && (
-                    <p className="text-[13px] text-brand-subtle line-clamp-2 mt-1.5 leading-relaxed">
-                        {task.description}
-                    </p>
-                )}
+            {task.description && (
+                <p className="m-0 line-clamp-2 text-[0.84375rem] leading-[1.45] text-paddock-subtle">
+                    {task.description}
+                </p>
+            )}
 
-                {/* Who, then how urgent, then when — the order someone
-                    triaging a board actually reads them in. An empty slot is
-                    left empty rather than filled with an em dash. */}
-                <div className="flex items-center flex-wrap gap-x-2 gap-y-1 mt-2.5 text-[13px] text-brand-subtle">
-                    <span className="truncate max-w-[14ch] text-brand-ink">
-                        {assigneeName ?? "Unassigned"}
+            {/* Who, then how urgent, then when — the order someone triaging a
+                board actually reads them in. */}
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[0.78125rem]">
+                <span className="flex min-w-0 items-center gap-1.5 font-semibold">
+                    {assignee ? (
+                        <PaddockAvatar person={assignee} size="xs" decorative />
+                    ) : null}
+                    <span className="max-w-[16ch] truncate">
+                        {assignee?.name ?? "Unassigned"}
                     </span>
-                    <PriorityBadge
-                        taskId={task.id}
-                        priority={task.priority}
-                        canEdit={canEdit}
-                    />
-                    {formattedDueDate && (
+                </span>
+                <span aria-hidden="true" className="text-paddock-subtle">
+                    ·
+                </span>
+                <PriorityBadge
+                    taskId={task.id}
+                    priority={task.priority}
+                    canEdit={canEdit}
+                />
+                {formattedDueDate && (
+                    <>
+                        <span
+                            aria-hidden="true"
+                            className="text-paddock-subtle"
+                        >
+                            ·
+                        </span>
                         <time
+                            suppressHydrationWarning
                             className={cn(
-                                isPastDue && "text-brand-danger font-medium",
+                                "paddock-mono text-xs",
+                                isPastDue
+                                    ? "font-semibold text-paddock-danger"
+                                    : "text-paddock-subtle",
                             )}
                             title={isPastDue ? "Overdue" : "Due"}
                         >
                             {isPastDue ? "Overdue " : "Due "}
                             {formattedDueDate}
                         </time>
-                    )}
-                </div>
+                    </>
+                )}
             </div>
         </article>
     );

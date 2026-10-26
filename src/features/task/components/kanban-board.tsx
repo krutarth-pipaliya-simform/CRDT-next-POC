@@ -13,11 +13,17 @@ import {
     type DragStartEvent,
 } from "@dnd-kit/core";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
-
 import type { TaskStatus } from "@prisma/client";
+import { Plus, Search, X } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import { EmptyState } from "@/components/ui/empty-state";
+import { PAGE_CONTAINER } from "@/components/layout/layout-styles";
+import { PageHeader } from "@/components/layout/page-header";
+import { NotchedCard } from "@/components/paddock/notched-card";
+import { PaddockButton } from "@/components/paddock/paddock-button";
+import { paddockFieldClasses } from "@/components/paddock/paddock-styles";
+import { Tag } from "@/components/paddock/tag";
+import { cn } from "@/lib/cn";
+import { taskStatusSchema } from "@/schemas/task";
 
 import { moveTaskAction } from "../actions/move-task";
 import type { TaskWithAssignee } from "../types";
@@ -33,6 +39,8 @@ export interface KanbanBoardProps {
     workspaceId: string;
     members: MemberOption[];
     canEdit?: boolean;
+    /** Small label above the hero title, e.g. "Halden Studio — Tasks". */
+    eyebrow?: string;
 }
 
 interface MoveAction {
@@ -46,6 +54,7 @@ export function KanbanBoard({
     workspaceId,
     members,
     canEdit = false,
+    eyebrow,
 }: KanbanBoardProps) {
     const [tasks, setTasks] = useState<TaskWithAssignee[]>(initialTasks);
     const [prevInitial, setPrevInitial] =
@@ -109,10 +118,13 @@ export function KanbanBoard({
         );
         if (!activeTaskItem) return;
 
+        // A column's droppable id is its status; anything else is a task id.
+        const overColumn = taskStatusSchema.safeParse(overId);
+
         // Determine destination status
         let destinationStatus: TaskStatus;
-        if (COLUMN_ORDER.includes(overId as TaskStatus)) {
-            destinationStatus = overId as TaskStatus;
+        if (overColumn.success) {
+            destinationStatus = overColumn.data;
         } else {
             const overTask = optimisticTasks.find((t) => t.id === overId);
             if (!overTask) return;
@@ -130,7 +142,7 @@ export function KanbanBoard({
 
         if (destTasks.length === 0) {
             newPosition = 1024;
-        } else if (COLUMN_ORDER.includes(overId as TaskStatus)) {
+        } else if (overColumn.success) {
             // Dropped onto the column container -> append to end
             const lastTask = destTasks[destTasks.length - 1];
             newPosition = (lastTask?.position ?? 0) + 1024;
@@ -214,103 +226,148 @@ export function KanbanBoard({
           )
         : optimisticTasks;
 
-    return (
-        <div className="flex flex-col gap-6">
-            {/* Top Toolbar: Search and New Task action */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-                <div className="relative flex-1 max-w-sm">
-                    <input
-                        type="search"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search tasks"
-                        aria-label="Filter tasks"
-                        className="w-full h-10 bg-brand-surface text-brand-ink placeholder:text-brand-subtle/70 text-sm border border-brand-line hover:border-brand-ink rounded-brand px-3 transition-colors"
-                    />
-                    {searchQuery && (
-                        <button
-                            type="button"
-                            onClick={() => setSearchQuery("")}
-                            aria-label="Clear search query"
-                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-brand-subtle hover:text-brand-ink p-1 cursor-pointer"
-                        >
-                            ✕
-                        </button>
+    const toolbar = (
+        <>
+            <div className="relative w-[17.5rem] max-w-full">
+                <Search
+                    aria-hidden="true"
+                    className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-paddock-subtle"
+                    strokeWidth={2}
+                />
+                <input
+                    type="search"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search tasks"
+                    aria-label="Filter tasks"
+                    className={cn(
+                        paddockFieldClasses,
+                        "h-13 pr-12 pl-10.5 [&::-webkit-search-cancel-button]:appearance-none",
                     )}
-                </div>
-
-                {canEdit && (
-                    <Button
+                />
+                {searchQuery && (
+                    <button
                         type="button"
-                        variant="primary"
-                        size="sm"
-                        onClick={() => handleAddTask("TODO")}
-                        className="shrink-0"
+                        onClick={() => setSearchQuery("")}
+                        aria-label="Clear search query"
+                        className="absolute top-1/2 right-1 inline-flex size-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-paddock text-paddock-ink transition-colors hover:bg-paddock-ink/8"
                     >
-                        New task
-                    </Button>
+                        <X
+                            aria-hidden="true"
+                            className="size-4"
+                            strokeWidth={2.4}
+                        />
+                    </button>
                 )}
             </div>
 
-            {/* Kanban Columns */}
-            <DndContext
-                sensors={sensors}
-                collisionDetection={closestCorners}
-                onDragStart={handleDragStart}
-                onDragEnd={handleDragEnd}
-            >
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {COLUMN_ORDER.map((status) => {
-                        const colTasks = filteredTasks
-                            .filter((t) => t.status === status)
-                            .sort((a, b) => a.position - b.position);
-
-                        return (
-                            <KanbanColumn
-                                key={status}
-                                status={status}
-                                tasks={colTasks}
-                                canEdit={canEdit}
-                                onOpenDetail={setSelectedTask}
-                                onAddTask={canEdit ? handleAddTask : undefined}
-                            />
-                        );
-                    })}
-                </div>
-
-                {/* Drag Overlay Clone */}
-                <DragOverlay>
-                    {activeTask ? (
-                        <TaskCard
-                            task={activeTask}
-                            canEdit={canEdit}
-                            isOverlay
-                        />
-                    ) : null}
-                </DragOverlay>
-            </DndContext>
-
-            {/* Empty State when no tasks match */}
-            {initialTasks.length === 0 && (
-                <EmptyState
-                    title="No tasks on the board yet"
-                    description="Create your first task to start organizing deliverables, priorities, and workflow stages."
-                    action={
-                        canEdit ? (
-                            <Button
-                                variant="primary"
-                                size="sm"
-                                onClick={() => handleAddTask("TODO")}
-                            >
-                                + Create First Task
-                            </Button>
-                        ) : undefined
-                    }
-                />
+            {canEdit && (
+                <PaddockButton
+                    variant="primary"
+                    onClick={() => handleAddTask("TODO")}
+                    className="h-13 px-5.5"
+                >
+                    <Plus
+                        aria-hidden="true"
+                        className="size-5"
+                        strokeWidth={2.6}
+                    />
+                    New task
+                </PaddockButton>
             )}
+        </>
+    );
 
-            {/* Modals */}
+    return (
+        <>
+            <PageHeader
+                eyebrow={eyebrow}
+                serif="The"
+                heavy="Board"
+                description="Drag a card to move it. Everyone on the board sees the move as it happens."
+                action={toolbar}
+            />
+
+            <div className={cn(PAGE_CONTAINER, "flex flex-col gap-6")}>
+                {/* Empty board: said once, above the columns, where it is seen */}
+                {initialTasks.length === 0 && (
+                    <NotchedCard tone="sheet">
+                        <div className="flex flex-wrap items-end justify-between gap-5">
+                            <div className="max-w-[52ch]">
+                                <Tag as="p" className="mb-2">
+                                    Empty board
+                                </Tag>
+                                <p className="paddock-heavy m-0 text-[1.375rem] leading-none">
+                                    No tasks on the board yet
+                                </p>
+                                <p className="m-0 mt-3 text-paddock-subtle">
+                                    Create your first task to start organising
+                                    deliverables, priorities and workflow
+                                    stages.
+                                </p>
+                            </div>
+                            {canEdit ? (
+                                <PaddockButton
+                                    variant="outline"
+                                    voice="plain"
+                                    size="sm"
+                                    onClick={() => handleAddTask("TODO")}
+                                >
+                                    Create the first task
+                                </PaddockButton>
+                            ) : null}
+                        </div>
+                    </NotchedCard>
+                )}
+
+                {/* Kanban columns. The board scrolls sideways inside its own
+                    box on a narrow screen, never the page. */}
+                <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCorners}
+                    onDragStart={handleDragStart}
+                    onDragEnd={handleDragEnd}
+                >
+                    <div className="-mx-4 overflow-x-auto overscroll-x-contain px-4 pb-2 sm:mx-0 sm:px-0">
+                        <div className="grid grid-cols-[repeat(3,minmax(17rem,1fr))] items-start gap-4">
+                            {COLUMN_ORDER.map((status) => {
+                                const colTasks = filteredTasks
+                                    .filter((t) => t.status === status)
+                                    .sort((a, b) => a.position - b.position);
+
+                                return (
+                                    <KanbanColumn
+                                        key={status}
+                                        status={status}
+                                        tasks={colTasks}
+                                        canEdit={canEdit}
+                                        onOpenDetail={setSelectedTask}
+                                        onAddTask={
+                                            canEdit ? handleAddTask : undefined
+                                        }
+                                    />
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Drag Overlay Clone */}
+                    <DragOverlay>
+                        {activeTask ? (
+                            <TaskCard
+                                task={activeTask}
+                                canEdit={canEdit}
+                                isOverlay
+                            />
+                        ) : null}
+                    </DragOverlay>
+                </DndContext>
+            </div>
+
+            {/* Modals. Keyed on the column so "+" on a column opens the form
+                already set to that column. */}
             <CreateTaskDialog
+                key={createDefaultStatus}
                 workspaceId={workspaceId}
                 members={members}
                 open={isCreateOpen}
@@ -330,6 +387,6 @@ export function KanbanBoard({
                 onTaskUpdated={handleTaskUpdated}
                 onTaskDeleted={handleTaskDeleted}
             />
-        </div>
+        </>
     );
 }

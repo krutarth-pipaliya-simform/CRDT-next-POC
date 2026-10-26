@@ -1,19 +1,26 @@
 "use client";
 
 import { startTransition, useActionState, useState } from "react";
-
 import type { TaskPriority, TaskStatus } from "@prisma/client";
 
-import { Alert } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { Dialog } from "@/components/ui/dialog";
-import { FormField } from "@/components/ui/form-field";
-import { Input } from "@/components/ui/input";
+import { PaddockButton } from "@/components/paddock/paddock-button";
+import { PaddockDialog } from "@/components/paddock/paddock-dialog";
+import {
+    PaddockInput,
+    PaddockSelect,
+    PaddockTextarea,
+} from "@/components/paddock/paddock-field";
+import { taskPrioritySchema, taskStatusSchema } from "@/schemas/task";
 
 import { createTaskAction } from "../actions/create-task";
 import type { TaskWithAssignee } from "../types";
-import { TASK_PRIORITY_LABELS, TASK_STATUS_LABELS } from "../types";
 import { AssigneePicker, type MemberOption } from "./assignee-picker";
+import {
+    TASK_PRIORITY_OPTIONS,
+    TASK_STATUS_OPTIONS,
+    TaskField,
+    TaskFormError,
+} from "./task-form-parts";
 
 export interface CreateTaskDialogProps {
     workspaceId: string;
@@ -75,135 +82,103 @@ export function CreateTaskDialog({
     }
 
     return (
-        <Dialog
+        <PaddockDialog
             open={open}
             onClose={handleClose}
-            title="Create Task"
-            className="max-w-lg"
+            titleSerif="New"
+            titleHeavy="task"
         >
-            <form action={formAction} className="flex flex-col gap-4">
-                {state.error && (
-                    <Alert intent="danger" title="Validation Error">
-                        {state.error}
-                    </Alert>
-                )}
+            <form action={formAction} className="flex flex-col">
+                {state.error && <TaskFormError message={state.error} />}
 
-                <div key={state.key} className="flex flex-col gap-4">
-                    {/* Title */}
-                    <FormField label="Task Title" htmlFor="task-title" required>
-                        <Input
-                            id="task-title"
-                            name="title"
-                            placeholder="e.g. Implement real-time notifications"
-                            required
-                            autoFocus
-                            maxLength={200}
+                <div
+                    key={state.key}
+                    className="grid grid-cols-1 gap-x-4 gap-y-3.5 sm:grid-cols-2"
+                >
+                    <PaddockInput
+                        id="task-title"
+                        name="title"
+                        label="Task title"
+                        placeholder="e.g. Implement real-time notifications"
+                        required
+                        data-autofocus
+                        maxLength={200}
+                        wrapperClassName="sm:col-span-2"
+                    />
+
+                    <PaddockTextarea
+                        id="task-description"
+                        name="description"
+                        label="Description"
+                        rows={3}
+                        placeholder="Add context, details, or checklist..."
+                        maxLength={2000}
+                        wrapperClassName="sm:col-span-2"
+                    />
+
+                    <PaddockSelect
+                        id="task-status"
+                        label="Column"
+                        options={TASK_STATUS_OPTIONS}
+                        value={status}
+                        onChange={(e) => {
+                            const parsed = taskStatusSchema.safeParse(
+                                e.target.value,
+                            );
+                            if (parsed.success) setStatus(parsed.data);
+                        }}
+                    />
+
+                    <PaddockSelect
+                        id="task-priority"
+                        label="Priority"
+                        options={TASK_PRIORITY_OPTIONS}
+                        value={priority}
+                        onChange={(e) => {
+                            const parsed = taskPrioritySchema.safeParse(
+                                e.target.value,
+                            );
+                            if (parsed.success) setPriority(parsed.data);
+                        }}
+                    />
+
+                    <TaskField htmlFor="task-assignee" label="Assignee">
+                        <AssigneePicker
+                            id="task-assignee"
+                            members={members}
+                            selectedMemberId={selectedAssignee}
+                            onChange={setSelectedAssignee}
                         />
-                    </FormField>
+                    </TaskField>
 
-                    {/* Description */}
-                    <FormField label="Description" htmlFor="task-description">
-                        <textarea
-                            id="task-description"
-                            name="description"
-                            rows={3}
-                            placeholder="Add context, details, or checklist..."
-                            maxLength={2000}
-                            className="w-full bg-brand-muted text-brand-ink placeholder:text-brand-subtle px-4 py-3 text-sm border-2 border-transparent focus:border-brand-accent transition-colors outline-none rounded-brand font-brand-sans resize-none"
-                        />
-                    </FormField>
-
-                    {/* Status & Priority row */}
-                    <div className="grid grid-cols-2 gap-3">
-                        <FormField label="Column" htmlFor="task-status">
-                            <select
-                                id="task-status"
-                                value={status}
-                                onChange={(e) =>
-                                    setStatus(e.target.value as TaskStatus)
-                                }
-                                className="w-full bg-brand-surface text-brand-ink text-sm border-2 border-brand-ink rounded-brand px-3 py-2 font-brand-sans focus:outline-none focus:ring-2 focus:ring-brand-accent cursor-pointer"
-                            >
-                                <option value="TODO">
-                                    {TASK_STATUS_LABELS.TODO}
-                                </option>
-                                <option value="IN_PROGRESS">
-                                    {TASK_STATUS_LABELS.IN_PROGRESS}
-                                </option>
-                                <option value="DONE">
-                                    {TASK_STATUS_LABELS.DONE}
-                                </option>
-                            </select>
-                        </FormField>
-
-                        <FormField label="Priority" htmlFor="task-priority">
-                            <select
-                                id="task-priority"
-                                value={priority}
-                                onChange={(e) =>
-                                    setPriority(e.target.value as TaskPriority)
-                                }
-                                className="w-full bg-brand-surface text-brand-ink text-sm border-2 border-brand-ink rounded-brand px-3 py-2 font-brand-sans focus:outline-none focus:ring-2 focus:ring-brand-accent cursor-pointer"
-                            >
-                                <option value="LOW">
-                                    {TASK_PRIORITY_LABELS.LOW}
-                                </option>
-                                <option value="MEDIUM">
-                                    {TASK_PRIORITY_LABELS.MEDIUM}
-                                </option>
-                                <option value="HIGH">
-                                    {TASK_PRIORITY_LABELS.HIGH}
-                                </option>
-                                <option value="URGENT">
-                                    {TASK_PRIORITY_LABELS.URGENT}
-                                </option>
-                            </select>
-                        </FormField>
-                    </div>
-
-                    {/* Assignee & Due Date row */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <FormField label="Assignee" htmlFor="task-assignee">
-                            <AssigneePicker
-                                members={members}
-                                selectedMemberId={selectedAssignee}
-                                onChange={setSelectedAssignee}
-                            />
-                        </FormField>
-
-                        <FormField label="Due Date" htmlFor="task-due-date">
-                            <input
-                                type="date"
-                                id="task-due-date"
-                                name="dueDate"
-                                className="w-full bg-brand-surface text-brand-ink text-sm border-2 border-brand-ink rounded-brand px-3 py-2 font-brand-sans focus:outline-none focus:ring-2 focus:ring-brand-accent cursor-pointer"
-                            />
-                        </FormField>
-                    </div>
+                    <PaddockInput
+                        id="task-due-date"
+                        name="dueDate"
+                        type="date"
+                        label="Due date"
+                        className="cursor-pointer"
+                    />
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center justify-end gap-3 pt-3 border-t border-brand-border">
-                    <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
+                <div className="mt-6 flex flex-wrap items-center justify-end gap-2.5 border-t border-paddock-rule pt-4.5">
+                    <PaddockButton
+                        variant="outline"
+                        voice="plain"
                         onClick={handleClose}
                         disabled={isPending}
                     >
                         Cancel
-                    </Button>
-                    <Button
+                    </PaddockButton>
+                    <PaddockButton
                         type="submit"
                         variant="primary"
-                        size="sm"
                         disabled={isPending}
-                        pendingText="Creating..."
                     >
-                        Create Task
-                    </Button>
+                        {isPending ? "Creating…" : "Create task"}
+                    </PaddockButton>
                 </div>
             </form>
-        </Dialog>
+        </PaddockDialog>
     );
 }

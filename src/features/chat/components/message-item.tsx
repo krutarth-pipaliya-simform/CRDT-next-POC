@@ -1,9 +1,9 @@
 "use client";
 
-import { UserAvatar } from "@/components/ui/user-avatar";
+import { PaddockAvatar } from "@/components/paddock/paddock-avatar";
+import { paddockPresenceVar } from "@/components/paddock/paddock-presence";
 import { cn } from "@/lib/cn";
 import { formatClockTime } from "@/lib/format-time";
-import { presenceVar } from "@/lib/presence";
 
 import type { ChatMessage } from "../types";
 
@@ -15,6 +15,12 @@ export interface MessageItemProps {
     onRetry: (messageId: string) => void;
 }
 
+/**
+ * Paddock's chat row (see `ChatMessage` in `components/paddock`), set out here
+ * because a server-rendered history needs what the primitive leaves out: the
+ * delivery state and test hooks on the row, and a clock time formatted in the
+ * reader's own time zone, which may differ from the server's.
+ */
 export function MessageItem({
     message,
     isGrouped,
@@ -24,67 +30,77 @@ export function MessageItem({
     const authorName = message.author.name || message.author.email || "Unknown";
     const isFailed = message.deliveryState === "failed";
     const isSending = message.deliveryState === "sending";
+    const colour = paddockPresenceVar(message.author.id);
 
     return (
         <div
             data-testid="chat-message"
             data-delivery-state={message.deliveryState}
             className={cn(
-                "group flex items-start gap-3 pl-3 pr-4 transition-opacity",
-                isGrouped ? "py-0.5" : "pt-3.5 pb-0.5",
+                "relative flex gap-3.5 rounded-paddock pr-2 transition-[background-color,opacity] hover:bg-paddock-ink/5",
+                isGrouped ? "py-0.5" : "pt-2.5 pb-1.5",
                 isSending && "opacity-60",
             )}
         >
-            {/* The rail runs the height of every message in a run, so a burst
-                from one person reads as one block of their colour. */}
+            {/* The rail runs down every message in a run, so a burst from one
+                person reads as one block of their colour. */}
             <span
                 aria-hidden="true"
-                className="w-[3px] self-stretch shrink-0"
-                style={{ backgroundColor: presenceVar(message.author.id) }}
+                className={cn(
+                    "absolute bottom-1 left-0 w-[3px] rounded-sm",
+                    isGrouped ? "top-1" : "top-2.5",
+                )}
+                style={{ backgroundColor: colour }}
             />
 
-            <div className="w-8 shrink-0">
-                {!isGrouped && <UserAvatar user={message.author} size="md" />}
-            </div>
+            <span className="ml-3 w-[2.125rem] shrink-0">
+                {!isGrouped && (
+                    <PaddockAvatar
+                        person={{
+                            id: message.author.id,
+                            name: authorName,
+                            image: message.author.image,
+                        }}
+                        size="md"
+                        decorative
+                    />
+                )}
+            </span>
 
             <div className="min-w-0 flex-1">
                 {!isGrouped && (
-                    <div className="flex items-baseline gap-2 mb-0.5">
+                    <div className="mb-0.5 flex min-w-0 items-center gap-2.5">
                         <span
-                            className="text-sm font-semibold truncate"
-                            style={{
-                                color: presenceVar(message.author.id),
-                            }}
+                            className="paddock-tag truncate rounded px-2 py-0.5 text-[0.65625rem] text-paddock-on-fill"
+                            style={{ backgroundColor: colour }}
                         >
                             {isOwn ? "You" : authorName}
                         </span>
                         <time
                             suppressHydrationWarning
                             dateTime={message.createdAt}
-                            className="font-brand-mono text-[11px] text-brand-subtle shrink-0 tabular-nums"
+                            className="paddock-mono shrink-0 text-[0.71875rem] text-paddock-subtle"
                         >
                             {formatClockTime(message.createdAt)}
                         </time>
                     </div>
                 )}
 
-                <p className="text-sm text-brand-ink whitespace-pre-wrap break-words">
+                <p className="m-0 text-[0.96875rem] leading-[1.55] [overflow-wrap:anywhere] whitespace-pre-wrap">
                     {message.body}
                 </p>
 
                 {isFailed && (
-                    <div className="flex items-center gap-2 mt-1">
-                        <span className="text-[13px] text-brand-danger">
-                            Not sent
-                        </span>
+                    <p className="m-0 mt-1 text-[0.8125rem] font-semibold text-paddock-danger">
+                        Not sent ·{" "}
                         <button
                             type="button"
                             onClick={() => onRetry(message.id)}
-                            className="text-[13px] text-brand-accent hover:underline underline-offset-2 cursor-pointer"
+                            className="-my-3 inline-flex min-h-11 cursor-pointer items-center border-0 bg-transparent p-0 font-bold text-paddock-danger underline underline-offset-[3px]"
                         >
                             Try again
                         </button>
-                    </div>
+                    </p>
                 )}
             </div>
         </div>

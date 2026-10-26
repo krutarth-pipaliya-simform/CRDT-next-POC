@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 
-import { PageHeader } from "@/components/layout/page-header";
 import { KanbanBoard } from "@/features/task/components/kanban-board";
 import { getWorkspaceTasks } from "@/features/task/queries/get-workspace-tasks";
 import {
@@ -34,18 +33,16 @@ export default async function TasksPage({
         getWorkspaceMembers(workspaceId),
     ]);
 
+    // The hero lives inside the board: its search box and "New task" action
+    // drive the board's own client state, so they render together.
     return (
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 pb-16">
-            <PageHeader
-                title="Tasks"
-                description="Drag a card to move it. Everyone on the board sees the move as it happens."
-            />
-
+        <main className="pb-24">
             <KanbanBoard
                 initialTasks={tasks}
                 workspaceId={workspaceId}
                 members={members}
                 canEdit={canEdit}
+                eyebrow={`${workspace.name} — Tasks`}
             />
         </main>
     );

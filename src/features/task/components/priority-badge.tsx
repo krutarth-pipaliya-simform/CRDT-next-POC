@@ -1,9 +1,9 @@
 "use client";
 
 import { useOptimistic, useTransition } from "react";
-
 import type { TaskPriority } from "@prisma/client";
 
+import { PriorityLabel } from "@/components/paddock/paddock-pills";
 import { cn } from "@/lib/cn";
 
 import { cyclePriorityAction } from "../actions/cycle-priority";
@@ -17,17 +17,10 @@ export interface PriorityBadgeProps {
 }
 
 /**
- * Priority is weight, not identity, so it is set in text rather than in a
- * bordered chip. Low and Medium recede into the ink scale; only High and Urgent
- * take colour, which is what makes them findable when a column is full.
+ * Priority is weight, not identity, so it is set in bold text rather than a
+ * chip, and never in a person's hue. `PriorityLabel` owns the treatment; this
+ * adds the click-to-cycle control around it for people who can edit.
  */
-const priorityStyles: Record<TaskPriority, string> = {
-    LOW: "text-brand-subtle",
-    MEDIUM: "text-brand-subtle",
-    HIGH: "text-brand-warning",
-    URGENT: "text-brand-danger font-medium",
-};
-
 export function PriorityBadge({
     taskId,
     priority,
@@ -49,18 +42,15 @@ export function PriorityBadge({
 
     if (!canEdit) {
         return (
-            <span
-                className={cn(
-                    "inline-flex items-center text-[13px] select-none",
-                    priorityStyles[optimisticPriority],
-                    className,
-                )}
-            >
-                {TASK_PRIORITY_LABELS[optimisticPriority]}
-            </span>
+            <PriorityLabel
+                priority={optimisticPriority}
+                className={cn("select-none", className)}
+            />
         );
     }
 
+    // The 44px hit area is pulled back into the line with negative margins,
+    // so the row stays tight while the target stays reachable.
     return (
         <button
             type="button"
@@ -68,12 +58,14 @@ export function PriorityBadge({
             title="Click to cycle priority"
             aria-label={`Current priority: ${TASK_PRIORITY_LABELS[optimisticPriority]}. Click to change.`}
             className={cn(
-                "inline-flex items-center text-[13px] select-none cursor-pointer rounded-brand underline-offset-2 hover:underline transition-colors",
-                priorityStyles[optimisticPriority],
+                "group/priority -mx-1 -my-3 inline-flex min-h-11 cursor-pointer items-center rounded-paddock px-1 select-none",
                 className,
             )}
         >
-            {TASK_PRIORITY_LABELS[optimisticPriority]}
+            <PriorityLabel
+                priority={optimisticPriority}
+                className="underline-offset-[3px] group-hover/priority:underline"
+            />
         </button>
     );
 }

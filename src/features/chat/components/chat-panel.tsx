@@ -1,15 +1,16 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
-import { Alert } from "@/components/ui/alert";
+import { DisplayHeading } from "@/components/paddock/display-heading";
 
-import { MessageComposer } from "./message-composer";
-import { MessageList } from "./message-list";
-import { PresenceList } from "./presence-list";
-import { TypingIndicator } from "./typing-indicator";
 import { useWorkspaceChat } from "../hooks/use-workspace-chat";
 import type { ChatMessage } from "../types";
+import { MessageComposer } from "./message-composer";
+import { MessageList } from "./message-list";
+import { PeoplePanel } from "./people-panel";
+import { PresenceList } from "./presence-list";
+import { TypingIndicator } from "./typing-indicator";
 
 export interface ChatPanelProps {
     workspaceId: string;
@@ -24,6 +25,40 @@ export interface ChatPanelProps {
     canPost: boolean;
 }
 
+/**
+ * Size the chat to the viewport left under the shell, so the page itself never
+ * scrolls and only the message log does. The CSS height is a close first
+ * guess; this corrects it for the real offset (the section tabs wrap on narrow
+ * screens) by writing the style directly, outside React's render, so it can
+ * never disagree with the server's markup.
+ */
+function useFillViewport() {
+    const frameRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const frame = frameRef.current;
+        if (!frame) return;
+
+        const fit = () => {
+            const top = frame.getBoundingClientRect().top + window.scrollY;
+            const parent = frame.parentElement;
+            const bottomGap = parent
+                ? Number.parseFloat(getComputedStyle(parent).paddingBottom) || 0
+                : 0;
+            frame.style.height = `${Math.max(window.innerHeight - top - bottomGap, 0)}px`;
+        };
+
+        fit();
+        window.addEventListener("resize", fit);
+        // Web fonts change the tab widths, and so whether the tabs wrap.
+        void document.fonts?.ready.then(fit);
+
+        return () => window.removeEventListener("resize", fit);
+    }, []);
+
+    return frameRef;
+}
+
 export function ChatPanel({
     workspaceId,
     workspaceName,
@@ -31,6 +66,7 @@ export function ChatPanel({
     currentUser,
     canPost,
 }: ChatPanelProps) {
+    const frameRef = useFillViewport();
     const {
         messages,
         participants,
@@ -62,38 +98,62 @@ export function ChatPanel({
 
     return (
         <div
-            data-testid="chat-panel"
-            className="flex flex-col h-[calc(100vh-18rem)] min-h-[28rem] border border-brand-border rounded-brand bg-brand-surface overflow-hidden"
+            ref={frameRef}
+            className="flex h-[calc(100dvh-11rem)] min-h-[26rem] gap-4"
         >
-            <header className="flex items-center justify-between gap-4 px-4 py-2.5 border-b border-brand-border">
-                <h2 className="text-sm font-semibold text-brand-ink truncate min-w-0">
-                    Everyone in {workspaceName}
-                </h2>
+            <section
+                data-testid="chat-panel"
+                aria-label="Workspace chat"
+                className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-paddock-panel border border-paddock-rule bg-paddock-sheet"
+            >
+                <header className="flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2.5 border-b border-paddock-rule px-4 py-3.5 sm:px-5">
+                    <div className="min-w-0">
+                        <DisplayHeading
+                            as="h1"
+                            layout="inline"
+                            size="sm"
+                            serif="Everyone in"
+                            heavy={workspaceName}
+                        />
+                        <p className="m-0 mt-1.5 text-[0.8125rem] text-paddock-subtle">
+                            Messages send even when you are offline, and catch
+                            up the moment you reconnect.
+                        </p>
+                    </div>
 
-                <PresenceList
-                    participants={participants}
-                    connectionStatus={connectionStatus}
+                    <PresenceList
+                        participants={participants}
+                        connectionStatus={connectionStatus}
+                    />
+                </header>
+
+                <MessageList
+                    messages={messages}
+                    currentUserId={currentUser.id}
+                    onRetry={handleRetry}
                 />
-            </header>
 
-            <MessageList
-                messages={messages}
-                currentUserId={currentUser.id}
-                onRetry={handleRetry}
-            />
+                <div className="shrink-0 px-4 pb-4 sm:px-5">
+                    <TypingIndicator typingUsers={typingUsers} />
 
-            <TypingIndicator typingUsers={typingUsers} />
-
-            {canPost ? (
-                <MessageComposer onSend={handleSend} onTyping={notifyTyping} />
-            ) : (
-                <div className="border-t-2 border-brand-muted p-3">
-                    <Alert intent="muted">
-                        You are viewing this workspace as a guest. Join the
-                        workspace to post messages.
-                    </Alert>
+                    {canPost ? (
+                        <MessageComposer
+                            onSend={handleSend}
+                            onTyping={notifyTyping}
+                        />
+                    ) : (
+                        <p className="m-0 rounded-xl border-[1.5px] border-dashed border-paddock-ink px-4 py-3.5 text-sm text-paddock-subtle">
+                            You are viewing this workspace as a guest. Join the
+                            workspace to post messages.
+                        </p>
+                    )}
                 </div>
-            )}
+            </section>
+
+            <PeoplePanel
+                participants={participants}
+                className="hidden lg:flex"
+            />
         </div>
     );
 }

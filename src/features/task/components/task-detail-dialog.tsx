@@ -1,21 +1,29 @@
 "use client";
 
 import { startTransition, useActionState, useState } from "react";
-
 import type { TaskPriority, TaskStatus } from "@prisma/client";
 
-import { Alert } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { Dialog } from "@/components/ui/dialog";
-import { FormField } from "@/components/ui/form-field";
-import { Input } from "@/components/ui/input";
+import { PaddockAvatar } from "@/components/paddock/paddock-avatar";
+import { PaddockButton } from "@/components/paddock/paddock-button";
+import { PaddockDialog } from "@/components/paddock/paddock-dialog";
+import {
+    PaddockInput,
+    PaddockSelect,
+    PaddockTextarea,
+} from "@/components/paddock/paddock-field";
+import { PriorityLabel, StatusPill } from "@/components/paddock/paddock-pills";
+import { taskPrioritySchema, taskStatusSchema } from "@/schemas/task";
 
 import { deleteTaskAction } from "../actions/delete-task";
 import { updateTaskAction } from "../actions/update-task";
 import type { TaskWithAssignee } from "../types";
-import { TASK_PRIORITY_LABELS, TASK_STATUS_LABELS } from "../types";
 import { AssigneePicker, type MemberOption } from "./assignee-picker";
-import { PriorityBadge } from "./priority-badge";
+import {
+    TASK_PRIORITY_OPTIONS,
+    TASK_STATUS_OPTIONS,
+    TaskField,
+    TaskFormError,
+} from "./task-form-parts";
 
 export interface TaskDetailDialogProps {
     task: TaskWithAssignee | null;
@@ -96,224 +104,219 @@ function TaskDetailForm({
         }
     }
 
-    return (
-        <form action={formAction} className="flex flex-col gap-4">
-            {updateState.error && (
-                <Alert intent="danger" title="Error">
-                    {updateState.error}
-                </Alert>
-            )}
+    const assignee = task.assignee?.user
+        ? {
+              id: task.assignee.user.id,
+              name:
+                  task.assignee.user.name ||
+                  task.assignee.user.email ||
+                  "Member",
+              image: task.assignee.user.image,
+          }
+        : null;
 
-            {/* Title */}
-            <FormField label="Task Title" htmlFor="detail-title" required>
+    return (
+        <form action={formAction} className="flex flex-col">
+            {updateState.error && <TaskFormError message={updateState.error} />}
+
+            <div className="grid grid-cols-1 gap-x-4 gap-y-3.5 sm:grid-cols-2">
+                {/* Title */}
                 {canEdit ? (
-                    <Input
+                    <PaddockInput
                         id="detail-title"
                         name="title"
+                        label="Task title"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                         required
                         maxLength={200}
+                        wrapperClassName="sm:col-span-2"
                     />
                 ) : (
-                    <p className="font-brand-sans font-semibold text-base text-brand-ink">
-                        {task.title}
-                    </p>
+                    <TaskField label="Task title" className="sm:col-span-2">
+                        <p className="m-0 text-base font-bold">{task.title}</p>
+                    </TaskField>
                 )}
-            </FormField>
 
-            {/* Description */}
-            <FormField label="Description" htmlFor="detail-description">
+                {/* Description */}
                 {canEdit ? (
-                    <textarea
+                    <PaddockTextarea
                         id="detail-description"
                         name="description"
+                        label="Description"
                         rows={4}
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                         placeholder="Add description..."
                         maxLength={2000}
-                        className="w-full bg-brand-muted text-brand-ink placeholder:text-brand-subtle px-4 py-3 text-sm border-2 border-transparent focus:border-brand-accent transition-colors outline-none rounded-brand font-brand-sans resize-none"
+                        wrapperClassName="sm:col-span-2"
                     />
                 ) : (
-                    <p className="font-brand-sans text-sm text-brand-subtle whitespace-pre-wrap">
-                        {task.description || "No description provided."}
-                    </p>
+                    <TaskField label="Description" className="sm:col-span-2">
+                        <p className="m-0 text-sm whitespace-pre-wrap text-paddock-subtle">
+                            {task.description || "No description provided."}
+                        </p>
+                    </TaskField>
                 )}
-            </FormField>
 
-            {/* Column & Priority */}
-            <div className="grid grid-cols-2 gap-3">
-                <FormField label="Column" htmlFor="detail-status">
-                    {canEdit ? (
-                        <select
-                            id="detail-status"
-                            value={status}
-                            onChange={(e) =>
-                                setStatus(e.target.value as TaskStatus)
-                            }
-                            className="w-full bg-brand-surface text-brand-ink text-sm border-2 border-brand-ink rounded-brand px-3 py-2 font-brand-sans focus:outline-none focus:ring-2 focus:ring-brand-accent cursor-pointer"
-                        >
-                            <option value="TODO">
-                                {TASK_STATUS_LABELS.TODO}
-                            </option>
-                            <option value="IN_PROGRESS">
-                                {TASK_STATUS_LABELS.IN_PROGRESS}
-                            </option>
-                            <option value="DONE">
-                                {TASK_STATUS_LABELS.DONE}
-                            </option>
-                        </select>
-                    ) : (
-                        <span className="text-sm font-semibold text-brand-ink">
-                            {TASK_STATUS_LABELS[task.status]}
+                {/* Column & Priority */}
+                {canEdit ? (
+                    <PaddockSelect
+                        id="detail-status"
+                        label="Column"
+                        options={TASK_STATUS_OPTIONS}
+                        value={status}
+                        onChange={(e) => {
+                            const parsed = taskStatusSchema.safeParse(
+                                e.target.value,
+                            );
+                            if (parsed.success) setStatus(parsed.data);
+                        }}
+                    />
+                ) : (
+                    <TaskField label="Column">
+                        <span>
+                            <StatusPill status={task.status} />
                         </span>
-                    )}
-                </FormField>
+                    </TaskField>
+                )}
 
-                <FormField label="Priority" htmlFor="detail-priority">
-                    {canEdit ? (
-                        <select
-                            id="detail-priority"
-                            value={priority}
-                            onChange={(e) =>
-                                setPriority(e.target.value as TaskPriority)
-                            }
-                            className="w-full bg-brand-surface text-brand-ink text-sm border-2 border-brand-ink rounded-brand px-3 py-2 font-brand-sans focus:outline-none focus:ring-2 focus:ring-brand-accent cursor-pointer"
-                        >
-                            <option value="LOW">
-                                {TASK_PRIORITY_LABELS.LOW}
-                            </option>
-                            <option value="MEDIUM">
-                                {TASK_PRIORITY_LABELS.MEDIUM}
-                            </option>
-                            <option value="HIGH">
-                                {TASK_PRIORITY_LABELS.HIGH}
-                            </option>
-                            <option value="URGENT">
-                                {TASK_PRIORITY_LABELS.URGENT}
-                            </option>
-                        </select>
-                    ) : (
-                        <div>
-                            <PriorityBadge
-                                taskId={task.id}
-                                priority={task.priority}
-                                canEdit={false}
-                            />
-                        </div>
-                    )}
-                </FormField>
-            </div>
+                {canEdit ? (
+                    <PaddockSelect
+                        id="detail-priority"
+                        label="Priority"
+                        options={TASK_PRIORITY_OPTIONS}
+                        value={priority}
+                        onChange={(e) => {
+                            const parsed = taskPrioritySchema.safeParse(
+                                e.target.value,
+                            );
+                            if (parsed.success) setPriority(parsed.data);
+                        }}
+                    />
+                ) : (
+                    <TaskField label="Priority">
+                        <PriorityLabel
+                            priority={task.priority}
+                            className="text-sm"
+                        />
+                    </TaskField>
+                )}
 
-            {/* Assignee & Due Date */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <FormField label="Assignee" htmlFor="detail-assignee">
-                    {canEdit ? (
+                {/* Assignee & Due Date */}
+                {canEdit ? (
+                    <TaskField htmlFor="detail-assignee" label="Assignee">
                         <AssigneePicker
+                            id="detail-assignee"
                             members={members}
                             selectedMemberId={assigneeId}
                             onChange={setAssigneeId}
                         />
-                    ) : (
-                        <div className="font-brand-sans text-sm text-brand-ink">
-                            {task.assignee?.user?.name ||
-                                task.assignee?.user?.email ||
-                                "Unassigned"}
-                        </div>
-                    )}
-                </FormField>
+                    </TaskField>
+                ) : (
+                    <TaskField label="Assignee">
+                        <span className="flex min-w-0 items-center gap-2 text-sm font-semibold">
+                            {assignee ? (
+                                <PaddockAvatar
+                                    person={assignee}
+                                    size="sm"
+                                    decorative
+                                />
+                            ) : null}
+                            <span className="truncate">
+                                {assignee?.name ?? "Unassigned"}
+                            </span>
+                        </span>
+                    </TaskField>
+                )}
 
-                <FormField label="Due Date" htmlFor="detail-due-date">
-                    {canEdit ? (
-                        <input
-                            type="date"
-                            id="detail-due-date"
-                            value={dueDate}
-                            onChange={(e) => setDueDate(e.target.value)}
-                            className="w-full bg-brand-surface text-brand-ink text-sm border-2 border-brand-ink rounded-brand px-3 py-2 font-brand-sans focus:outline-none focus:ring-2 focus:ring-brand-accent cursor-pointer"
-                        />
-                    ) : (
-                        <span className="text-sm text-brand-ink">
+                {canEdit ? (
+                    <PaddockInput
+                        id="detail-due-date"
+                        type="date"
+                        label="Due date"
+                        value={dueDate}
+                        onChange={(e) => setDueDate(e.target.value)}
+                        className="cursor-pointer"
+                    />
+                ) : (
+                    <TaskField label="Due date">
+                        <span className="paddock-mono text-sm">
                             {task.dueDate
                                 ? new Date(task.dueDate).toLocaleDateString()
                                 : "None"}
                         </span>
-                    )}
-                </FormField>
+                    </TaskField>
+                )}
             </div>
 
-            {/* Metadata */}
-            <div className="text-[11px] text-brand-subtle/70 pt-2 border-t border-brand-border">
-                Created {new Date(task.createdAt).toLocaleString()}
-            </div>
-
-            {/* Delete Confirmation Alert */}
+            {/* Delete confirmation */}
             {showDeleteConfirm && canEdit && (
-                <div className="p-3 bg-brand-danger/10 border-2 border-brand-danger rounded-brand flex flex-col gap-2">
-                    <p className="text-xs text-brand-danger font-semibold uppercase">
+                <div
+                    role="alert"
+                    className="mt-4.5 flex flex-wrap items-center justify-between gap-3 rounded-[10px] border-[1.5px] border-paddock-danger px-4 py-3.5"
+                >
+                    <p className="m-0 font-bold text-paddock-danger">
                         Permanently delete this task?
                     </p>
-                    <div className="flex gap-2">
-                        <Button
-                            type="button"
-                            variant="danger"
-                            size="sm"
-                            onClick={handleDelete}
-                            disabled={isDeleting}
-                            pendingText="Deleting..."
-                        >
-                            Confirm Delete
-                        </Button>
-                        <Button
-                            type="button"
-                            variant="secondary"
+                    <div className="flex flex-wrap gap-2">
+                        <PaddockButton
+                            variant="outline"
+                            voice="plain"
                             size="sm"
                             onClick={() => setShowDeleteConfirm(false)}
                             disabled={isDeleting}
                         >
                             Cancel
-                        </Button>
+                        </PaddockButton>
+                        <PaddockButton
+                            variant="danger"
+                            size="sm"
+                            onClick={handleDelete}
+                            disabled={isDeleting}
+                        >
+                            {isDeleting ? "Deleting…" : "Delete task"}
+                        </PaddockButton>
                     </div>
                 </div>
             )}
 
-            {/* Action Buttons */}
-            <div className="flex items-center justify-between gap-3 pt-3 border-t border-brand-border">
-                {canEdit && !showDeleteConfirm ? (
-                    <Button
-                        type="button"
-                        variant="danger"
-                        size="sm"
-                        onClick={() => setShowDeleteConfirm(true)}
-                        disabled={isSaving || isDeleting}
-                    >
-                        Delete
-                    </Button>
-                ) : (
-                    <div />
-                )}
+            {/* Actions */}
+            <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-paddock-rule pt-4.5">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                    {canEdit && !showDeleteConfirm ? (
+                        <PaddockButton
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setShowDeleteConfirm(true)}
+                            disabled={isSaving || isDeleting}
+                            className="-ml-2 px-2 font-bold text-paddock-danger hover:bg-paddock-danger/8"
+                        >
+                            Delete
+                        </PaddockButton>
+                    ) : null}
+                    <span className="paddock-mono text-xs text-paddock-subtle">
+                        Created {new Date(task.createdAt).toLocaleString()}
+                    </span>
+                </div>
 
-                <div className="flex items-center gap-2">
-                    <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
+                <div className="flex flex-wrap items-center gap-2.5">
+                    <PaddockButton
+                        variant="outline"
+                        voice="plain"
                         onClick={onClose}
                         disabled={isSaving || isDeleting}
                     >
                         Close
-                    </Button>
+                    </PaddockButton>
                     {canEdit && (
-                        <Button
+                        <PaddockButton
                             type="submit"
                             variant="primary"
-                            size="sm"
                             disabled={isSaving || isDeleting}
-                            pendingText="Saving..."
                         >
-                            Save Changes
-                        </Button>
+                            {isSaving ? "Saving…" : "Save changes"}
+                        </PaddockButton>
                     )}
                 </div>
             </div>
@@ -330,24 +333,26 @@ export function TaskDetailDialog({
     onTaskUpdated,
     onTaskDeleted,
 }: TaskDetailDialogProps) {
-    if (!task) return null;
-
+    // The dialog stays mounted so closing it can hand focus back to the card;
+    // only the form comes and goes with the selected task.
     return (
-        <Dialog
-            open={open}
+        <PaddockDialog
+            open={open && task !== null}
             onClose={() => onOpenChange(false)}
-            title={canEdit ? "Edit Task" : "Task Details"}
-            className="max-w-xl"
+            titleSerif={canEdit ? "Edit" : "Task"}
+            titleHeavy={canEdit ? "task" : "details"}
         >
-            <TaskDetailForm
-                key={task.id}
-                task={task}
-                members={members}
-                canEdit={canEdit}
-                onClose={() => onOpenChange(false)}
-                onTaskUpdated={onTaskUpdated}
-                onTaskDeleted={onTaskDeleted}
-            />
-        </Dialog>
+            {task ? (
+                <TaskDetailForm
+                    key={task.id}
+                    task={task}
+                    members={members}
+                    canEdit={canEdit}
+                    onClose={() => onOpenChange(false)}
+                    onTaskUpdated={onTaskUpdated}
+                    onTaskDeleted={onTaskDeleted}
+                />
+            ) : null}
+        </PaddockDialog>
     );
 }

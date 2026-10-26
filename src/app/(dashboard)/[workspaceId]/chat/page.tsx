@@ -1,6 +1,5 @@
 import { notFound, redirect } from "next/navigation";
 
-import { PageHeader } from "@/components/layout/page-header";
 import { auth } from "@/features/auth/lib/auth";
 import { ChatPanel } from "@/features/chat/components/chat-panel";
 import { getWorkspaceMessages } from "@/features/chat/queries/get-workspace-messages";
@@ -36,13 +35,10 @@ export default async function ChatPage({ params }: ChatPageProps) {
 
     const messages = await getWorkspaceMessages(workspaceId);
 
+    // No hero: the chat fills the viewport under the shell, and its own
+    // header carries the page heading.
     return (
-        <main className="max-w-5xl mx-auto px-6 py-8">
-            <PageHeader
-                title="Chat"
-                description="Messages send even when you are offline, and catch up the moment you reconnect."
-            />
-
+        <main className="mx-auto w-full max-w-[90rem] px-4 pt-4 pb-5 sm:px-6">
             <ChatPanel
                 workspaceId={workspaceId}
                 workspaceName={workspace.name}

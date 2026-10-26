@@ -97,7 +97,10 @@ test.describe("Team Chat, Presence & Notifications (Phase 5)", () => {
         await page.goto(`/${workspaceId}/chat`);
 
         await expect(
-            page.getByRole("heading", { name: "Chat", exact: true }),
+            page.getByRole("heading", {
+                name: "Everyone in Chat Test Workspace",
+                exact: true,
+            }),
         ).toBeVisible();
         await expect(page.getByTestId("chat-panel")).toBeVisible();
         await expect(page.getByTestId("chat-presence")).toBeVisible();

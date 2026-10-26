@@ -1,12 +1,12 @@
 "use client";
 
-import { Fragment, useEffect, useRef } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
+import { ArrowDown } from "lucide-react";
 
-import { EmptyState } from "@/components/ui/empty-state";
 import { formatDayLabel } from "@/lib/format-time";
 
-import { MessageItem } from "./message-item";
 import type { ChatMessage } from "../types";
+import { MessageItem } from "./message-item";
 
 export interface MessageListProps {
     messages: ChatMessage[];
@@ -31,6 +31,7 @@ export function MessageList({
 }: MessageListProps) {
     const scrollRef = useRef<HTMLDivElement>(null);
     const isPinnedRef = useRef(true);
+    const [showJump, setShowJump] = useState(false);
 
     // Follow new messages only while the reader is already at the bottom,
     // so scrolling back through history is never yanked away
@@ -50,64 +51,105 @@ export function MessageList({
             container.scrollTop -
             container.clientHeight;
         isPinnedRef.current = distanceFromBottom <= AUTOSCROLL_THRESHOLD_PX;
+        setShowJump(!isPinnedRef.current);
+    };
+
+    const jumpToLatest = () => {
+        const container = scrollRef.current;
+        if (!container) return;
+
+        container.scrollTop = container.scrollHeight;
+        isPinnedRef.current = true;
+        setShowJump(false);
     };
 
     if (messages.length === 0) {
         return (
-            <div className="flex-1 overflow-y-auto p-4">
-                <EmptyState
-                    title="No messages yet"
-                    description="Say hello — mention a teammate with @ to send them a notification."
-                    className="h-full"
-                />
+            <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 overflow-y-auto px-6 py-8 text-center">
+                <p className="paddock-heavy m-0 text-[1.375rem] leading-none">
+                    No messages yet
+                </p>
+                <p className="m-0 max-w-[40ch] text-sm text-paddock-subtle">
+                    Say hello — mention a teammate with @ to send them a
+                    notification.
+                </p>
             </div>
         );
     }
 
     return (
-        <div
-            ref={scrollRef}
-            onScroll={handleScroll}
-            data-testid="chat-message-list"
-            className="flex-1 overflow-y-auto pb-2"
-        >
-            {messages.map((message, index) => {
-                const previous = index > 0 ? messages[index - 1] : null;
-                const startsNewDay =
-                    !previous ||
-                    !isSameDay(previous.createdAt, message.createdAt);
+        <div className="relative min-h-0 flex-1">
+            <div
+                ref={scrollRef}
+                onScroll={handleScroll}
+                role="log"
+                aria-label="Messages"
+                tabIndex={0}
+                data-testid="chat-message-list"
+                className="absolute inset-0 overflow-y-auto overscroll-contain px-4 [scrollbar-color:var(--color-paddock-rule)_transparent] [scrollbar-width:thin] sm:px-5"
+            >
+                <div className="flex min-h-full flex-col justify-end pt-2 pb-2.5">
+                    {messages.map((message, index) => {
+                        const previous = index > 0 ? messages[index - 1] : null;
+                        const startsNewDay =
+                            !previous ||
+                            !isSameDay(previous.createdAt, message.createdAt);
 
-                const isGrouped =
-                    !startsNewDay &&
-                    previous !== null &&
-                    previous.author.id === message.author.id &&
-                    new Date(message.createdAt).getTime() -
-                        new Date(previous.createdAt).getTime() <
-                        GROUPING_WINDOW_MS;
+                        const isGrouped =
+                            !startsNewDay &&
+                            previous !== null &&
+                            previous.author.id === message.author.id &&
+                            new Date(message.createdAt).getTime() -
+                                new Date(previous.createdAt).getTime() <
+                                GROUPING_WINDOW_MS;
 
-                return (
-                    <Fragment key={message.id}>
-                        {startsNewDay && (
-                            <div className="flex items-center gap-3 px-4 pt-5 pb-1">
-                                <span className="h-px flex-1 bg-brand-muted" />
-                                <span
-                                    suppressHydrationWarning
-                                    className="text-[13px] text-brand-subtle"
-                                >
-                                    {formatDayLabel(message.createdAt)}
-                                </span>
-                                <span className="h-px flex-1 bg-brand-muted" />
-                            </div>
-                        )}
-                        <MessageItem
-                            message={message}
-                            isGrouped={isGrouped}
-                            isOwn={message.author.id === currentUserId}
-                            onRetry={onRetry}
-                        />
-                    </Fragment>
-                );
-            })}
+                        return (
+                            <Fragment key={message.id}>
+                                {startsNewDay && (
+                                    <div className="mt-4.5 mb-2.5 flex items-center gap-3.5">
+                                        <span
+                                            aria-hidden="true"
+                                            className="h-px flex-1 bg-paddock-rule"
+                                        />
+                                        <span
+                                            suppressHydrationWarning
+                                            className="paddock-tag text-[0.6875rem] text-paddock-subtle"
+                                        >
+                                            {formatDayLabel(message.createdAt)}
+                                        </span>
+                                        <span
+                                            aria-hidden="true"
+                                            className="h-px flex-1 bg-paddock-rule"
+                                        />
+                                    </div>
+                                )}
+                                <MessageItem
+                                    message={message}
+                                    isGrouped={isGrouped}
+                                    isOwn={message.author.id === currentUserId}
+                                    onRetry={onRetry}
+                                />
+                            </Fragment>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* Night stays dark in both themes, so the lime arrow keeps its contrast */}
+            {showJump && (
+                <button
+                    type="button"
+                    onClick={jumpToLatest}
+                    className="paddock-night paddock-tag paddock-press absolute bottom-3 left-1/2 inline-flex h-11 -translate-x-1/2 cursor-pointer items-center gap-2 rounded-full px-4 text-[0.6875rem] shadow-paddock-float"
+                >
+                    Jump to latest
+                    <ArrowDown
+                        aria-hidden="true"
+                        className="size-3.5 text-paddock-lime"
+                        strokeWidth={2.4}
+                    />
+                </button>
+            )}
         </div>
     );
 }

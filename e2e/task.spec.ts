@@ -97,7 +97,7 @@ test.describe("Task Management & Kanban Board", () => {
         await page.goto(`/${workspaceId}/tasks`);
 
         await expect(
-            page.getByRole("heading", { name: "Tasks", exact: true }),
+            page.getByRole("heading", { name: "The Board", exact: true }),
         ).toBeVisible();
         await expect(
             page.getByRole("heading", { name: "To do" }),
@@ -119,7 +119,7 @@ test.describe("Task Management & Kanban Board", () => {
         await page.getByRole("button", { name: "New task" }).click();
         const dialog = page.locator("dialog[open]");
         await expect(
-            dialog.getByRole("heading", { name: "Create Task" }),
+            dialog.getByRole("heading", { name: "New task" }),
         ).toBeVisible();
 
         // Fill form
@@ -130,7 +130,7 @@ test.describe("Task Management & Kanban Board", () => {
 
         // Submit
         await dialog
-            .getByRole("button", { name: "Create Task", exact: true })
+            .getByRole("button", { name: "Create task", exact: true })
             .click();
         await expect(dialog).not.toBeVisible();
 
@@ -202,7 +202,7 @@ test.describe("Task Management & Kanban Board", () => {
             .getByLabel("Task Title")
             .fill("Setup Database Backups");
         await createDialog
-            .getByRole("button", { name: "Create Task", exact: true })
+            .getByRole("button", { name: "Create task", exact: true })
             .click();
         await expect(createDialog).not.toBeVisible();
         await expect(page.getByText("Setup Database Backups")).toBeVisible();
@@ -289,7 +289,7 @@ test.describe("Task Management & Kanban Board", () => {
         ).toBeVisible();
 
         // Confirm Delete
-        await dialog.getByRole("button", { name: "Confirm Delete" }).click();
+        await dialog.getByRole("button", { name: "Delete task" }).click();
         await expect(dialog).not.toBeVisible();
 
         // Verify task removed from board
@@ -306,7 +306,7 @@ test.describe("Task Management & Kanban Board", () => {
 
         // Guest can see the board and headings
         await expect(
-            page.getByRole("heading", { name: "Tasks", exact: true }),
+            page.getByRole("heading", { name: "The Board", exact: true }),
         ).toBeVisible();
         await expect(
             page.getByRole("heading", { name: "To do" }),

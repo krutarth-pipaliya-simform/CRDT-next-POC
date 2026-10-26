@@ -1,8 +1,14 @@
 "use client";
 
-import { useRef, useState, type ChangeEvent, type KeyboardEvent } from "react";
+import {
+    useId,
+    useRef,
+    useState,
+    type ChangeEvent,
+    type KeyboardEvent,
+} from "react";
+import { ArrowRight } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { MESSAGE_MAX_LENGTH } from "@/schemas/chat";
 
@@ -14,16 +20,23 @@ export interface MessageComposerProps {
 }
 
 /** Height ceiling before the textarea starts scrolling instead of growing. */
-const MAX_TEXTAREA_HEIGHT_PX = 160;
+const MAX_TEXTAREA_HEIGHT_PX = 180;
 
+/**
+ * The message box pinned under the log, styled as Paddock's `ChatComposer`.
+ * It stays its own component because the stock one cannot broadcast typing,
+ * carry the test hooks, or be disabled. Enter sends, Shift+Enter starts a new
+ * line, and the whole box takes the focus ring while the textarea has focus.
+ */
 export function MessageComposer({
     onSend,
     onTyping,
     disabled = false,
-    placeholder = "Write a message — use @ to mention a teammate",
+    placeholder = "Message everyone — use @ to mention a teammate",
 }: MessageComposerProps) {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [value, setValue] = useState("");
+    const hintId = useId();
 
     const trimmed = value.trim();
     const isOverLimit = value.length > MESSAGE_MAX_LENGTH;
@@ -68,56 +81,61 @@ export function MessageComposer({
     };
 
     return (
-        <div className="border-t-2 border-brand-muted p-3">
-            <div className="flex items-end gap-3">
-                <textarea
-                    ref={textareaRef}
-                    value={value}
-                    onChange={handleChange}
-                    onKeyDown={handleKeyDown}
-                    disabled={disabled}
-                    rows={1}
-                    aria-label="Message"
-                    data-testid="chat-composer-input"
-                    placeholder={placeholder}
-                    className={cn(
-                        "flex-1 resize-none bg-brand-surface text-brand-ink placeholder:text-brand-subtle/70",
-                        "px-3 py-2.5 text-sm border rounded-brand transition-colors",
-                        "disabled:opacity-60 disabled:cursor-not-allowed",
-                        isOverLimit
-                            ? "border-brand-danger"
-                            : "border-brand-line hover:border-brand-ink",
-                    )}
-                />
+        <div
+            className={cn(
+                "paddock-compose-box rounded-xl border-[1.5px] bg-paddock-paper",
+                isOverLimit ? "border-paddock-danger" : "border-paddock-ink",
+            )}
+        >
+            <textarea
+                ref={textareaRef}
+                value={value}
+                onChange={handleChange}
+                onKeyDown={handleKeyDown}
+                disabled={disabled}
+                rows={1}
+                aria-label="Message"
+                aria-describedby={hintId}
+                aria-invalid={isOverLimit ? true : undefined}
+                data-testid="chat-composer-input"
+                placeholder={placeholder}
+                className="block max-h-[180px] min-h-12 w-full resize-none overflow-y-auto border-0 bg-transparent px-4 pt-3.5 pb-1.5 text-[0.9375rem] leading-normal font-medium text-paddock-ink placeholder:text-paddock-subtle disabled:cursor-not-allowed disabled:opacity-55"
+            />
 
-                <Button
-                    type="button"
-                    size="sm"
-                    onClick={submit}
-                    disabled={!canSubmit}
-                    data-testid="chat-send-button"
-                    className="shrink-0"
-                >
-                    Send
-                </Button>
-            </div>
-
-            <div className="flex items-center justify-between gap-3 mt-1.5 px-1">
-                <span className="text-[13px] text-brand-subtle">
-                    Enter sends. Shift + Enter starts a new line.
-                </span>
+            <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 px-2 pt-1 pb-2">
                 {value.length > MESSAGE_MAX_LENGTH * 0.8 && (
                     <span
+                        aria-live="polite"
                         className={cn(
-                            "font-brand-mono text-[11px] shrink-0 tabular-nums",
+                            "paddock-mono text-xs",
                             isOverLimit
-                                ? "text-brand-danger"
-                                : "text-brand-subtle",
+                                ? "font-semibold text-paddock-danger"
+                                : "text-paddock-subtle",
                         )}
                     >
-                        {value.length}/{MESSAGE_MAX_LENGTH}
+                        {value.length} / {MESSAGE_MAX_LENGTH}
                     </span>
                 )}
+                <span
+                    id={hintId}
+                    className="hidden text-xs text-paddock-subtle sm:inline"
+                >
+                    Enter to send · Shift + Enter for a new line
+                </span>
+                <button
+                    type="button"
+                    onClick={submit}
+                    aria-disabled={canSubmit ? undefined : true}
+                    data-testid="chat-send-button"
+                    className="paddock-press paddock-heavy inline-flex h-11 shrink-0 cursor-pointer items-center gap-2 rounded-paddock bg-paddock-lime px-4 text-sm text-paddock-on-fill aria-disabled:cursor-not-allowed aria-disabled:opacity-45"
+                >
+                    Send
+                    <ArrowRight
+                        aria-hidden="true"
+                        className="size-3.5"
+                        strokeWidth={2.4}
+                    />
+                </button>
             </div>
         </div>
     );

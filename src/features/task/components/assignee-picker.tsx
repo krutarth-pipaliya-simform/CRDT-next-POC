@@ -1,7 +1,11 @@
 "use client";
 
-import { UserAvatar } from "@/components/ui/user-avatar";
+import { ChevronDown } from "lucide-react";
+
+import { PaddockAvatar } from "@/components/paddock/paddock-avatar";
+import { paddockFieldClasses } from "@/components/paddock/paddock-styles";
 import { cn } from "@/lib/cn";
+import { WORKSPACE_ROLE_LABELS, type WorkspaceRole } from "@/schemas/workspace";
 
 export interface MemberOption {
     id: string;
@@ -21,8 +25,23 @@ export interface AssigneePickerProps {
     name?: string;
     disabled?: boolean;
     className?: string;
+    /** Set when a visible `<label htmlFor>` names the select; otherwise it labels itself. */
+    id?: string;
 }
 
+function isWorkspaceRole(role: string): role is WorkspaceRole {
+    return role in WORKSPACE_ROLE_LABELS;
+}
+
+function memberName(member: MemberOption): string {
+    return member.user.name || member.user.email || "Unnamed member";
+}
+
+/**
+ * A native select (the platform picker is the accessible one on every device)
+ * with the chosen person's avatar set inside it, so the field shows *who* in
+ * their own colour before you read the name.
+ */
 export function AssigneePicker({
     members,
     selectedMemberId,
@@ -30,45 +49,55 @@ export function AssigneePicker({
     name = "assigneeId",
     disabled = false,
     className,
+    id,
 }: AssigneePickerProps) {
     const selectedMember = members.find((m) => m.id === selectedMemberId);
 
     return (
-        <div className={cn("flex flex-col gap-1.5", className)}>
-            <div className="relative flex items-center">
-                {selectedMember && (
-                    <div className="absolute left-2.5 pointer-events-none z-10 flex items-center">
-                        <UserAvatar user={selectedMember.user} size="sm" />
-                    </div>
+        <div className={cn("relative flex items-center", className)}>
+            {selectedMember && (
+                <span className="pointer-events-none absolute left-3 z-10 flex items-center">
+                    <PaddockAvatar
+                        person={{
+                            id: selectedMember.user.id,
+                            name: memberName(selectedMember),
+                            image: selectedMember.user.image,
+                        }}
+                        size="sm"
+                        decorative
+                    />
+                </span>
+            )}
+            <select
+                id={id}
+                name={name}
+                value={selectedMemberId ?? ""}
+                onChange={(e) => {
+                    const val = e.target.value;
+                    onChange?.(val === "" ? null : val);
+                }}
+                disabled={disabled}
+                aria-label={id ? undefined : "Assign task to member"}
+                className={cn(
+                    paddockFieldClasses,
+                    "h-13 cursor-pointer appearance-none pr-10",
+                    selectedMember ? "pl-12" : "pl-4",
                 )}
-                <select
-                    name={name}
-                    value={selectedMemberId ?? ""}
-                    onChange={(e) => {
-                        const val = e.target.value;
-                        onChange?.(val === "" ? null : val);
-                    }}
-                    disabled={disabled}
-                    className={cn(
-                        "w-full bg-brand-surface text-brand-ink text-sm border-2 border-brand-ink rounded-brand py-2 pr-8 font-brand-sans focus:outline-none focus:ring-2 focus:ring-brand-accent transition-colors disabled:opacity-50 cursor-pointer appearance-none",
-                        selectedMember ? "pl-11" : "pl-3",
-                    )}
-                    aria-label="Assign task to member"
-                >
-                    <option value="">Unassigned</option>
-                    {members.map((member) => (
-                        <option key={member.id} value={member.id}>
-                            {member.user.name ||
-                                member.user.email ||
-                                "Unnamed Member"}{" "}
-                            ({member.role})
-                        </option>
-                    ))}
-                </select>
-                <div className="absolute right-3 pointer-events-none text-brand-subtle text-xs">
-                    ▼
-                </div>
-            </div>
+            >
+                <option value="">Unassigned</option>
+                {members.map((member) => (
+                    <option key={member.id} value={member.id}>
+                        {isWorkspaceRole(member.role)
+                            ? `${memberName(member)} · ${WORKSPACE_ROLE_LABELS[member.role]}`
+                            : memberName(member)}
+                    </option>
+                ))}
+            </select>
+            <ChevronDown
+                aria-hidden="true"
+                className="pointer-events-none absolute right-3.5 size-4 text-paddock-ink"
+                strokeWidth={2.2}
+            />
         </div>
     );
 }
