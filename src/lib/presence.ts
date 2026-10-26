@@ -40,14 +40,20 @@ const PRESENCE_WIRE_COLORS = [
  * Maps a user id onto a stable presence slot. The same person keeps the same
  * hue across every surface and every session, which is the whole point — the
  * colour has to be learnable.
+ *
+ * `slotCount` defaults to the eight product hues. The Paddock showcase passes
+ * its own, smaller palette size so both systems share one hash.
  */
-export function getPresenceSlot(userId: string): number {
+export function getPresenceSlot(
+    userId: string,
+    slotCount: number = PRESENCE_SLOT_COUNT,
+): number {
     let hash = 0;
     for (let i = 0; i < userId.length; i++) {
         hash = (hash << 5) - hash + userId.charCodeAt(i);
         hash |= 0;
     }
-    return Math.abs(hash) % PRESENCE_SLOT_COUNT;
+    return Math.abs(hash) % slotCount;
 }
 
 /** Theme-aware CSS variable for a person's hue. Use this for anything painted. */

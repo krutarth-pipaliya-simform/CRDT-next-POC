@@ -2,7 +2,12 @@
  * An array of routes that are accessible to the public.
  * These routes do not require authentication.
  */
-export const publicRoutes: string[] = ["/", "/verify-email", "/favicon.ico"];
+export const publicRoutes: string[] = [
+    "/",
+    "/verify-email",
+    "/favicon.ico",
+    "/design-system/v2",
+];
 
 /**
  * An array of routes that are used for authentication.

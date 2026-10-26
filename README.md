@@ -35,7 +35,25 @@ Because people are warm and the system is cool, the two can never be mistaken fo
 - **Two voices.** The grotesque operates the interface; the serif is scoped to the document canvas so a document reads like a document. Mono is for real data only — never buttons or labels.
 - **Motion answers an action.** The only unprompted animation in the product is the merge demo on the landing page, which shows two people typing into one document. Everything honours `prefers-reduced-motion`.
 
-`/design-system` renders the live palette and primitives.
+`/design-system` renders the live palette and primitives. It links to `/design-system/v2`, which shows the proposed next direction.
+
+## Design System v2: "Paddock" (proposal, showcase only)
+
+`/design-system/v2` renders the full component set of the Paddock direction: off-white paper, olive ink, one acid-lime accent, faint contour-line backgrounds, two-voice display headings (Instrument Serif caps over heavy wide Mona Sans caps), notched-corner cards and a hand-drawn lime scribble. Nothing in the product uses it yet. The current "Presence First" system is unchanged, and the two pages link to each other ("Paddock (v2)" and "Current (v1)").
+
+| Where                                      | What                                                                                                                                                                                                  |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/components/paddock/`                  | The reusable Paddock primitives. They sit next to `ui/`, not inside it, so the v1 primitives are untouched and adopting Paddock later is a folder-level decision                                      |
+| `src/components/paddock/paddock-styles.ts` | Shared class maps (buttons, fields, pills) and the `CssVariableStyle` type. No `"use client"`, for the same reason as `button-styles.ts`                                                              |
+| `src/components/paddock/paddock-fonts.ts`  | Mona Sans (with the `wdth` axis) and Instrument Serif via `next/font/google`, attached only by `<PaddockRoot>`, so other routes do not load them                                                      |
+| `src/features/design-system/`              | Showcase-only composition: section layout, interactive demos and sample data                                                                                                                          |
+| `src/app/design-system/v2/page.tsx`        | The route. A server component; client islands only where something is interactive                                                                                                                     |
+| `src/app/globals.css` (end of file)        | The `--color-paddock-*`, `--font-paddock-*`, `--radius-paddock*` and `--shadow-paddock-*` tokens, with dark values, plus the `.paddock-*` voices, devices and keyframes, scoped under `.paddock-root` |
+| `src/hooks/`                               | `usePrefersReducedMotion` (now also used by the landing merge demo), `useScrollLock`, and `useModalDialog`, which drives a native `<dialog>` as a controlled modal                                    |
+
+Components: Wordmark, DisplayHeading, Tag, PaddockButton / PaddockLinkButton / PaddockIconButton / BurgerButton, PaddockInput / PaddockTextarea / PaddockSelect, RadioCardGroup, NotchedCard, ContourBackground, Scribble, Marquee, WordReveal, WorkspaceTabs, PillTabs, MenuOverlay, PaddockAvatar / AvatarStack, CursorFlag / CollaboratorHighlight, StatusPill / PriorityLabel / RolePill, PaddockStatTile, PaddockDialog, FloatingToolbar, ChatMessage / Mention, ChatComposer / ComposerTool, NotificationRow, PlanCard and LoaderScreen.
+
+Paddock conflicts with three "Presence First" rules: lime instead of blue as the system colour, uppercase labels, and motion nobody asked for. It also uses four people colours instead of eight, one of them cyan. These are recorded as an **open decision** in `AGENTS.md`. The old rules have not been rewritten.
 
 > **Note on tokens read at runtime.** Tailwind v4 only emits an `@theme` variable whose name appears literally in the source. The presence and chart palettes are composed at runtime (`presenceVar()`, `readChartPalette()`), so they are declared as plain custom properties in the `:root` block beneath `@theme`. Left in `@theme` they were tree-shaken out of the light build entirely — which is why the analytics charts previously had no light-mode colours. Any future runtime-read token belongs there too.
 
@@ -228,6 +246,13 @@ Open [http://localhost:3000](http://localhost:3000) with your browser. You will 
 - **Document cards show no editors.** A document card carries no presence rail because the schema records no author or last-editor on `Document` — only `updatedAt`. Adding `lastEditedById` (written on save) would let a document wear the hues of the people who touched it, which is the one place the language is currently silent.
 - **The workspace nav shows the roster, not live presence.** The avatars in the workspace bar are everyone with access, not everyone currently online, because workspace-wide awareness would mean a second CRDT connection on every route. Live presence is shown where it is real: the document editor and chat.
 - **Collaborator carets use a shared mid-tone.** Awareness payloads are theme-independent, so a peer's caret is drawn from one literal that reads acceptably on both grounds rather than from the viewer's own palette.
+
+## Known Limitations (Paddock v2 showcase)
+
+- `/design-system/v2` is in `publicRoutes` (`src/lib/routes.ts`), so it opens without signing in. `/design-system` (v1) still needs a signed-in session.
+- Paddock has four people colours. With more than four people, two will share a colour. The sample people use ids chosen to land on four different hues.
+- The word reveal starts words at 18% opacity until they scroll into view. This only happens where scroll-driven animations are supported and reduced motion is off. A contrast audit taken mid-scroll can flag those words.
+- Native `<dialog>` keeps focus inside the page, but Tab can still reach the browser's own controls. This is the platform's behaviour and satisfies the WAI-ARIA dialog pattern.
 
 ## Known Limitations (Theming)
 

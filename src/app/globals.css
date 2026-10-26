@@ -537,3 +537,484 @@ time,
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Paddock — the v2 visual direction (showcase only)
+   ───────────────────────────────────────────────────────────────────────────
+   Rendered at /design-system/v2 by the primitives in `src/components/paddock/`.
+   Nothing in the product consumes these yet: every name is namespaced
+   `paddock` so no `--color-brand-*` token, and no current surface, changes.
+
+   Where Paddock contradicts "Presence First" (lime as the system colour,
+   uppercase labels, unprompted motion), AGENTS.md records it as an open
+   decision. These tokens do not settle it.
+
+   Two grounds, deliberately separate:
+   - `ink` / `inverse` FLIP with the theme. Use them for text, strokes and
+     selected states.
+   - `night` / `deep` are ALWAYS dark. Use them for the inverted bands, the
+     menu and the toolbar, which are the only places lime may be text.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@theme {
+    /* Paper, ink and the hairlines between them */
+    --color-paddock-paper: #f4f4ed;
+    --color-paddock-sheet: #fbfbf7;
+    --color-paddock-ink: #282c20;
+    --color-paddock-subtle: #5e6352;
+    --color-paddock-rule: rgb(40 44 32 / 0.14);
+    --color-paddock-contour: rgb(40 44 32 / 0.13);
+
+    /* A filled selected state, which flips with the theme */
+    --color-paddock-inverse: #282c20;
+    --color-paddock-on-inverse: #f4f4ed;
+
+    /* Always-dark grounds. `night-muted` is 4.2:1 on night: large text only. */
+    --color-paddock-night: #282c20;
+    --color-paddock-night-fg: #f4f4ed;
+    --color-paddock-night-subtle: #a8ad98;
+    --color-paddock-night-muted: #8a9078;
+    --color-paddock-night-rule: rgb(244 244 237 / 0.14);
+    --color-paddock-night-contour: rgb(210 255 0 / 0.1);
+    --color-paddock-night-card: #3a3f31;
+    --color-paddock-float: #5b6150;
+    --color-paddock-float-fg: #d9dccd;
+    --color-paddock-track: #4a5040;
+    --color-paddock-deep: #111112;
+    --color-paddock-deep-line: #3a3a3d;
+    --color-paddock-deep-card: #1c1c1e;
+
+    /* The one accent. A FILL with `on-fill` text; text only on night/deep. */
+    --color-paddock-lime: #d2ff00;
+    /* Text on lime and on a presence fill. Dark in both themes on purpose. */
+    --color-paddock-on-fill: #282c20;
+
+    --color-paddock-danger: #b3361f;
+    --color-paddock-on-danger: #f4f4ed;
+    --color-paddock-warning: #8a6508;
+    --color-paddock-scrim: rgb(17 17 18 / 0.55);
+
+    /* Two display voices over one body face; mono for real data only */
+    --font-paddock-sans: var(--font-mona-sans);
+    --font-paddock-serif: var(--font-instrument-serif);
+    --font-paddock-mono: var(--font-geist-mono);
+
+    --radius-paddock: 8px;
+    --radius-paddock-card: 12px;
+    --radius-paddock-panel: 16px;
+
+    /* Elevation stays rationed: dialogs and the floating merge card only */
+    --shadow-paddock-float: 0 30px 60px -20px rgb(0 0 0 / 0.6);
+    --shadow-paddock-dialog: 0 40px 80px -30px rgb(0 0 0 / 0.6);
+}
+
+/* Runtime-read: `paddockPresenceVar()` composes these names from a hash, so
+   they live outside `@theme` for the same reason the brand presence hues do. */
+:root {
+    --color-paddock-presence-1: #ff8a6b; /* coral */
+    --color-paddock-presence-2: #ffb547; /* amber */
+    --color-paddock-presence-3: #6fd6e0; /* cyan */
+    --color-paddock-presence-4: #b79bff; /* violet */
+    /* Carets are a step darker than the flag so a 2px line still reads */
+    --color-paddock-caret-1: #e8613f;
+    --color-paddock-caret-2: #d48a12;
+    --color-paddock-caret-3: #2ba7b3;
+    --color-paddock-caret-4: #8b6fe0;
+}
+
+[data-theme="dark"] {
+    --color-paddock-paper: #121310;
+    --color-paddock-sheet: #1b1d16;
+    --color-paddock-ink: #ecede3;
+    --color-paddock-subtle: #a8ad98;
+    --color-paddock-rule: rgb(236 237 227 / 0.14);
+    --color-paddock-contour: rgb(210 255 0 / 0.07);
+
+    --color-paddock-inverse: #ecede3;
+    --color-paddock-on-inverse: #121310;
+
+    --color-paddock-night: #22261b;
+    --color-paddock-night-fg: #f4f4ed;
+    --color-paddock-night-subtle: #a8ad98;
+    --color-paddock-night-muted: #8a9078;
+    --color-paddock-night-rule: rgb(244 244 237 / 0.14);
+    --color-paddock-night-contour: rgb(210 255 0 / 0.1);
+    --color-paddock-night-card: #30352a;
+    --color-paddock-float: #474d3d;
+    --color-paddock-float-fg: #d9dccd;
+    --color-paddock-track: #3a3f31;
+    --color-paddock-deep: #0a0a0b;
+    --color-paddock-deep-line: #2e2e31;
+    --color-paddock-deep-card: #161618;
+
+    --color-paddock-lime: #d2ff00;
+    --color-paddock-on-fill: #282c20;
+
+    --color-paddock-danger: #ff8c7a;
+    --color-paddock-on-danger: #121310;
+    --color-paddock-warning: #e3b44c;
+    --color-paddock-scrim: rgb(0 0 0 / 0.7);
+
+    --color-paddock-presence-1: #ff8a6b;
+    --color-paddock-presence-2: #ffb547;
+    --color-paddock-presence-3: #6fd6e0;
+    --color-paddock-presence-4: #b79bff;
+    --color-paddock-caret-1: #ff7a59;
+    --color-paddock-caret-2: #ffb547;
+    --color-paddock-caret-3: #6fd6e0;
+    --color-paddock-caret-4: #b79bff;
+}
+
+/* ─── Paddock voices and devices ─────────────────────────────
+   Unlayered and scoped under `.paddock-root`, on purpose: the global
+   `:focus-visible`, `::selection` and theme-transition rules above are
+   unlayered too, and an unlayered rule beats any layered utility regardless
+   of specificity. These classes never set a font size, so a size utility on
+   the same element never competes with them. */
+.paddock-root {
+    --paddock-focus-edge: var(--color-paddock-ink);
+    background-color: var(--color-paddock-paper);
+    color: var(--color-paddock-ink);
+    font-family: var(--font-paddock-sans), ui-sans-serif, system-ui, sans-serif;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+}
+
+.paddock-root ::selection {
+    background-color: var(--color-paddock-lime);
+    color: var(--color-paddock-on-fill);
+}
+
+/* Lime alone is ~1.1:1 on paper, so the ring carries an ink edge outside it.
+   On night grounds the edge turns lime, where lime has the contrast. */
+.paddock-root :focus-visible {
+    outline: 2px solid var(--paddock-focus-edge);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 2px var(--color-paddock-lime);
+}
+
+.paddock-root .paddock-night {
+    --paddock-focus-edge: var(--color-paddock-lime);
+    background-color: var(--color-paddock-night);
+    color: var(--color-paddock-night-fg);
+}
+
+.paddock-root .paddock-deep {
+    --paddock-focus-edge: var(--color-paddock-lime);
+    background-color: var(--color-paddock-deep);
+    color: var(--color-paddock-night-fg);
+}
+
+.paddock-root .paddock-serif {
+    font-family: var(--font-paddock-serif), ui-serif, Georgia, serif;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+}
+
+.paddock-root .paddock-heavy {
+    font-family: var(--font-paddock-sans), ui-sans-serif, system-ui, sans-serif;
+    font-weight: 800;
+    font-stretch: 112%;
+    text-transform: uppercase;
+    letter-spacing: -0.02em;
+}
+
+.paddock-root .paddock-tag {
+    font-family: var(--font-paddock-sans), ui-sans-serif, system-ui, sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.paddock-root .paddock-mono {
+    font-family: var(--font-paddock-mono), ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Hover lift for anything pressable. Disabled controls stay put. */
+.paddock-root .paddock-press {
+    transition:
+        transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1),
+        background-color 160ms,
+        color 160ms,
+        box-shadow 160ms;
+}
+
+.paddock-root .paddock-press:hover:not(:disabled, [aria-disabled="true"]) {
+    transform: translateY(-2px);
+}
+
+.paddock-root .paddock-press:active:not(:disabled, [aria-disabled="true"]) {
+    transform: translateY(0) scale(0.97);
+}
+
+.paddock-root .paddock-lift {
+    transition:
+        transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1),
+        border-color 160ms;
+}
+
+.paddock-root .paddock-lift:hover {
+    transform: translateY(-4px);
+    border-color: var(--color-paddock-ink);
+}
+
+/* Notched corners. The raised part is the "tab" where a label may sit. */
+.paddock-root .paddock-notch {
+    clip-path: polygon(
+        0 0,
+        100% 0,
+        100% 100%,
+        46% 100%,
+        calc(46% - 24px) calc(100% - 28px),
+        0 calc(100% - 28px)
+    );
+}
+
+.paddock-root .paddock-notch-top {
+    clip-path: polygon(
+        0 18px,
+        58% 18px,
+        calc(58% + 18px) 0,
+        100% 0,
+        100% 100%,
+        0 100%
+    );
+}
+
+/* Burger: the short bar grows on hover, both bars cross when open */
+.paddock-root .paddock-burger span {
+    transition: transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.paddock-root .paddock-burger span:first-child {
+    transform: translateX(4px) scaleX(0.55);
+}
+
+.paddock-root .paddock-burger:hover span:first-child,
+.paddock-root .paddock-burger:focus-visible span:first-child {
+    transform: translateX(0) scaleX(1);
+}
+
+.paddock-root .paddock-burger[aria-expanded="true"] span:first-child {
+    transform: translateY(4px) rotate(45deg);
+}
+
+.paddock-root .paddock-burger[aria-expanded="true"] span:last-child {
+    transform: translateY(-4px) rotate(-45deg);
+}
+
+/* Scribble: a hand-drawn stroke that draws itself in */
+.paddock-root .paddock-scribble path {
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: var(--paddock-scribble-length, 700);
+    stroke-dashoffset: var(--paddock-scribble-length, 700);
+}
+
+.paddock-root .paddock-scribble[data-trigger="load"] path {
+    animation: paddock-draw 1100ms cubic-bezier(0.6, 0, 0.2, 1)
+        var(--paddock-scribble-delay, 300ms) forwards;
+}
+
+.paddock-root .paddock-scribble[data-trigger="hover"] path {
+    transition: stroke-dashoffset 520ms cubic-bezier(0.6, 0, 0.2, 1);
+}
+
+.paddock-root .paddock-scribble[data-trigger="static"] path,
+.paddock-root .group:hover .paddock-scribble[data-trigger="hover"] path,
+.paddock-root .group:focus-visible .paddock-scribble[data-trigger="hover"] path,
+.paddock-root [aria-current="page"] .paddock-scribble path {
+    stroke-dashoffset: 0;
+}
+
+/* Two-row marquee; rows run in opposite directions */
+.paddock-root .paddock-marquee-track {
+    display: flex;
+    width: max-content;
+    animation: paddock-slide-left var(--paddock-marquee-duration, 34s) linear
+        infinite;
+}
+
+.paddock-root .paddock-marquee-track[data-direction="right"] {
+    animation-name: paddock-slide-right;
+}
+
+.paddock-root .paddock-marquee[data-paused="true"] .paddock-marquee-track,
+.paddock-root .paddock-drift[data-paused="true"] {
+    animation-play-state: paused;
+}
+
+/* Menu overlay: a circle opening from the burger, columns drifting behind */
+.paddock-root .paddock-menu-reveal {
+    animation: paddock-menu-reveal 700ms cubic-bezier(0.7, 0, 0.2, 1) both;
+}
+
+.paddock-root .paddock-drift {
+    will-change: transform;
+    animation: paddock-drift-up var(--paddock-drift-duration, 26s) linear
+        infinite;
+}
+
+.paddock-root .paddock-drift[data-direction="down"] {
+    animation-name: paddock-drift-down;
+}
+
+.paddock-root .paddock-rise {
+    display: inline-block;
+    animation: paddock-rise 600ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    animation-delay: var(--paddock-rise-delay, 0ms);
+}
+
+.paddock-root .paddock-in {
+    animation: paddock-in 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* Loader: the bar fills, then the whole screen lifts away */
+.paddock-root .paddock-loader {
+    animation: paddock-loader-exit 800ms cubic-bezier(0.7, 0, 0.2, 1) 1300ms
+        forwards;
+}
+
+.paddock-root .paddock-loader-bar {
+    transform-origin: left;
+    animation: paddock-fill 1100ms cubic-bezier(0.6, 0, 0.2, 1) 100ms both;
+}
+
+/* The composer rings its whole box while the textarea has focus */
+.paddock-root .paddock-compose-box:has(textarea:focus-visible) {
+    outline: 2px solid var(--paddock-focus-edge);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 2px var(--color-paddock-lime);
+}
+
+.paddock-root .paddock-compose-box textarea:focus-visible {
+    outline: none;
+    box-shadow: none;
+}
+
+/* Word reveal: scroll-driven where supported, fully legible everywhere else */
+@supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+        .paddock-root .paddock-word {
+            animation: paddock-reveal linear both;
+            animation-timeline: view();
+            animation-range: entry 10% cover 40%;
+        }
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .paddock-root .paddock-marquee-track,
+    .paddock-root .paddock-drift,
+    .paddock-root .paddock-menu-reveal,
+    .paddock-root .paddock-rise,
+    .paddock-root .paddock-in {
+        animation: none;
+    }
+
+    .paddock-root .paddock-scribble path {
+        animation: none;
+        stroke-dashoffset: 0;
+    }
+
+    .paddock-root .paddock-loader {
+        display: none;
+    }
+}
+
+@keyframes paddock-draw {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes paddock-slide-left {
+    from {
+        transform: translateX(0);
+    }
+    to {
+        transform: translateX(-50%);
+    }
+}
+
+@keyframes paddock-slide-right {
+    from {
+        transform: translateX(-50%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+@keyframes paddock-drift-up {
+    from {
+        transform: translateY(0);
+    }
+    to {
+        transform: translateY(-50%);
+    }
+}
+
+@keyframes paddock-drift-down {
+    from {
+        transform: translateY(-50%);
+    }
+    to {
+        transform: translateY(0);
+    }
+}
+
+@keyframes paddock-menu-reveal {
+    from {
+        clip-path: circle(0% at calc(100% - 50px) 50px);
+    }
+    to {
+        clip-path: circle(150% at calc(100% - 50px) 50px);
+    }
+}
+
+@keyframes paddock-rise {
+    from {
+        transform: translateY(110%);
+    }
+    to {
+        transform: translateY(0);
+    }
+}
+
+@keyframes paddock-in {
+    from {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes paddock-loader-exit {
+    to {
+        transform: translateY(-100%);
+    }
+}
+
+@keyframes paddock-fill {
+    from {
+        transform: scaleX(0);
+    }
+    to {
+        transform: scaleX(1);
+    }
+}
+
+@keyframes paddock-reveal {
+    from {
+        opacity: 0.18;
+    }
+    to {
+        opacity: 1;
+    }
+}

@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
+
+import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 
 /**
  * Two people writing into one document at the same time, then the result
@@ -38,29 +40,13 @@ const TOTAL_TICKS =
     Math.max(...LINES.map((line) => line.start + line.text.length)) +
     HOLD_TICKS;
 
-const STILLNESS_QUERY = "(prefers-reduced-motion: reduce)";
-
-function subscribeToMotionPreference(onChange: () => void) {
-    const query = window.matchMedia(STILLNESS_QUERY);
-    query.addEventListener("change", onChange);
-    return () => query.removeEventListener("change", onChange);
-}
-
-function readMotionPreference() {
-    return window.matchMedia(STILLNESS_QUERY).matches;
-}
-
 export function MergeDemo() {
     const [tick, setTick] = useState(0);
 
     // Read as a subscription rather than a one-off check in an effect: a
     // visitor who turns on "reduce motion" mid-visit gets the settled document
     // immediately, and the server snapshot is a constant so hydration matches.
-    const prefersStillness = useSyncExternalStore(
-        subscribeToMotionPreference,
-        readMotionPreference,
-        () => false,
-    );
+    const prefersStillness = usePrefersReducedMotion();
 
     useEffect(() => {
         if (prefersStillness) return;

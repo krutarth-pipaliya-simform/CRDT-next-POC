@@ -64,6 +64,22 @@ The product has exactly one organising idea, and every other visual decision is 
 - **Theme Writes Happen Outside the Render Cycle**: A preference change writes `data-theme` synchronously in the handler, before React re-renders. Anything reading resolved tokens back out of the cascade during render would otherwise be one frame stale.
 - **Colour Read in JavaScript Takes the Theme as an Argument**: `readChartPalette(theme)` — the resolved theme is an explicit input with a per-theme fallback, so memoising on it declares a real dependency instead of an unused one.
 
+### Paddock (v2) Showcase & the Open Design Decision
+
+`/design-system/v2` renders "Paddock", a proposed next visual direction (paper `#F4F4ED`, olive ink, one acid-lime accent, contour lines, Instrument Serif over heavy wide Mona Sans caps, notched cards, a lime scribble). It is a **proposal**. The product still follows Presence First, and `/design-system` (v1) is unchanged. The two pages link to each other.
+
+- **Where it lives.** Primitives are in `src/components/paddock/`, next to `ui/` rather than inside it, so v1 is untouched and adopting Paddock is one folder-level decision. Showcase-only composition (sections, demos, sample data) is in `src/features/design-system/`. Class maps and the `CssVariableStyle` type live in `paddock-styles.ts` with no `"use client"`, for the same reason as `button-styles.ts`.
+- **Tokens are namespaced.** Paddock tokens are `--color-paddock-*`, `--font-paddock-*`, `--radius-paddock*` and `--shadow-paddock-*`, in their own block at the end of `globals.css`. Each has a dark value. Never reuse a `--color-brand-*` token for Paddock, and never make one Paddock-aware. `--color-paddock-presence-*` and `--color-paddock-caret-*` are composed by `paddockPresenceVar()` / `paddockCaretVar()`, so they live in `:root`, outside `@theme`.
+- **Two kinds of dark.** `paddock-ink` / `paddock-inverse` flip with the theme; use them for text, strokes and selected fills. `paddock-night` / `paddock-deep` stay dark in both themes; use them for inverted bands, the menu and the toolbar. Lime is a fill with `paddock-on-fill` text, or text on night/deep only. Never put lime text on an ink fill, because ink turns light in dark mode.
+- **Scoped, unlayered CSS.** The `.paddock-*` voices, devices and keyframes only apply under `.paddock-root` (`<PaddockRoot>`, which also attaches the two Paddock fonts). They are unlayered on purpose: the global `:focus-visible`, `::selection` and theme-transition rules are unlayered, and an unlayered rule beats any layered utility. These classes never set `font-size`, so a size utility on the same element never competes with them.
+- **Focus on paper.** Lime is about 1.1:1 on paper, so the Paddock focus ring is lime with an ink outline outside it. Night grounds switch that edge to lime through `--paddock-focus-edge`.
+- **Shared hooks.** `usePrefersReducedMotion` (`src/hooks/`) is the one subscription for reduced motion. The landing merge demo uses it too, so do not re-declare a `matchMedia` store. `useModalDialog` drives a native `<dialog>` as a controlled modal: inert background, Escape, backdrop click, scroll lock via `useScrollLock`, and focus returned to the trigger. Use it for any new modal instead of hand-rolling a focus trap.
+- **Open decision: do not resolve it silently.** Paddock conflicts with these Presence First rules. Until the team decides, the Presence First rules above stay binding for the product. Paddock may break them **only** inside `.paddock-root` on the showcase:
+    1. **System colour.** Paddock uses lime for primary actions, focus and selection. Presence First reserves blue (`--color-brand-accent`) for the system.
+    2. **Uppercase labels.** Paddock tags and display headings are uppercase (`text-transform`, with source text kept in sentence case). Presence First bans tracked caps.
+    3. **Unprompted motion.** Paddock's marquee, drifting menu columns, draw-on-load scribble, scroll-driven word reveal and loader move without being asked. Presence First allows only the landing merge demo. The showcase keeps the loader behind a button and gives the marquee a pause control, and all of it stops under reduced motion.
+    4. **People palette.** Paddock has four people hues (coral, amber, cyan, violet) instead of eight. So four hues collide sooner, and cyan sits near the blue that means "the system".
+
 ---
 
 ### Reusable Components & DRY Architecture (Binding)

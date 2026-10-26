@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { PRESENCE_SLOT_COUNT } from "@/lib/presence";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +24,19 @@ export default function ComponentsKitchenSink() {
                         One rule holds the rest together: a saturated colour
                         always means a person. Blue is the single exception and
                         it belongs to the interface — focus, selection, links.
+                    </p>
+                    <p className="text-sm mt-4">
+                        <Link
+                            href="/design-system/v2"
+                            className="font-medium text-brand-accent underline underline-offset-4 hover:no-underline"
+                        >
+                            Paddock (v2)
+                        </Link>
+                        <span className="text-brand-subtle">
+                            {" "}
+                            — the proposed next direction, side by side with
+                            this one.
+                        </span>
                     </p>
                 </header>
 
