@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-import { PaddockAvatar } from "@/components/paddock/paddock-avatar";
 import { PaddockLinkButton } from "@/components/paddock/paddock-button";
 import { Wordmark } from "@/components/paddock/wordmark";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
@@ -13,6 +12,7 @@ import { getWorkspacesForUser } from "@/features/workspace/queries/get-workspace
 import { db } from "@/lib/db";
 import { formatRelativeTime } from "@/lib/format-time";
 
+import { AccountMenu } from "./account-menu";
 import { AppMenu } from "./app-menu";
 import type { ShellWorkspace } from "./types";
 import { WorkspaceSwitcher } from "./workspace-switcher";
@@ -100,21 +100,14 @@ export async function SiteHeader() {
                         )}
                         initialUnreadCount={inbox.unreadCount}
                     />
-                    <Link
-                        href="/profile"
-                        aria-label={`Your profile, ${displayName}`}
-                        className="hidden rounded-full sm:block"
-                    >
-                        <PaddockAvatar
-                            person={{
-                                id: user.id,
-                                name: displayName,
-                                image: user.image,
-                            }}
-                            size="xl"
-                            decorative
-                        />
-                    </Link>
+                    <AccountMenu
+                        user={{
+                            id: user.id,
+                            name: displayName,
+                            email: user.email,
+                            image: user.image,
+                        }}
+                    />
                     <AppMenu
                         workspaces={workspaces}
                         recentDocuments={recent.map((document) => ({
