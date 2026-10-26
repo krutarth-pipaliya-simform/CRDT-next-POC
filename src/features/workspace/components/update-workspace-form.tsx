@@ -1,12 +1,15 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState } from "react";
+import { Check } from "lucide-react";
 
-import { Alert } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { PaddockButton } from "@/components/paddock/paddock-button";
+import { PaddockInput } from "@/components/paddock/paddock-field";
+import {
+    RadioCardGroup,
+    type RadioCardOption,
+} from "@/components/paddock/radio-card-group";
 import { updateWorkspaceAction } from "@/features/workspace/actions/update-workspace";
-import { cn } from "@/lib/cn";
 import { WorkspaceVisibility } from "@/schemas/workspace";
 
 export interface UpdateWorkspaceFormProps {
@@ -15,105 +18,81 @@ export interface UpdateWorkspaceFormProps {
     initialVisibility?: WorkspaceVisibility;
 }
 
+const VISIBILITY_OPTIONS: RadioCardOption[] = [
+    {
+        value: WorkspaceVisibility.PRIVATE,
+        label: "Private",
+        badge: "Restricted",
+        description: "Only people you invite can see and open this workspace.",
+    },
+    {
+        value: WorkspaceVisibility.PUBLIC,
+        label: "Public",
+        badge: "Open",
+        description: "Anyone can find this workspace, join it and collaborate.",
+    },
+];
+
+/**
+ * Name and visibility. Visibility is a pair of native radios (as notched
+ * cards), so the choice is submitted with the form and needs no hidden input.
+ */
 export function UpdateWorkspaceForm({
     workspaceId,
     initialName,
     initialVisibility = WorkspaceVisibility.PRIVATE,
 }: UpdateWorkspaceFormProps) {
     const boundUpdateAction = updateWorkspaceAction.bind(null, workspaceId);
-    const [state, formAction] = useActionState(boundUpdateAction, null);
-    const [visibility, setVisibility] =
-        useState<WorkspaceVisibility>(initialVisibility);
-
-    const visibilityOptions = [
-        {
-            value: WorkspaceVisibility.PRIVATE,
-            title: "Private",
-            description:
-                "Only members explicitly invited can view and access this workspace.",
-            badge: "Restricted",
-        },
-        {
-            value: WorkspaceVisibility.PUBLIC,
-            title: "Public",
-            description:
-                "Anyone can discover this workspace, join it, and collaborate.",
-            badge: "Open",
-        },
-    ];
+    const [state, formAction, isPending] = useActionState(
+        boundUpdateAction,
+        null,
+    );
 
     return (
-        <form action={formAction} className="flex flex-col gap-6 max-w-xl">
-            <Input
+        <form action={formAction} className="flex flex-col gap-6.5">
+            <PaddockInput
                 id="name"
                 name="name"
-                label="Workspace Name"
+                label="Workspace name"
+                hint="2 to 50 characters. Everyone in the workspace sees this name."
                 defaultValue={initialName}
                 required
             />
 
-            <div className="flex flex-col gap-3">
-                <label className="text-xs text-brand-subtle">
-                    Workspace Visibility
-                </label>
-                <input type="hidden" name="visibility" value={visibility} />
-                <div className="grid grid-cols-1 gap-3">
-                    {visibilityOptions.map((opt) => (
-                        <button
-                            type="button"
-                            key={opt.value}
-                            onClick={() => setVisibility(opt.value)}
-                            className={cn(
-                                "flex items-start justify-between p-4 border-2 rounded-brand text-left transition-all cursor-pointer",
-                                visibility === opt.value
-                                    ? "border-brand-accent bg-brand-surface shadow-brand-subtle"
-                                    : "border-brand-border bg-brand-surface hover:border-brand-subtle opacity-80",
-                            )}
-                            aria-pressed={visibility === opt.value}
+            <RadioCardGroup
+                name="visibility"
+                legend="Who can see it"
+                options={VISIBILITY_OPTIONS}
+                defaultValue={initialVisibility}
+            />
+
+            {state?.error ? (
+                <p
+                    role="alert"
+                    className="m-0 text-sm font-semibold text-paddock-danger"
+                >
+                    {state.error}
+                </p>
+            ) : null}
+
+            <div className="flex flex-wrap items-center gap-4">
+                <PaddockButton type="submit" disabled={isPending}>
+                    {isPending ? "Saving..." : "Save changes"}
+                </PaddockButton>
+                {state?.success && !isPending ? (
+                    <p
+                        role="status"
+                        className="m-0 flex items-center gap-2 font-semibold"
+                    >
+                        <span
+                            aria-hidden="true"
+                            className="paddock-night flex size-5.5 shrink-0 items-center justify-center rounded-full text-paddock-lime"
                         >
-                            <div className="flex items-start gap-3">
-                                <div
-                                    className={cn(
-                                        "w-4 h-4 rounded-full border-2 mt-0.5 flex items-center justify-center shrink-0",
-                                        visibility === opt.value
-                                            ? "border-brand-accent bg-brand-accent"
-                                            : "border-brand-border",
-                                    )}
-                                >
-                                    {visibility === opt.value && (
-                                        <div className="w-1.5 h-1.5 rounded-full bg-brand-surface" />
-                                    )}
-                                </div>
-                                <div>
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-sm font-semibold text-brand-ink">
-                                            {opt.title}
-                                        </span>
-                                    </div>
-                                    <p className="text-xs text-brand-subtle mt-1 leading-relaxed">
-                                        {opt.description}
-                                    </p>
-                                </div>
-                            </div>
-                            <span className="text-[12px] px-2 py-0.5 border border-brand-border bg-brand-muted text-brand-subtle rounded-brand shrink-0">
-                                {opt.badge}
-                            </span>
-                        </button>
-                    ))}
-                </div>
-            </div>
-
-            {state?.error && <Alert intent="danger">{state.error}</Alert>}
-            {state?.success && (
-                <Alert intent="success">
-                    Workspace settings saved successfully.
-                </Alert>
-            )}
-
-            <div>
-                <Button type="submit" pendingText="Saving...">
-                    Save Changes
-                </Button>
+                            <Check className="size-3" strokeWidth={3} />
+                        </span>
+                        Workspace settings saved successfully.
+                    </p>
+                ) : null}
             </div>
         </form>
     );

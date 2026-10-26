@@ -2,9 +2,8 @@
 
 import { useState, useTransition } from "react";
 
-import { Alert } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { Dialog } from "@/components/ui/dialog";
+import { PaddockButton } from "@/components/paddock/paddock-button";
+import { PaddockDialog } from "@/components/paddock/paddock-dialog";
 import { removeMemberAction } from "@/features/workspace/actions/remove-member";
 
 export interface RemoveMemberButtonProps {
@@ -22,6 +21,12 @@ export function RemoveMemberButton({
     const [error, setError] = useState<string | null>(null);
     const [isPending, startTransition] = useTransition();
 
+    const close = () => {
+        if (isPending) return;
+        setOpen(false);
+        setError(null);
+    };
+
     const handleRemove = () => {
         setError(null);
         startTransition(async () => {
@@ -36,10 +41,10 @@ export function RemoveMemberButton({
 
     return (
         <>
-            <Button
-                variant="ghost"
+            <PaddockButton
+                variant="outline"
+                voice="plain"
                 size="sm"
-                className="text-brand-danger hover:bg-brand-danger/10 hover:text-brand-danger text-xs"
                 onClick={() => {
                     setError(null);
                     setOpen(true);
@@ -47,55 +52,52 @@ export function RemoveMemberButton({
                 aria-label={`Remove ${memberName}`}
             >
                 Remove
-            </Button>
+            </PaddockButton>
 
-            {open && (
-                <Dialog
-                    open={open}
-                    onClose={() => {
-                        if (!isPending) {
-                            setOpen(false);
-                            setError(null);
-                        }
-                    }}
-                    title="Remove Member"
-                >
-                    <div className="flex flex-col gap-5">
-                        <p className="text-sm text-brand-subtle">
-                            Are you sure you want to remove{" "}
-                            <span className="font-semibold text-brand-ink">
-                                {memberName}
-                            </span>{" "}
-                            from this workspace? They will immediately lose
-                            access to all documents, tasks, and data.
+            {/* Stays mounted so focus can return to the trigger on close. */}
+            <PaddockDialog
+                open={open}
+                onClose={close}
+                titleSerif="Remove"
+                titleHeavy="member"
+                className="w-[30rem]"
+                footer={
+                    <>
+                        <PaddockButton
+                            variant="outline"
+                            voice="plain"
+                            onClick={close}
+                            disabled={isPending}
+                        >
+                            Cancel
+                        </PaddockButton>
+                        <PaddockButton
+                            variant="danger"
+                            voice="plain"
+                            onClick={handleRemove}
+                            disabled={isPending}
+                        >
+                            {isPending ? "Removing..." : "Remove member"}
+                        </PaddockButton>
+                    </>
+                }
+            >
+                <div className="flex flex-col gap-4">
+                    <p className="m-0 text-base">
+                        Remove <strong>{memberName}</strong> from this
+                        workspace? They lose access to every document, task and
+                        message straight away.
+                    </p>
+                    {error ? (
+                        <p
+                            role="alert"
+                            className="m-0 text-sm font-semibold text-paddock-danger"
+                        >
+                            {error}
                         </p>
-
-                        {error && <Alert intent="danger">{error}</Alert>}
-
-                        <div className="flex justify-end gap-3 pt-2">
-                            <Button
-                                type="button"
-                                variant="secondary"
-                                onClick={() => {
-                                    setOpen(false);
-                                    setError(null);
-                                }}
-                                disabled={isPending}
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                type="button"
-                                variant="danger"
-                                onClick={handleRemove}
-                                disabled={isPending}
-                            >
-                                {isPending ? "Removing..." : "Confirm Remove"}
-                            </Button>
-                        </div>
-                    </div>
-                </Dialog>
-            )}
+                    ) : null}
+                </div>
+            </PaddockDialog>
         </>
     );
 }

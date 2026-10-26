@@ -1,42 +1,69 @@
 import type { ResolvedTheme } from "@/lib/theme";
 
 /**
- * ECharts needs concrete color strings, so the design tokens are read back out
- * of the cascade at runtime rather than duplicated as hex literals here. The
- * fallbacks only apply before styles resolve (or in a non-DOM environment).
+ * ECharts needs concrete color strings, so the Paddock chart tokens are read
+ * back out of the cascade at runtime rather than duplicated as hex literals
+ * here. The fallbacks only apply before styles resolve (or in a non-DOM
+ * environment).
+ *
+ * Every chart sits on the night band, which stays dark in both themes, so the
+ * palette is "on night" in both. Counts are not people: the series use lime,
+ * paper and neutrals, never a presence hue.
  */
 export interface ChartPalette {
-    series: string[];
-    ink: string;
-    subtle: string;
-    border: string;
-    surface: string;
-    success: string;
+    /** Lime: the series that matters most (created, done, progress). */
+    accent: string;
+    /** Paper: the second series, and chart text. */
+    strong: string;
+    /** Axis labels and the quietest series. */
+    muted: string;
+    /** A fourth series that should recede further than `muted`. */
+    faint: string;
+    /** Work still open, beside completed work. */
+    open: string;
     warning: string;
     danger: string;
+    /** The empty part of a gauge. */
+    track: string;
+    /** Grid and axis lines. */
+    rule: string;
+    /** The card the chart sits on: slice gaps and the tooltip. */
+    surface: string;
+    fontSans: string;
+    fontMono: string;
 }
 
-/** Mirrors the `@theme` block in globals.css; used only until the cascade resolves. */
+type ChartColorKey = Exclude<keyof ChartPalette, "fontSans" | "fontMono">;
+
+/** Mirrors the Paddock chart tokens in globals.css; used only until the cascade resolves. */
 const FALLBACKS: Record<ResolvedTheme, ChartPalette> = {
     light: {
-        series: ["#2948ff", "#16a34a", "#d97706", "#7c3aed", "#0891b2"],
-        ink: "#1a1a1a",
-        subtle: "#555555",
-        border: "#e8e8e8",
-        surface: "#fbfbfb",
-        success: "#16a34a",
-        warning: "#d97706",
-        danger: "#e53e3e",
+        accent: "#d2ff00",
+        strong: "#f4f4ed",
+        muted: "#a8ad98",
+        faint: "#8a9078",
+        open: "#7b7e73",
+        warning: "#baa56f",
+        danger: "#ff8c7a",
+        track: "#5b6150",
+        rule: "rgba(244, 244, 237, 0.14)",
+        surface: "#3a3f31",
+        fontSans: "ui-sans-serif, system-ui, sans-serif",
+        fontMono: "ui-monospace, monospace",
     },
     dark: {
-        series: ["#6c86ff", "#4ade80", "#fbbf24", "#a78bfa", "#22d3ee"],
-        ink: "#ededed",
-        subtle: "#a3a3a3",
-        border: "#2e2e2e",
-        surface: "#141414",
-        success: "#4ade80",
-        warning: "#fbbf24",
-        danger: "#ff6b6b",
+        accent: "#d2ff00",
+        strong: "#f4f4ed",
+        muted: "#a8ad98",
+        faint: "#8a9078",
+        open: "#75786e",
+        warning: "#e3b44c",
+        danger: "#ff8c7a",
+        track: "#474d3d",
+        rule: "rgba(244, 244, 237, 0.14)",
+        surface: "#30352a",
+        fontSans: "ui-sans-serif, system-ui, sans-serif",
+        fontMono: "ui-monospace, monospace",
     },
 };
 
@@ -55,6 +82,9 @@ function readToken(
  * `theme` selects the fallback set and makes the theme an explicit input, so a
  * caller memoising on it is declaring a real dependency rather than a hint —
  * the live values still come from the cascade, which the theme attribute drives.
+ *
+ * Styles are read from `.paddock-root` because that is where the Paddock font
+ * variables are attached; the colour tokens on `:root` inherit down to it.
  */
 export function readChartPalette(theme: ResolvedTheme = "light"): ChartPalette {
     const fallback = FALLBACKS[theme];
@@ -63,40 +93,71 @@ export function readChartPalette(theme: ResolvedTheme = "light"): ChartPalette {
         return fallback;
     }
 
-    const styles = window.getComputedStyle(document.documentElement);
+    const root =
+        document.querySelector(".paddock-root") ?? document.documentElement;
+    const styles = window.getComputedStyle(root);
+    const color = (name: ChartColorKey) =>
+        readToken(styles, `--color-paddock-chart-${name}`, fallback[name]);
+    // A next/font variable holds the family plus its metric fallback; the
+    // generic stack goes after it in case the variable is not there yet.
+    const font = (variable: string, generic: string) => {
+        const family = styles.getPropertyValue(variable).trim();
+        return family ? `${family}, ${generic}` : generic;
+    };
 
     return {
-        series: fallback.series.map((value, index) =>
-            readToken(styles, `--color-brand-chart-${index + 1}`, value),
-        ),
-        ink: readToken(styles, "--color-brand-ink", fallback.ink),
-        subtle: readToken(styles, "--color-brand-subtle", fallback.subtle),
-        border: readToken(styles, "--color-brand-border", fallback.border),
-        surface: readToken(styles, "--color-brand-surface", fallback.surface),
-        success: readToken(styles, "--color-brand-success", fallback.success),
-        warning: readToken(styles, "--color-brand-warning", fallback.warning),
-        danger: readToken(styles, "--color-brand-danger", fallback.danger),
+        accent: color("accent"),
+        strong: color("strong"),
+        muted: color("muted"),
+        faint: color("faint"),
+        open: color("open"),
+        warning: color("warning"),
+        danger: color("danger"),
+        track: color("track"),
+        rule: color("rule"),
+        surface: color("surface"),
+        fontSans: font("--font-mona-sans", fallback.fontSans),
+        fontMono: font("--font-geist-mono", fallback.fontMono),
     };
 }
 
-/** Shared axis / tooltip styling so every widget reads as one system. */
+/** Shared axis, legend and tooltip styling so every widget reads as one system. */
 export function baseChartStyles(palette: ChartPalette) {
     return {
         textStyle: {
-            fontFamily: "var(--font-brand-mono), ui-monospace, monospace",
-            color: palette.subtle,
-            fontSize: 11,
+            fontFamily: palette.fontSans,
+            color: palette.muted,
+            fontSize: 12,
         },
         tooltip: {
             backgroundColor: palette.surface,
-            borderColor: palette.ink,
-            borderWidth: 2,
-            textStyle: { color: palette.ink, fontSize: 12 },
-            extraCssText: "border-radius:0;box-shadow:2px 2px 0 #1a1a1a;",
+            borderColor: palette.track,
+            borderWidth: 1,
+            textStyle: {
+                color: palette.strong,
+                fontFamily: palette.fontSans,
+                fontSize: 13,
+            },
+            extraCssText: "border-radius:8px;box-shadow:none;",
         },
-        axisLine: { lineStyle: { color: palette.border } },
-        splitLine: {
-            lineStyle: { color: palette.border, type: "dashed" as const },
+        legend: {
+            bottom: 0,
+            icon: "roundRect",
+            itemWidth: 12,
+            itemHeight: 12,
+            itemGap: 16,
+            textStyle: {
+                color: palette.muted,
+                fontFamily: palette.fontSans,
+                fontSize: 12,
+            },
         },
+        axisLabel: {
+            color: palette.muted,
+            fontFamily: palette.fontMono,
+            fontSize: 11,
+        },
+        axisLine: { lineStyle: { color: palette.rule } },
+        splitLine: { lineStyle: { color: palette.rule } },
     };
 }

@@ -737,6 +737,20 @@ time,
     --color-paddock-caret-2: #d48a12;
     --color-paddock-caret-3: #2ba7b3;
     --color-paddock-caret-4: #8b6fe0;
+    /* Charts, read by `readChartPalette()` with getComputedStyle. They are
+       drawn on the night band, which stays dark in both themes, so these are
+       "on night" values. Counts are not people: lime, paper and neutrals
+       only. Plain rgb()/rgba() so ECharts can parse every one of them. */
+    --color-paddock-chart-accent: #d2ff00;
+    --color-paddock-chart-strong: #f4f4ed;
+    --color-paddock-chart-muted: #a8ad98;
+    --color-paddock-chart-faint: #8a9078;
+    --color-paddock-chart-open: #7b7e73;
+    --color-paddock-chart-warning: #baa56f;
+    --color-paddock-chart-danger: #ff8c7a;
+    --color-paddock-chart-track: #5b6150;
+    --color-paddock-chart-rule: rgba(244, 244, 237, 0.14);
+    --color-paddock-chart-surface: #3a3f31;
 }
 
 [data-theme="dark"] {
@@ -780,6 +794,17 @@ time,
     --color-paddock-caret-2: #ffb547;
     --color-paddock-caret-3: #6fd6e0;
     --color-paddock-caret-4: #b79bff;
+
+    --color-paddock-chart-accent: #d2ff00;
+    --color-paddock-chart-strong: #f4f4ed;
+    --color-paddock-chart-muted: #a8ad98;
+    --color-paddock-chart-faint: #8a9078;
+    --color-paddock-chart-open: #75786e;
+    --color-paddock-chart-warning: #e3b44c;
+    --color-paddock-chart-danger: #ff8c7a;
+    --color-paddock-chart-track: #474d3d;
+    --color-paddock-chart-rule: rgba(244, 244, 237, 0.14);
+    --color-paddock-chart-surface: #30352a;
 }
 
 /* ─── Paddock voices and devices ─────────────────────────────

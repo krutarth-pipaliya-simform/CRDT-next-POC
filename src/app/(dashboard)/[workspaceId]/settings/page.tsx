@@ -1,17 +1,24 @@
 import { notFound } from "next/navigation";
 
-import { Separator } from "@/components/ui/separator";
+import { DisplayHeading } from "@/components/paddock/display-heading";
 import { auth } from "@/features/auth/lib/auth";
 import { DeleteWorkspaceButton } from "@/features/workspace/components/delete-workspace-button";
 import { LeaveWorkspaceButton } from "@/features/workspace/components/leave-workspace-button";
 import { UpdateWorkspaceForm } from "@/features/workspace/components/update-workspace-form";
 import { getWorkspace } from "@/features/workspace/queries/get-workspace";
+import { cn } from "@/lib/cn";
 
-export default async function SettingsPage({
-    params,
-}: {
+export interface SettingsPageProps {
     params: Promise<{ workspaceId: string }>;
-}) {
+}
+
+/** Heading on the left, content on the right; stacks below ~860px. */
+const SECTION = "flex flex-wrap gap-x-16 gap-y-6";
+const SECTION_INTRO =
+    "flex max-w-[21.25rem] flex-[1_1_16.25rem] flex-col gap-2.5";
+const SECTION_BODY = "min-w-0 flex-[999_1_32.5rem]";
+
+export default async function SettingsPage({ params }: SettingsPageProps) {
     const { workspaceId } = await params;
     const [workspace, session] = await Promise.all([
         getWorkspace(workspaceId),
@@ -23,45 +30,62 @@ export default async function SettingsPage({
     }
 
     return (
-        <div className="flex flex-col gap-10">
-            <section className="flex flex-col gap-4">
-                <div>
-                    <h3 className="text-lg font-medium text-brand-ink">
-                        General Settings
-                    </h3>
-                    <p className="text-xs text-brand-subtle">
-                        Manage your workspace display name and details.
+        <div className="flex flex-col gap-14 pt-2">
+            <section aria-labelledby="settings-general" className={SECTION}>
+                <div className={SECTION_INTRO}>
+                    <DisplayHeading
+                        id="settings-general"
+                        as="h2"
+                        size="md"
+                        serif="The"
+                        heavy="basics"
+                    />
+                    <p className="m-0 text-paddock-subtle">
+                        Your workspace&apos;s name, and who can find it.
                     </p>
                 </div>
-                <UpdateWorkspaceForm
-                    workspaceId={workspaceId}
-                    initialName={workspace.name}
-                    initialVisibility={workspace.visibility}
-                />
+                <div className={SECTION_BODY}>
+                    <UpdateWorkspaceForm
+                        workspaceId={workspaceId}
+                        initialName={workspace.name}
+                        initialVisibility={workspace.visibility}
+                    />
+                </div>
             </section>
 
-            <Separator />
-
-            <section className="flex flex-col gap-4">
-                <div>
-                    <h3 className="text-lg font-medium text-brand-danger">
-                        Danger Zone
-                    </h3>
-                    <p className="text-xs text-brand-subtle">
-                        Actions that permanently affect your membership or the
-                        entire workspace.
+            <section
+                aria-labelledby="settings-danger"
+                className={cn(SECTION, "border-t border-paddock-rule pt-12")}
+            >
+                <div className={SECTION_INTRO}>
+                    <DisplayHeading
+                        id="settings-danger"
+                        as="h2"
+                        size="md"
+                        serif="Danger"
+                        heavy="zone"
+                        className="text-paddock-danger"
+                    />
+                    <p className="m-0 text-paddock-subtle">
+                        Actions that permanently change your membership or the
+                        whole workspace.
                     </p>
                 </div>
 
-                <div className="flex flex-col gap-6 p-5 border-2 border-brand-border rounded-brand bg-brand-surface">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div>
-                            <h4 className="text-sm font-semibold text-brand-ink">
-                                Leave Workspace
-                            </h4>
-                            <p className="text-xs text-brand-subtle mt-1">
-                                Transfer admin ownership to another member and
-                                remove yourself from this workspace.
+                <div
+                    className={cn(
+                        SECTION_BODY,
+                        "overflow-hidden rounded-paddock-card border-[1.5px] border-paddock-danger",
+                    )}
+                >
+                    <div className="flex flex-wrap items-center justify-between gap-4 border-b border-paddock-rule px-6 py-5.5">
+                        <div className="flex-[1_1_17.5rem]">
+                            <h3 className="m-0 text-base font-bold">
+                                Leave workspace
+                            </h3>
+                            <p className="m-0 text-sm text-paddock-subtle">
+                                Hand admin to another member, then remove
+                                yourself from {workspace.name}.
                             </p>
                         </div>
                         <LeaveWorkspaceButton
@@ -73,20 +97,18 @@ export default async function SettingsPage({
                             variant="secondary"
                             size="sm"
                         >
-                            Leave Workspace
+                            Leave workspace
                         </LeaveWorkspaceButton>
                     </div>
 
-                    <Separator />
-
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div>
-                            <h4 className="text-sm font-semibold text-brand-danger">
-                                Delete Workspace
-                            </h4>
-                            <p className="text-xs text-brand-subtle mt-1">
-                                Permanently delete this workspace and all
-                                associated documents, tasks, and data.
+                    <div className="flex flex-wrap items-center justify-between gap-4 px-6 py-5.5">
+                        <div className="flex-[1_1_17.5rem]">
+                            <h3 className="m-0 text-base font-bold text-paddock-danger">
+                                Delete workspace
+                            </h3>
+                            <p className="m-0 text-sm text-paddock-subtle">
+                                Permanently delete {workspace.name} and every
+                                document, task and message in it.
                             </p>
                         </div>
                         <DeleteWorkspaceButton workspaceId={workspaceId} />

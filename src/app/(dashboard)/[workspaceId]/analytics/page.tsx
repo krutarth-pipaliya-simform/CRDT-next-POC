@@ -1,9 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { EmptyState } from "@/components/ui/empty-state";
-import { StatTile } from "@/components/ui/stat-tile";
+import { PAGE_CONTAINER } from "@/components/layout/layout-styles";
 import { PageHeader } from "@/components/layout/page-header";
+import { ContourBackground } from "@/components/paddock/contour-background";
+import { DisplayHeading } from "@/components/paddock/display-heading";
+import { NotchedCard } from "@/components/paddock/notched-card";
+import { PaddockStatTile } from "@/components/paddock/paddock-stat-tile";
 import { PlanBadge } from "@/features/billing/components/plan-badge";
 import { planAllowsRange } from "@/features/billing/lib/plans";
 import { getWorkspaceSubscription } from "@/features/billing/queries/get-workspace-subscription";
@@ -19,6 +22,7 @@ import {
 import { getWorkspaceAnalytics } from "@/features/dashboard/queries/get-workspace-analytics";
 import { verifyWorkspaceRole } from "@/features/workspace/lib/rbac";
 import { getWorkspace } from "@/features/workspace/queries/get-workspace";
+import { cn } from "@/lib/cn";
 import { RANGE_LABELS, analyticsSearchParamsSchema } from "@/schemas/analytics";
 
 export const dynamic = "force-dynamic";
@@ -65,123 +69,178 @@ export default async function AnalyticsPage({
 
     const { totals } = analytics;
     const hasTasks = totals.tasks > 0;
+    const rangeLabel = RANGE_LABELS[range].toLowerCase();
 
     return (
-        <main className="max-w-7xl mx-auto px-6 py-8">
+        <main className="pb-24">
             <PageHeader
-                title="Analytics"
+                eyebrow={`${workspace.name} — Analytics`}
+                serif="Workspace"
+                heavy="pulse"
                 description="How much is moving through the board, and who is moving it."
-                action={<PlanBadge plan={plan} />}
+                action={
+                    <div className="flex flex-col items-start gap-3.5 sm:items-end">
+                        <PlanBadge plan={plan} />
+                        <AnalyticsRangeTabs
+                            workspaceId={workspaceId}
+                            activeRange={range}
+                            plan={plan}
+                        />
+                        {plan === "FREE" ? (
+                            <p
+                                className="m-0 max-w-[22rem] text-sm text-paddock-subtle sm:text-right"
+                                data-testid="analytics-range-lock"
+                            >
+                                Longer history is part of Pro —{" "}
+                                <Link
+                                    href={`/${workspaceId}/settings/billing`}
+                                    className="font-semibold text-paddock-ink underline underline-offset-2"
+                                >
+                                    upgrade this workspace
+                                </Link>
+                                .
+                            </p>
+                        ) : null}
+                    </div>
+                }
             />
 
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
-                <AnalyticsRangeTabs
-                    workspaceId={workspaceId}
-                    activeRange={range}
-                    plan={plan}
-                />
-                {plan === "FREE" && (
-                    <p
-                        className="text-[11px] text-brand-subtle"
-                        data-testid="analytics-range-lock"
-                    >
-                        Longer history is part of Pro —{" "}
-                        <Link
-                            href={`/${workspaceId}/settings/billing`}
-                            className="text-brand-accent underline underline-offset-2"
-                        >
-                            upgrade this workspace
-                        </Link>
-                        .
-                    </p>
-                )}
-            </div>
-
             <section
-                className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8"
+                aria-label="Totals"
                 data-testid="analytics-totals"
+                className={cn(
+                    PAGE_CONTAINER,
+                    "grid grid-cols-[repeat(auto-fit,minmax(15rem,1fr))] gap-3.5 pb-12",
+                )}
             >
-                <StatTile
-                    label="Completion rate"
-                    value={`${totals.completionRate}%`}
-                    hint={`${totals.tasksDone} of ${totals.tasks} tasks done`}
-                    testId="stat-completion-rate"
-                />
-                <StatTile
-                    label={`Tasks created · ${RANGE_LABELS[range].toLowerCase()}`}
-                    value={totals.tasksCreatedInRange}
-                    hint={`${totals.tasks} on the board in total`}
-                    testId="stat-tasks-created"
-                />
-                <StatTile
-                    label="Documents"
-                    value={totals.documents}
-                    hint="Collaborative documents"
-                    testId="stat-documents"
-                />
-                <StatTile
-                    label="Members"
-                    value={totals.members}
-                    hint={`${totals.messages} chat messages sent`}
-                    testId="stat-members"
-                />
+                <div data-testid="stat-completion-rate">
+                    <PaddockStatTile
+                        label="Completion rate"
+                        value={String(totals.completionRate)}
+                        unit="%"
+                        hint={`${totals.tasksDone} of ${totals.tasks} tasks done`}
+                        className="h-full"
+                    />
+                </div>
+                <div data-testid="stat-tasks-created">
+                    <PaddockStatTile
+                        label={`Tasks created · ${rangeLabel}`}
+                        value={String(totals.tasksCreatedInRange)}
+                        hint={`${totals.tasks} on the board in total`}
+                        className="h-full"
+                    />
+                </div>
+                <div data-testid="stat-documents">
+                    <PaddockStatTile
+                        label="Documents"
+                        value={String(totals.documents)}
+                        hint="Collaborative documents"
+                        className="h-full"
+                    />
+                </div>
+                <div data-testid="stat-members">
+                    <PaddockStatTile
+                        label="Members"
+                        value={String(totals.members)}
+                        hint={`${totals.messages} chat messages sent`}
+                        className="h-full"
+                    />
+                </div>
             </section>
 
             {hasTasks ? (
-                <div className="grid gap-6 lg:grid-cols-3">
-                    <ChartCard
-                        title="Task completion rate"
-                        description="Share of the board that reached Done"
-                    >
-                        <CompletionGauge
-                            completionRate={totals.completionRate}
-                            tasksDone={totals.tasksDone}
-                            tasksTotal={totals.tasks}
-                        />
-                    </ChartCard>
+                <section
+                    aria-labelledby="analytics-charts-heading"
+                    className="paddock-night relative overflow-hidden px-4 pt-16 pb-18 sm:px-6"
+                >
+                    <ContourBackground pattern="band" surface="night" />
+                    <div className="relative mx-auto max-w-[74rem]">
+                        <h2
+                            id="analytics-charts-heading"
+                            className="m-0 mb-8 leading-[0.86]"
+                        >
+                            <span className="paddock-serif block text-[clamp(2.5rem,6vw,3.75rem)] text-paddock-lime">
+                                How the board
+                            </span>{" "}
+                            <span className="paddock-heavy block text-[clamp(2.125rem,5.4vw,3.375rem)]">
+                                is moving
+                            </span>
+                        </h2>
 
-                    <ChartCard
-                        title="Workspace activity"
-                        description={`Tasks, documents and messages · ${RANGE_LABELS[range].toLowerCase()}`}
-                        className="lg:col-span-2"
-                    >
-                        <ActivityChart points={analytics.activity} />
-                    </ChartCard>
+                        <div className="flex flex-wrap gap-4">
+                            <ChartCard
+                                title="Task completion rate"
+                                description="Share of the board that reached Done"
+                                className="flex-[1_1_20rem]"
+                            >
+                                <CompletionGauge
+                                    completionRate={totals.completionRate}
+                                    tasksDone={totals.tasksDone}
+                                    tasksTotal={totals.tasks}
+                                />
+                            </ChartCard>
 
-                    <ChartCard
-                        title="Status distribution"
-                        description="Where work currently sits"
-                    >
-                        <StatusDonut slices={analytics.statusBreakdown} />
-                    </ChartCard>
+                            <ChartCard
+                                title="Workspace activity"
+                                description={`Tasks, documents and messages · ${rangeLabel}`}
+                                className="flex-[2_1_40rem]"
+                            >
+                                <ActivityChart points={analytics.activity} />
+                            </ChartCard>
 
-                    <ChartCard
-                        title="Priority mix"
-                        description="How the board is weighted"
-                    >
-                        <PriorityBars slices={analytics.priorityBreakdown} />
-                    </ChartCard>
+                            <ChartCard
+                                title="Status distribution"
+                                description="Where work currently sits"
+                                className="flex-[1_1_20rem]"
+                            >
+                                <StatusDonut
+                                    slices={analytics.statusBreakdown}
+                                />
+                            </ChartCard>
 
-                    <ChartCard
-                        title="Contributors"
-                        description="Completed vs open per assignee"
-                    >
-                        {analytics.contributors.length > 0 ? (
-                            <ContributorBars
-                                contributors={analytics.contributors}
-                            />
-                        ) : (
-                            <p className="text-xs text-brand-subtle py-10 text-center">
-                                No tasks are assigned yet.
-                            </p>
-                        )}
-                    </ChartCard>
-                </div>
+                            <ChartCard
+                                title="Priority mix"
+                                description="How the board is weighted"
+                                className="flex-[1_1_20rem]"
+                            >
+                                <PriorityBars
+                                    slices={analytics.priorityBreakdown}
+                                />
+                            </ChartCard>
+
+                            <ChartCard
+                                title="Contributors"
+                                description="Completed vs open per assignee"
+                                className="flex-[1_1_20rem]"
+                            >
+                                {analytics.contributors.length > 0 ? (
+                                    <ContributorBars
+                                        contributors={analytics.contributors}
+                                    />
+                                ) : (
+                                    <p className="m-0 py-10 text-center text-sm text-paddock-night-subtle">
+                                        No tasks are assigned yet.
+                                    </p>
+                                )}
+                            </ChartCard>
+                        </div>
+                    </div>
+                </section>
             ) : (
-                <EmptyState
-                    title="Nothing to chart yet"
-                    description={`Create tasks, documents or messages in ${workspace.name} and the metrics will appear here.`}
-                />
+                <div className={PAGE_CONTAINER}>
+                    <NotchedCard bodyClassName="flex flex-col gap-3 px-7 pt-8">
+                        <DisplayHeading
+                            as="h2"
+                            size="md"
+                            serif="Nothing to chart"
+                            heavy="yet"
+                        />
+                        <p className="m-0 max-w-[56ch] text-paddock-subtle">
+                            Create tasks, documents or messages in{" "}
+                            {workspace.name} and the metrics will appear here.
+                        </p>
+                    </NotchedCard>
+                </div>
             )}
         </main>
     );

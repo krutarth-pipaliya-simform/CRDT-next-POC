@@ -2,14 +2,18 @@
 
 import { useState, useTransition } from "react";
 
-import { Alert } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
+import { PaddockButton } from "@/components/paddock/paddock-button";
 import { deleteWorkspaceAction } from "@/features/workspace/actions/delete-workspace";
 
 export interface DeleteWorkspaceButtonProps {
     workspaceId: string;
 }
 
+/**
+ * Two steps, in place: the trigger, then a confirmation that asks again. The
+ * confirmation spans the full row (`basis-full`), so render this inside a
+ * wrapping flex row next to the action's description.
+ */
 export function DeleteWorkspaceButton({
     workspaceId,
 }: DeleteWorkspaceButtonProps) {
@@ -29,35 +33,46 @@ export function DeleteWorkspaceButton({
 
     if (!confirming) {
         return (
-            <Button
-                type="button"
-                variant="danger"
+            <PaddockButton
+                variant="outline"
+                voice="plain"
+                size="sm"
+                className="border-paddock-danger text-paddock-danger"
                 onClick={() => setConfirming(true)}
             >
-                Delete Workspace
-            </Button>
+                Delete workspace
+            </PaddockButton>
         );
     }
 
     return (
-        <div className="flex flex-col gap-4 max-w-md p-4 border-2 border-brand-danger bg-brand-danger/5 rounded-brand">
-            <Alert intent="danger">
+        <div
+            role="alert"
+            className="paddock-in flex basis-full flex-col gap-3.5 rounded-paddock bg-[color-mix(in_srgb,var(--color-paddock-danger)_9%,var(--color-paddock-paper))] px-5 py-4.5"
+        >
+            <p className="m-0 font-semibold">
                 Are you sure? This action is permanent and will delete all
                 documents, tasks, and data in this workspace.
-            </Alert>
-            {error && <Alert intent="danger">{error}</Alert>}
-            <div className="flex gap-3">
-                <Button
-                    type="button"
+            </p>
+            {error ? (
+                <p className="m-0 text-sm font-semibold text-paddock-danger">
+                    {error}
+                </p>
+            ) : null}
+            <div className="flex flex-wrap gap-2.5">
+                <PaddockButton
                     variant="danger"
+                    voice="plain"
+                    size="sm"
                     onClick={handleDelete}
                     disabled={isPending}
                 >
-                    {isPending ? "Deleting..." : "Yes, Delete Permanently"}
-                </Button>
-                <Button
-                    type="button"
-                    variant="secondary"
+                    {isPending ? "Deleting..." : "Yes, delete permanently"}
+                </PaddockButton>
+                <PaddockButton
+                    variant="outline"
+                    voice="plain"
+                    size="sm"
                     onClick={() => {
                         setConfirming(false);
                         setError(null);
@@ -65,7 +80,7 @@ export function DeleteWorkspaceButton({
                     disabled={isPending}
                 >
                     Cancel
-                </Button>
+                </PaddockButton>
             </div>
         </div>
     );

@@ -93,7 +93,7 @@ test.describe("Workspace Management", () => {
         await page.goto(`/${ws.id}/settings`);
 
         await expect(
-            page.getByRole("heading", { name: "General Settings" }),
+            page.getByRole("heading", { name: "The basics" }),
         ).toBeVisible();
 
         const updatedName = `Updated Name ${Date.now()}`;
@@ -168,7 +168,7 @@ test.describe("Workspace Management", () => {
         await page.goto(`/${ws.id}/settings/members`);
 
         await expect(
-            page.getByRole("heading", { name: /Workspace Members/ }),
+            page.getByRole("heading", { name: /Workspace members/i }),
         ).toBeVisible();
 
         await page
@@ -317,11 +317,14 @@ test.describe("Workspace Management", () => {
             .getByRole("button", { name: "Remove Invitee To Remove" })
             .click();
 
-        // Dialog should be open with Confirm Remove button
+        // Dialog should be open with its Remove member button
         await expect(
             page.getByRole("heading", { name: "Remove Member" }),
         ).toBeVisible();
-        await page.getByRole("button", { name: "Confirm Remove" }).click();
+        await page
+            .locator("dialog[open]")
+            .getByRole("button", { name: "Remove member" })
+            .click();
 
         // Member should be removed from the list
         await expect(
@@ -374,7 +377,10 @@ test.describe("Workspace Management", () => {
 
         const badge = memberItem.getByText("Member", { exact: true });
         const adminBadge = adminItem.getByText("Admin", { exact: true });
-        const nameSpan = memberItem.locator("span.text-sm.truncate");
+        // The row's own name, not the copy inside the open remove dialog.
+        const nameSpan = memberItem
+            .locator("span")
+            .filter({ hasText: /^Layout Stability Member$/ });
 
         const initialBadgeBox = await badge.boundingBox();
         const adminBadgeBox = await adminBadge.boundingBox();
@@ -402,7 +408,9 @@ test.describe("Workspace Management", () => {
             page.getByRole("heading", { name: "Remove Member" }),
         ).toBeVisible();
         await expect(
-            page.getByRole("button", { name: "Confirm Remove" }),
+            page
+                .locator("dialog[open]")
+                .getByRole("button", { name: "Remove member" }),
         ).toBeVisible();
         await expect(
             page.getByRole("button", { name: "Cancel" }),
@@ -464,7 +472,10 @@ test.describe("Workspace Management", () => {
         await page.goto(`/${ws.id}/settings`);
 
         // Select Public visibility option
-        await page.getByRole("button", { name: /Public/ }).click();
+        // The radio is visually hidden inside its card; choose it by clicking
+        // the card, as a person would.
+        await page.locator("label").filter({ hasText: "Public" }).click();
+        await expect(page.getByRole("radio", { name: /Public/ })).toBeChecked();
         await page.getByRole("button", { name: "Save Changes" }).click();
 
         await expect(
@@ -645,7 +656,7 @@ test.describe("Workspace Management", () => {
         await expect(
             page.getByText("You are viewing this public workspace as a guest."),
         ).toBeVisible();
-        await expect(page.getByText("Guest", { exact: true })).toBeVisible();
+        await expect(page.getByTestId("workspace-role")).toHaveText("Guest");
 
         // 4. Click "Join Workspace" from the banner inside the workspace
         await page.getByRole("button", { name: "Join Workspace" }).click();
@@ -1005,7 +1016,7 @@ test.describe("Workspace Management", () => {
         // Successor can access workspace settings
         await successorPage.goto(`/${ws.id}/settings`);
         await expect(
-            successorPage.getByRole("heading", { name: "General Settings" }),
+            successorPage.getByRole("heading", { name: "The basics" }),
         ).toBeVisible();
 
         await successorContext.close();

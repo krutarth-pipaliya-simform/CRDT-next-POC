@@ -10,7 +10,10 @@ export interface ChartCardProps {
     className?: string;
 }
 
-/** Consistent frame around every analytics widget. */
+/**
+ * Consistent frame around every analytics widget: a raised card on the
+ * analytics night band. Render it inside a `paddock-night` ground.
+ */
 export function ChartCard({
     title,
     description,
@@ -21,22 +24,22 @@ export function ChartCard({
     return (
         <section
             className={cn(
-                "flex flex-col gap-4 p-5 border-2 border-brand-border bg-brand-surface rounded-brand",
+                "flex min-w-0 flex-col gap-3.5 rounded-paddock-card bg-paddock-night-card p-6",
                 className,
             )}
         >
-            <div className="flex items-start justify-between gap-3">
-                <div>
-                    <h3 className="text-sm font-semibold text-brand-ink">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="min-w-0">
+                    <h3 className="m-0 text-[1.0625rem] font-bold text-paddock-night-fg">
                         {title}
                     </h3>
-                    {description && (
-                        <p className="text-[11px] text-brand-subtle mt-1">
+                    {description ? (
+                        <p className="m-0 text-[0.84375rem] text-paddock-night-subtle">
                             {description}
                         </p>
-                    )}
+                    ) : null}
                 </div>
-                {action && <div className="shrink-0">{action}</div>}
+                {action ? <div className="shrink-0">{action}</div> : null}
             </div>
             {children}
         </section>

@@ -218,7 +218,7 @@ test.describe("Billing & Analytics Dashboard", () => {
         await page.goto(`/${freeWorkspaceId}/analytics`);
 
         await expect(
-            page.getByRole("heading", { name: "Analytics", exact: true }),
+            page.getByRole("heading", { name: "Workspace pulse", exact: true }),
         ).toBeVisible();
         await expect(page.getByTestId("analytics-totals")).toBeVisible();
         await expect(page.getByTestId("stat-completion-rate")).toContainText(
@@ -248,12 +248,12 @@ test.describe("Billing & Analytics Dashboard", () => {
         await page.goto(`/${freeWorkspaceId}/analytics`);
 
         await expect(page.getByTestId("analytics-range-lock")).toBeVisible();
-        // Locked ranges render as disabled tabs carrying a "Pro" badge.
+        // Locked ranges render as disabled buttons carrying a "Pro" tag.
         await expect(
-            page.getByRole("tab", { name: "Last 30 days" }),
+            page.getByRole("button", { name: "Last 30 days" }),
         ).toBeDisabled();
         await expect(
-            page.getByRole("tab", { name: "Last 90 days" }),
+            page.getByRole("button", { name: "Last 90 days" }),
         ).toBeDisabled();
 
         // A hand-typed range must be refused by the server, not just hidden in the UI.
