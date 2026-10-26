@@ -3,11 +3,16 @@
 import { useActionState, useState, useTransition } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Alert } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Check } from "lucide-react";
+
+import { PaddockButton } from "@/components/paddock/paddock-button";
+import { PaddockInput } from "@/components/paddock/paddock-field";
 import { loginAction } from "@/features/auth/actions/login";
 import { resendVerificationAction } from "@/features/auth/actions/resend-verification";
+import { AuthHeading } from "@/features/auth/components/auth-heading";
+import { AuthNotice } from "@/features/auth/components/auth-notice";
+import { AUTH_TEXT_LINK } from "@/features/auth/components/auth-styles";
+import { AuthSubmitButton } from "@/features/auth/components/auth-submit-button";
 import { DevVerifyQuickLink } from "@/features/auth/components/dev-verify-quick-link";
 import { SocialAuthButtons } from "@/features/auth/components/social-auth-buttons";
 import { DEFAULT_LOGIN_REDIRECT } from "@/lib/routes";
@@ -43,97 +48,105 @@ export function LoginForm() {
     };
 
     return (
-        <div className="w-full max-w-sm flex flex-col gap-8">
-            <div>
-                <h1 className="text-[30px] font-semibold tracking-[-0.024em] text-brand-ink">
-                    Welcome back
-                </h1>
-                <p className="text-sm text-brand-subtle mt-1.5">
-                    Pick up wherever your team left off.
-                </p>
-            </div>
+        <div className="flex flex-col">
+            <AuthHeading serif="Welcome" heavy="back" className="mb-3.5" />
+            <p className="m-0 mb-7.5 text-paddock-subtle">
+                Pick up wherever your team left off.
+            </p>
 
-            <form action={formAction} className="flex flex-col gap-6">
+            {state?.error === "unverified" && (
+                <div
+                    role="alert"
+                    className="mb-5 flex flex-col gap-2.5 rounded-paddock border-[1.5px] border-paddock-ink bg-paddock-sheet px-4 py-3.5"
+                >
+                    <span className="font-bold">
+                        Your email is not verified.
+                    </span>
+                    {state.unverifiedEmail ? (
+                        <span className="text-sm text-paddock-subtle">
+                            Open the link we sent to {state.unverifiedEmail}, or
+                            send a fresh one.
+                        </span>
+                    ) : null}
+
+                    {resendStatus &&
+                        (resendStatus.type === "success" ? (
+                            <span
+                                role="status"
+                                className="flex items-start gap-2 text-sm font-semibold"
+                            >
+                                <Check
+                                    aria-hidden="true"
+                                    className="mt-0.5 size-4 shrink-0"
+                                    strokeWidth={2.4}
+                                />
+                                {resendStatus.message}
+                            </span>
+                        ) : (
+                            <span className="text-sm font-semibold text-paddock-danger">
+                                {resendStatus.message}
+                            </span>
+                        ))}
+                    {resendStatus?.verifyUrl && (
+                        <DevVerifyQuickLink
+                            verifyUrl={resendStatus.verifyUrl}
+                        />
+                    )}
+
+                    <PaddockButton
+                        variant="outline"
+                        size="sm"
+                        voice="plain"
+                        onClick={handleResend}
+                        disabled={isPending}
+                        className="self-start"
+                    >
+                        {isPending ? "Sending..." : "Resend verification email"}
+                    </PaddockButton>
+                </div>
+            )}
+
+            <form action={formAction} className="flex flex-col gap-4">
                 <input type="hidden" name="callbackUrl" value={callbackUrl} />
-                <Input
+                <PaddockInput
                     id="email"
                     name="email"
                     type="email"
                     label="Email"
                     placeholder="name@example.com"
+                    autoComplete="email"
                     required
                 />
-                <Input
+                <PaddockInput
                     id="password"
                     name="password"
                     type="password"
                     label="Password"
                     placeholder="••••••••"
+                    autoComplete="current-password"
                     required
                 />
 
                 {state?.error && state.error !== "unverified" && (
-                    <Alert intent="danger">{state.error}</Alert>
+                    <AuthNotice tone="danger">{state.error}</AuthNotice>
                 )}
 
-                {state?.error === "unverified" && (
-                    <div className="flex flex-col gap-2">
-                        <Alert intent="danger">
-                            Your email is not verified.
-                        </Alert>
-                        {resendStatus && (
-                            <div className="flex flex-col gap-2">
-                                <Alert
-                                    intent={
-                                        resendStatus.type === "success"
-                                            ? "success"
-                                            : "danger"
-                                    }
-                                >
-                                    {resendStatus.message}
-                                </Alert>
-                                {resendStatus.verifyUrl && (
-                                    <DevVerifyQuickLink
-                                        verifyUrl={resendStatus.verifyUrl}
-                                    />
-                                )}
-                            </div>
-                        )}
-                        <Button
-                            type="button"
-                            variant="secondary"
-                            onClick={handleResend}
-                            disabled={isPending}
-                        >
-                            {isPending
-                                ? "Sending..."
-                                : "Resend Verification Email"}
-                        </Button>
-                    </div>
-                )}
-
-                <div className="pt-2">
-                    <Button
-                        type="submit"
-                        className="w-full"
-                        pendingText="Signing in…"
-                    >
-                        Sign in
-                    </Button>
-                </div>
+                <AuthSubmitButton
+                    pendingText="Signing in…"
+                    className="mt-1.5 w-full"
+                >
+                    Sign in
+                </AuthSubmitButton>
             </form>
 
             <SocialAuthButtons callbackUrl={callbackUrl} />
 
-            <div className="text-sm text-brand-subtle">
+            <p className="mt-7 mb-0 text-sm">
                 New here?{" "}
-                <Link
-                    href="/register"
-                    className="text-brand-accent underline underline-offset-4 hover:text-brand-ink"
-                >
+                <Link href="/register" className={AUTH_TEXT_LINK}>
                     Create an account
                 </Link>
-            </div>
+            </p>
         </div>
     );
 }

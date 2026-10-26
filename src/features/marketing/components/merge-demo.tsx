@@ -2,17 +2,26 @@
 
 import { useEffect, useState } from "react";
 
+import { CursorFlag } from "@/components/paddock/cursor-flag";
+import {
+    paddockPresenceTint,
+    paddockPresenceVar,
+    type PaddockPerson,
+} from "@/components/paddock/paddock-presence";
+import { DEMO_PEOPLE } from "@/features/marketing/lib/demo-people";
 import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
+import { cn } from "@/lib/cn";
 
 /**
  * Two people writing into one document at the same time, then the result
  * standing there intact. This is the product's only real claim, so it is the
- * only thing on the page that moves — and it demonstrates rather than asserts.
+ * one thing on the page that moves by itself — and it demonstrates rather than
+ * asserts.
  */
-const AUTHORS = [
-    { name: "Ama", color: "var(--color-brand-presence-6)" },
-    { name: "Ravi", color: "var(--color-brand-presence-2)" },
-] as const;
+const AUTHORS: [PaddockPerson, PaddockPerson] = [
+    DEMO_PEOPLE.ama,
+    DEMO_PEOPLE.ravi,
+];
 
 interface DemoLine {
     author: 0 | 1;
@@ -62,21 +71,23 @@ export function MergeDemo() {
     const settled = frame >= TOTAL_TICKS - HOLD_TICKS;
 
     return (
-        <div className="border-2 border-brand-ink bg-brand-surface rounded-brand shadow-brand-card">
-            <div className="flex items-center justify-between gap-3 px-4 py-2.5 border-b border-brand-border">
-                <span className="text-[13px] font-medium text-brand-ink">
-                    Launch plan
-                </span>
-                <span className="flex items-center gap-2">
+        <figure className="m-0 overflow-hidden rounded-paddock-card border border-paddock-rule bg-paddock-sheet text-paddock-ink">
+            <div className="flex items-center justify-between gap-3 border-b border-paddock-rule px-5 py-3.5 sm:px-6">
+                <span className="font-semibold">Launch plan</span>
+                <span className="flex items-center gap-3.5 text-[0.8125rem] font-semibold">
                     {AUTHORS.map((author) => (
                         <span
-                            key={author.name}
-                            className="flex items-center gap-1.5 text-[13px] text-brand-subtle"
+                            key={author.id}
+                            className="flex items-center gap-1.5"
                         >
                             <span
                                 aria-hidden="true"
-                                className="w-2 h-2 rounded-full"
-                                style={{ backgroundColor: author.color }}
+                                className="size-2.5 rounded-full"
+                                style={{
+                                    backgroundColor: paddockPresenceVar(
+                                        author.id,
+                                    ),
+                                }}
                             />
                             {author.name}
                         </span>
@@ -91,76 +102,67 @@ export function MergeDemo() {
             */}
             <div
                 aria-hidden="true"
-                className="px-5 py-6 min-h-[248px] font-brand-serif space-y-2"
+                className="flex min-h-[14.5rem] flex-col gap-3.5 px-5 pt-8 pb-6 sm:px-10"
             >
                 {LINES.map((line, index) => {
                     const revealed = Math.max(
                         0,
                         Math.min(line.text.length, frame - line.start),
                     );
-                    if (revealed === 0) {
-                        return (
-                            <p
-                                key={index}
-                                className={line.heading ? "h-9" : "h-7"}
-                            />
-                        );
-                    }
-
-                    const typing = revealed < line.text.length;
+                    const typing = revealed > 0 && revealed < line.text.length;
                     const author = AUTHORS[line.author];
 
                     return (
                         <p
                             key={index}
-                            className={
+                            className={cn(
+                                "m-0 min-h-[1.35em] leading-[1.35]",
                                 line.heading
-                                    ? "font-brand-sans text-[19px] font-semibold tracking-[-0.015em] text-brand-ink h-9 leading-9"
-                                    : "text-[15px] leading-7 text-brand-ink h-7"
-                            }
-                        >
-                            {line.text.slice(0, revealed)}
-                            {typing && (
-                                <span className="relative inline-block">
-                                    <span
-                                        className="inline-block w-[2px] h-[1.05em] translate-y-[0.16em] animate-caret"
-                                        style={{
-                                            backgroundColor: author.color,
-                                        }}
-                                    />
-                                    <span
-                                        className="absolute left-[3px] top-[0.1em] px-1 text-[12px] font-brand-sans font-semibold leading-[15px] whitespace-nowrap rounded-brand"
-                                        style={{
-                                            backgroundColor: author.color,
-                                            color: "var(--color-brand-on-fill)",
-                                        }}
-                                    >
-                                        {author.name}
-                                    </span>
-                                </span>
+                                    ? "text-[1.625rem] font-bold"
+                                    : "text-lg",
                             )}
+                        >
+                            <span
+                                className="rounded-[3px]"
+                                style={{
+                                    backgroundColor: typing
+                                        ? paddockPresenceTint(author.id, 26)
+                                        : "transparent",
+                                }}
+                            >
+                                {line.text.slice(0, revealed)}
+                            </span>
+                            {typing ? (
+                                <CursorFlag person={author} blinking />
+                            ) : null}
                         </p>
                     );
                 })}
             </div>
 
-            <p className="sr-only">
-                A demonstration: Ama and Ravi type into the same document at the
-                same time. The finished document reads — Launch checklist. Draft
-                the release note. Book the walkthrough for Thursday. Confirm the
-                pricing copy. Every edit is kept and nothing is merged by hand.
-            </p>
-
-            <div className="px-4 py-2.5 border-t border-brand-border">
+            <div
+                aria-hidden="true"
+                className="flex items-center justify-between gap-3 border-t border-paddock-rule bg-paddock-paper px-5 py-3 sm:px-6"
+            >
                 <span
-                    className="text-[13px] text-brand-subtle transition-opacity duration-300"
-                    style={{ opacity: settled ? 1 : 0.35 }}
+                    className="text-[0.84375rem] font-semibold transition-opacity duration-300"
+                    style={{ opacity: settled ? 1 : 0.7 }}
                 >
                     {settled
                         ? "Both edits kept. Nothing to resolve."
                         : "Two people typing…"}
                 </span>
+                <span className="paddock-mono text-xs text-paddock-subtle">
+                    0 conflicts
+                </span>
             </div>
-        </div>
+
+            <figcaption className="sr-only">
+                A demonstration: Ama and Ravi type into the same document at the
+                same time. The finished document reads — Launch checklist. Draft
+                the release note. Book the walkthrough for Thursday. Confirm the
+                pricing copy. Every edit is kept and nothing is merged by hand.
+            </figcaption>
+        </figure>
     );
 }
