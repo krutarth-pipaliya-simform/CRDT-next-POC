@@ -1,24 +1,20 @@
 "use client";
 
 import {
+    useId,
     useRef,
     useState,
     type ChangeEvent,
     type DragEvent,
     type FormEvent,
 } from "react";
-import {
-    Image as ImageIcon,
-    Link as LinkIcon,
-    Loader2,
-    Upload,
-    X,
-} from "lucide-react";
+import { Image as ImageIcon, Loader2, Upload, X } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import { Dialog } from "@/components/ui/dialog";
-import { FormField } from "@/components/ui/form-field";
-import { Input } from "@/components/ui/input";
+import { PaddockButton } from "@/components/paddock/paddock-button";
+import { PaddockDialog } from "@/components/paddock/paddock-dialog";
+import { PaddockInput } from "@/components/paddock/paddock-field";
+import { PillTabs, pillTabIds } from "@/components/paddock/pill-tabs";
+import { cn } from "@/lib/cn";
 
 import { uploadDocumentImageAction } from "../actions/upload-document-image";
 
@@ -47,6 +43,9 @@ export function ImageDialog({
     const [isDragging, setIsDragging] = useState(false);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
+    // The actions sit in the dialog footer, outside the <form>.
+    const formId = useId();
+    const { tabId, panelId } = pillTabIds("image-dialog", tab);
 
     const resetState = () => {
         setUrl("");
@@ -96,19 +95,19 @@ export function ImageDialog({
         }
     };
 
-    const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
+    const handleDragOver = (e: DragEvent<HTMLButtonElement>) => {
         e.preventDefault();
         e.stopPropagation();
         setIsDragging(true);
     };
 
-    const handleDragLeave = (e: DragEvent<HTMLDivElement>) => {
+    const handleDragLeave = (e: DragEvent<HTMLButtonElement>) => {
         e.preventDefault();
         e.stopPropagation();
         setIsDragging(false);
     };
 
-    const handleDrop = (e: DragEvent<HTMLDivElement>) => {
+    const handleDrop = (e: DragEvent<HTMLButtonElement>) => {
         e.preventDefault();
         e.stopPropagation();
         setIsDragging(false);
@@ -179,85 +178,128 @@ export function ImageDialog({
         }
     };
 
-    return (
-        <Dialog open={open} onClose={handleClose} title="Insert Image">
-            {/* Tabs */}
-            <div className="flex border-b-2 border-brand-ink mb-4">
-                <button
-                    type="button"
-                    onClick={() => {
-                        setTab("upload");
-                        setError(null);
-                    }}
-                    className={`flex items-center gap-1.5 px-3 py-2 text-xs transition-colors border-b-2 -mb-[2px] ${
-                        tab === "upload"
-                            ? "border-brand-ink font-bold text-brand-ink bg-brand-muted"
-                            : "border-transparent text-brand-subtle hover:text-brand-ink"
-                    }`}
-                >
-                    <Upload className="w-3.5 h-3.5" aria-hidden="true" />
-                    Upload File
-                </button>
-                <button
-                    type="button"
-                    onClick={() => {
-                        setTab("url");
-                        setError(null);
-                    }}
-                    className={`flex items-center gap-1.5 px-3 py-2 text-xs transition-colors border-b-2 -mb-[2px] ${
-                        tab === "url"
-                            ? "border-brand-ink font-bold text-brand-ink bg-brand-muted"
-                            : "border-transparent text-brand-subtle hover:text-brand-ink"
-                    }`}
-                >
-                    <LinkIcon className="w-3.5 h-3.5" aria-hidden="true" />
-                    Image URL
-                </button>
-            </div>
+    const isSubmitDisabled =
+        isUploading ||
+        (tab === "upload" && !previewUrl) ||
+        (tab === "url" && !url.trim());
 
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                {tab === "upload" ? (
-                    <div className="flex flex-col gap-3">
-                        {!previewUrl ? (
-                            <div
-                                onDragOver={handleDragOver}
-                                onDragLeave={handleDragLeave}
-                                onDrop={handleDrop}
-                                onClick={() => fileInputRef.current?.click()}
-                                className={`flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-brand cursor-pointer transition-colors ${
-                                    isDragging
-                                        ? "border-brand-accent bg-brand-muted"
-                                        : "border-brand-border hover:border-brand-ink bg-brand-muted/50 hover:bg-brand-muted"
-                                }`}
-                            >
-                                <div className="p-3 bg-brand-surface border border-brand-border rounded-brand mb-2">
-                                    <Upload
-                                        className="w-6 h-6 text-brand-ink"
+    return (
+        <PaddockDialog
+            open={open}
+            onClose={handleClose}
+            titleSerif="Insert"
+            titleHeavy="image"
+            footer={
+                <>
+                    <PaddockButton
+                        variant="outline"
+                        voice="plain"
+                        onClick={handleClose}
+                        disabled={isUploading}
+                    >
+                        Cancel
+                    </PaddockButton>
+                    <PaddockButton
+                        type="submit"
+                        form={formId}
+                        disabled={isSubmitDisabled}
+                    >
+                        {isUploading ? (
+                            <>
+                                <Loader2
+                                    className="size-4 animate-spin"
+                                    aria-hidden="true"
+                                />
+                                Uploading…
+                            </>
+                        ) : (
+                            <>
+                                <ImageIcon
+                                    className="size-4"
+                                    aria-hidden="true"
+                                />
+                                Insert image
+                            </>
+                        )}
+                    </PaddockButton>
+                </>
+            }
+        >
+            <PillTabs<TabMode>
+                items={[
+                    { value: "upload", label: "Upload file" },
+                    { value: "url", label: "Image URL" },
+                ]}
+                value={tab}
+                onChange={(value) => {
+                    setTab(value);
+                    setError(null);
+                }}
+                label="Image source"
+                idBase="image-dialog"
+                className="mb-5"
+            />
+
+            <form
+                id={formId}
+                onSubmit={handleSubmit}
+                className="flex flex-col gap-4"
+            >
+                <div
+                    role="tabpanel"
+                    id={panelId}
+                    aria-labelledby={tabId}
+                    className="flex flex-col gap-3"
+                >
+                    {tab === "upload" ? (
+                        !previewUrl ? (
+                            <>
+                                <button
+                                    type="button"
+                                    onDragOver={handleDragOver}
+                                    onDragLeave={handleDragLeave}
+                                    onDrop={handleDrop}
+                                    onClick={() =>
+                                        fileInputRef.current?.click()
+                                    }
+                                    className={cn(
+                                        "flex w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-paddock-card border-[1.5px] border-dashed px-6 py-8 text-center transition-colors",
+                                        isDragging
+                                            ? "border-paddock-ink bg-paddock-ink/8"
+                                            : "border-paddock-ink/40 bg-paddock-sheet hover:border-paddock-ink",
+                                    )}
+                                >
+                                    <span
                                         aria-hidden="true"
-                                    />
-                                </div>
-                                <span className="text-xs font-bold text-brand-ink">
-                                    Choose an image or drag & drop
-                                </span>
-                                <span className="text-[11px] text-brand-subtle mt-1">
-                                    PNG, JPG, WebP, GIF, SVG (up to 5MB)
-                                </span>
+                                        className="mb-2 flex size-12 items-center justify-center rounded-paddock bg-paddock-lime text-paddock-on-fill"
+                                    >
+                                        <Upload className="size-5" />
+                                    </span>
+                                    <span className="text-[0.9375rem] font-bold text-paddock-ink">
+                                        Choose an image or drag &amp; drop
+                                    </span>
+                                    <span className="paddock-mono text-xs text-paddock-subtle">
+                                        PNG, JPG, WebP, GIF, SVG (up to 5MB)
+                                    </span>
+                                </button>
                                 <input
                                     ref={fileInputRef}
                                     type="file"
                                     accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
                                     onChange={handleFileChange}
+                                    tabIndex={-1}
+                                    aria-hidden="true"
                                     className="sr-only"
                                 />
-                            </div>
+                            </>
                         ) : (
                             <div className="flex flex-col gap-2">
-                                <div className="relative border-2 border-brand-ink rounded-brand overflow-hidden bg-brand-muted p-2 flex items-center justify-center min-h-[140px] max-h-[220px]">
+                                <div className="relative flex max-h-[220px] min-h-[140px] items-center justify-center overflow-hidden rounded-paddock-card border border-paddock-rule bg-paddock-sheet p-2">
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
                                     <img
                                         src={previewUrl}
                                         alt="Selected Preview"
-                                        className="max-h-[200px] max-w-full object-contain rounded-brand shadow-brand-subtle"
+                                        className="max-h-[200px] max-w-full rounded-paddock object-contain"
                                     />
                                     <button
                                         type="button"
@@ -268,22 +310,22 @@ export function ImageDialog({
                                                 fileInputRef.current.value = "";
                                             }
                                         }}
-                                        className="absolute top-2 right-2 p-1 bg-brand-ink text-brand-surface rounded-brand hover:opacity-80 transition-opacity"
+                                        className="paddock-press absolute top-2 right-2 flex size-11 cursor-pointer items-center justify-center rounded-paddock bg-paddock-inverse text-paddock-on-inverse"
                                         title="Remove selected image"
                                         aria-label="Remove selected image"
                                     >
                                         <X
-                                            className="w-3.5 h-3.5"
+                                            className="size-4"
                                             aria-hidden="true"
                                         />
                                     </button>
                                 </div>
                                 {selectedFile && (
-                                    <div className="flex items-center justify-between text-xs text-brand-subtle px-1">
-                                        <span className="truncate max-w-[240px]">
+                                    <div className="paddock-mono flex items-center justify-between gap-3 px-1 text-xs text-paddock-subtle">
+                                        <span className="truncate">
                                             {selectedFile.name}
                                         </span>
-                                        <span>
+                                        <span className="shrink-0">
                                             {(selectedFile.size / 1024).toFixed(
                                                 1,
                                             )}{" "}
@@ -292,84 +334,40 @@ export function ImageDialog({
                                     </div>
                                 )}
                             </div>
-                        )}
-                    </div>
-                ) : (
-                    <FormField
-                        label="Image Web URL"
-                        htmlFor="image-dialog-url"
-                        error={error ?? undefined}
-                    >
-                        <Input
+                        )
+                    ) : (
+                        <PaddockInput
                             id="image-dialog-url"
-                            type="text"
+                            label="Image URL"
                             placeholder="https://example.com/image.png"
                             value={url}
+                            error={error ?? undefined}
                             onChange={(e) => {
                                 setUrl(e.target.value);
                                 setError(null);
                             }}
                         />
-                    </FormField>
-                )}
+                    )}
 
-                {error && tab === "upload" && (
-                    <p className="text-xs text-brand-danger" role="alert">
-                        {error}
-                    </p>
-                )}
-
-                <FormField
-                    label="Alt Text (Accessibility & SEO)"
-                    htmlFor="image-dialog-alt"
-                >
-                    <Input
-                        id="image-dialog-alt"
-                        type="text"
-                        placeholder="Description of the image"
-                        value={alt}
-                        onChange={(e) => setAlt(e.target.value)}
-                    />
-                </FormField>
-
-                <div className="flex justify-end gap-3 mt-2">
-                    <Button
-                        type="button"
-                        variant="secondary"
-                        onClick={handleClose}
-                        disabled={isUploading}
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        type="submit"
-                        variant="primary"
-                        disabled={
-                            isUploading ||
-                            (tab === "upload" && !previewUrl) ||
-                            (tab === "url" && !url.trim())
-                        }
-                    >
-                        {isUploading ? (
-                            <>
-                                <Loader2
-                                    className="w-4 h-4 mr-1.5 animate-spin"
-                                    aria-hidden="true"
-                                />
-                                Uploading...
-                            </>
-                        ) : (
-                            <>
-                                <ImageIcon
-                                    className="w-4 h-4 mr-1.5"
-                                    aria-hidden="true"
-                                />
-                                Insert Image
-                            </>
-                        )}
-                    </Button>
+                    {error && tab === "upload" && (
+                        <p
+                            className="m-0 text-[0.8125rem] font-semibold text-paddock-danger"
+                            role="alert"
+                        >
+                            {error}
+                        </p>
+                    )}
                 </div>
+
+                <PaddockInput
+                    id="image-dialog-alt"
+                    label="Alt text"
+                    hint="Describes the image for screen readers and search."
+                    placeholder="Description of the image"
+                    value={alt}
+                    onChange={(e) => setAlt(e.target.value)}
+                />
             </form>
-        </Dialog>
+        </PaddockDialog>
     );
 }

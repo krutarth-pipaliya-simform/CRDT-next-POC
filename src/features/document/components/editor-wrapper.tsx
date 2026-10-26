@@ -7,9 +7,9 @@ export const CollaborativeEditor = dynamic(
     {
         ssr: false,
         loading: () => (
-            <div className="p-8 text-center text-brand-ink/60 animate-pulse text-sm">
-                Loading Editor...
-            </div>
+            <p className="paddock-tag m-0 px-4 py-16 text-center text-[0.6875rem] text-paddock-subtle">
+                Loading the editor…
+            </p>
         ),
     },
 );

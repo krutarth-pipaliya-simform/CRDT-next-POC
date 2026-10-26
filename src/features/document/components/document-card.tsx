@@ -1,13 +1,16 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { FileText, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Dialog } from "@/components/ui/dialog";
+import { NotchedCard } from "@/components/paddock/notched-card";
+import {
+    PaddockButton,
+    PaddockIconButton,
+} from "@/components/paddock/paddock-button";
+import { PaddockDialog } from "@/components/paddock/paddock-dialog";
 import { formatRelativeTime } from "@/lib/format-time";
 
 import { deleteDocumentAction } from "../actions/delete-document";
@@ -18,6 +21,9 @@ export interface DocumentCardProps {
     workspaceId: string;
     canManage: boolean;
 }
+
+/** Widths of the faint text lines in the page preview, top to bottom. */
+const PREVIEW_LINES = ["w-full", "w-[88%]", "w-[94%]", "w-[70%]", "w-[80%]"];
 
 export function DocumentCard({
     document,
@@ -53,91 +59,109 @@ export function DocumentCard({
     };
 
     return (
-        <>
-            <Card
-                interactive
-                className="relative flex items-start gap-3 p-4 min-w-0 w-full overflow-hidden"
+        <li className="paddock-lift min-w-0 list-none lg:nth-[3n]:mt-5 lg:nth-[3n+2]:mt-12">
+            <NotchedCard
+                bodyClassName="p-0 pb-7"
+                tab={
+                    <span className="flex items-center gap-2">
+                        Edited
+                        <time
+                            dateTime={updatedAt.toISOString()}
+                            title={exactDate}
+                            suppressHydrationWarning
+                            className="paddock-mono text-[0.71875rem] font-medium normal-case"
+                        >
+                            {formatRelativeTime(updatedAt)}
+                        </time>
+                    </span>
+                }
             >
-                <span className="p-2 bg-brand-muted rounded-brand text-brand-subtle shrink-0">
-                    <FileText className="w-4 h-4" aria-hidden="true" />
-                </span>
+                {/* A sketch of a page, so the grid reads as documents at a glance. */}
+                <div
+                    aria-hidden="true"
+                    className="relative h-[8.625rem] overflow-hidden border-b border-paddock-rule bg-paddock-paper"
+                >
+                    <span className="absolute top-[1.625rem] right-[3.75rem] left-[1.625rem] flex flex-col gap-[0.5625rem]">
+                        <span className="h-2.5 w-[62%] rounded-[2px] bg-paddock-ink" />
+                        {PREVIEW_LINES.map((width) => (
+                            <span
+                                key={width}
+                                className={`h-1.5 rounded-[2px] bg-paddock-rule ${width}`}
+                            />
+                        ))}
+                    </span>
+                </div>
 
-                <div className="flex flex-col min-w-0 flex-1">
+                <div className="flex items-start justify-between gap-3 px-5 pt-[1.125rem] pb-3.5">
                     {/* The whole card is the target; the heading carries the
                         link so the accessible name is the document's title. */}
-                    <h3 className="min-w-0">
+                    <h3 className="m-0 min-w-0">
                         <Link
                             href={`/${workspaceId}/documents/${document.id}`}
-                            className="font-semibold text-[15px] text-brand-ink truncate block after:absolute after:inset-0 after:content-['']"
+                            className="paddock-heavy block text-[1.375rem] leading-[0.98] break-words text-paddock-ink no-underline after:absolute after:inset-0 after:content-['']"
                         >
                             {document.title}
                         </Link>
                     </h3>
-                    <time
-                        dateTime={updatedAt.toISOString()}
-                        title={exactDate}
-                        suppressHydrationWarning
-                        className="text-[13px] text-brand-subtle mt-0.5"
-                    >
-                        Edited {formatRelativeTime(updatedAt)}
-                    </time>
+
+                    {canManage ? (
+                        <PaddockIconButton
+                            label={`Delete ${document.title}`}
+                            icon={
+                                <Trash2 className="size-4" strokeWidth={1.8} />
+                            }
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setIsDeleteDialogOpen(true)}
+                            className="relative z-10 border-[1.5px] border-paddock-rule text-paddock-subtle hover:text-paddock-danger"
+                        />
+                    ) : null}
                 </div>
+            </NotchedCard>
 
-                {canManage && (
-                    <button
-                        type="button"
-                        onClick={() => setIsDeleteDialogOpen(true)}
-                        className="relative z-10 p-1.5 -m-1 text-brand-subtle hover:text-brand-danger rounded-brand transition-colors shrink-0"
-                        aria-label={`Delete ${document.title}`}
-                    >
-                        <Trash2 className="w-4 h-4" aria-hidden="true" />
-                    </button>
-                )}
-            </Card>
-
-            {/* Delete Confirmation Dialog */}
-            <Dialog
+            <PaddockDialog
                 open={isDeleteDialogOpen}
                 onClose={() => setIsDeleteDialogOpen(false)}
-                title="Delete this document?"
-            >
-                <div className="flex flex-col gap-4">
-                    <p className="text-sm text-brand-subtle leading-relaxed">
-                        <strong className="text-brand-ink font-semibold">
-                            {document.title}
-                        </strong>{" "}
-                        and everything in it will be deleted for everyone in
-                        this workspace. This cannot be undone.
-                    </p>
-
-                    {deleteError && (
-                        <div
-                            role="alert"
-                            className="p-3 bg-brand-danger/10 border border-brand-danger/40 text-brand-danger text-[13px] rounded-brand"
-                        >
-                            {deleteError}
-                        </div>
-                    )}
-
-                    <div className="flex justify-end gap-3 mt-2">
-                        <Button
-                            type="button"
-                            variant="secondary"
+                titleSerif="Delete this"
+                titleHeavy="document?"
+                className="w-[30rem]"
+                footer={
+                    <>
+                        <PaddockButton
+                            variant="outline"
+                            voice="plain"
                             onClick={() => setIsDeleteDialogOpen(false)}
                         >
                             Cancel
-                        </Button>
-                        <Button
-                            type="button"
+                        </PaddockButton>
+                        <PaddockButton
                             variant="danger"
+                            voice="display"
                             onClick={handleDelete}
                             disabled={isPending}
                         >
                             {isPending ? "Deleting…" : "Delete document"}
-                        </Button>
-                    </div>
+                        </PaddockButton>
+                    </>
+                }
+            >
+                <div className="flex flex-col gap-4">
+                    <p className="m-0 leading-relaxed">
+                        <strong className="font-bold">{document.title}</strong>{" "}
+                        and everything in it will be deleted for everyone in
+                        this workspace. This cannot be undone.
+                    </p>
+
+                    {deleteError ? (
+                        <p
+                            role="alert"
+                            className="m-0 rounded-paddock border-[1.5px] border-paddock-danger px-3.5 py-3 text-[0.8125rem] font-semibold text-paddock-danger"
+                        >
+                            {deleteError}
+                        </p>
+                    ) : null}
                 </div>
-            </Dialog>
-        </>
+            </PaddockDialog>
+        </li>
     );
 }

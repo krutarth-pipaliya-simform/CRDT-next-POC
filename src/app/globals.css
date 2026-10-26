@@ -300,146 +300,240 @@ time,
 }
 
 /* ─── Rich Text & ProseMirror Editor ───────────────────── */
+/* The canvas follows the Paddock Editor artboard: Mona Sans body at reading
+   size, headings in the two display voices, quotes in Instrument Serif. Every
+   colour is a `--color-paddock-*` token, each with a dark value, so the canvas
+   restates itself in both themes without a second set of rules. */
 .ProseMirror {
     outline: none;
     min-height: 400px;
     max-width: 100%;
     word-break: break-word;
     overflow-wrap: break-word;
-    /* The canvas is the one place a serif is right: this is prose being read,
-       not chrome being operated. Headings stay in the grotesque so structure
-       still reads as interface. */
-    font-family: var(--font-brand-serif), ui-serif, Georgia, serif;
-    font-size: 1.0625rem;
-    line-height: 1.72;
+    color: var(--color-paddock-ink);
+    font-family: var(--font-paddock-sans), ui-sans-serif, system-ui, sans-serif;
+    font-size: 1.15625rem;
+    line-height: 1.7;
 }
 
-.ProseMirror h1,
-.ProseMirror h2,
-.ProseMirror h3,
-.ProseMirror h4 {
-    font-family: var(--font-brand-sans), ui-sans-serif, system-ui, sans-serif;
+/* The sheet around the canvas shows focus (its border turns ink); the global
+   ring on a page-sized contenteditable would only double it. */
+.paddock-root .ProseMirror:focus-visible {
+    outline: none;
+    box-shadow: none;
+}
+
+.ProseMirror > :first-child {
+    margin-top: 0;
 }
 
 .ProseMirror p.is-editor-empty:first-child::before {
-    color: var(--color-brand-subtle);
+    color: var(--color-paddock-subtle);
     content: attr(data-placeholder);
     float: left;
     height: 0;
     pointer-events: none;
-    opacity: 0.6;
 }
 
-.ProseMirror h1 {
-    font-size: 2.25rem;
-    font-weight: 700;
-    line-height: 1.2;
-    margin-top: 1.5rem;
-    margin-bottom: 0.75rem;
+/* Heavy wide caps */
+.ProseMirror h1,
+.ProseMirror h3 {
+    font-family: var(--font-paddock-sans), ui-sans-serif, system-ui, sans-serif;
+    font-weight: 800;
+    font-stretch: 112%;
+    text-transform: uppercase;
     letter-spacing: -0.02em;
 }
 
+.ProseMirror h1 {
+    font-size: clamp(2rem, 5vw, 3.375rem);
+    line-height: 0.95;
+    margin-top: 1.75rem;
+    margin-bottom: 1rem;
+}
+
+/* The serif voice */
 .ProseMirror h2 {
-    font-size: 1.75rem;
-    font-weight: 600;
-    line-height: 1.25;
-    margin-top: 1.25rem;
-    margin-bottom: 0.5rem;
+    font-family: var(--font-paddock-serif), ui-serif, Georgia, serif;
+    font-weight: 400;
+    font-size: clamp(1.875rem, 4.4vw, 2.75rem);
+    line-height: 0.95;
+    text-transform: uppercase;
     letter-spacing: -0.01em;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
 }
 
 .ProseMirror h3 {
-    font-size: 1.35rem;
-    font-weight: 600;
-    line-height: 1.3;
-    margin-top: 1rem;
-    margin-bottom: 0.5rem;
+    font-size: 1.625rem;
+    line-height: 1;
+    margin-top: 1.25rem;
+    margin-bottom: 0.625rem;
 }
 
 .ProseMirror h4 {
-    font-size: 1.15rem;
-    font-weight: 600;
-    line-height: 1.4;
-    margin-top: 0.75rem;
-    margin-bottom: 0.25rem;
+    font-family: var(--font-paddock-sans), ui-sans-serif, system-ui, sans-serif;
+    font-size: 1.1875rem;
+    font-weight: 700;
+    line-height: 1.3;
+    margin-top: 1rem;
+    margin-bottom: 0.375rem;
 }
 
 .ProseMirror p {
-    margin-top: 0.5rem;
-    margin-bottom: 0.5rem;
+    margin-top: 0.625rem;
+    margin-bottom: 0.625rem;
     line-height: 1.7;
 }
 
+.ProseMirror a {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 3px;
+}
+
+/* Lime is a fill with on-fill text, never lime text */
+.ProseMirror mark {
+    background-color: var(--color-paddock-lime);
+    color: var(--color-paddock-on-fill);
+    border-radius: 3px;
+    padding: 0 0.1em;
+}
+
 .ProseMirror blockquote {
-    border-left: 4px solid var(--color-brand-ink);
-    padding-left: 1rem;
-    margin: 1rem 0;
-    font-style: italic;
-    color: var(--color-brand-subtle);
+    border-left: 3px solid var(--color-paddock-ink);
+    padding: 0.25rem 0 0.25rem 1.125rem;
+    margin: 1.5rem 0;
+    color: var(--color-paddock-subtle);
+    font-family: var(--font-paddock-serif), ui-serif, Georgia, serif;
+    font-size: 1.5rem;
+    line-height: 1.3;
+}
+
+.ProseMirror blockquote p {
+    margin: 0;
 }
 
 .ProseMirror hr {
     border: none;
-    border-top: 2px solid var(--color-brand-border);
+    border-top: 1.5px solid var(--color-paddock-rule);
     margin: 2rem 0;
 }
 
+/* Checklists: ruled rows, a square box that fills lime when done */
 .ProseMirror ul[data-type="taskList"] {
     list-style: none;
     padding: 0;
-    margin: 0.5rem 0;
+    margin: 1rem 0 1.5rem;
+    font-size: 1.03125rem;
 }
 
 .ProseMirror ul[data-type="taskList"] li {
     display: flex;
     align-items: flex-start;
-    gap: 0.5rem;
-    margin-bottom: 0.25rem;
+    gap: 0.875rem;
+    padding: 0.75rem 0;
+    border-top: 1px solid var(--color-paddock-rule);
+}
+
+.ProseMirror ul[data-type="taskList"] > li:last-child {
+    border-bottom: 1px solid var(--color-paddock-rule);
 }
 
 .ProseMirror ul[data-type="taskList"] li > label {
     user-select: none;
-    margin-top: 0.25rem;
+    display: flex;
+    flex: none;
+    margin-top: 0.1em;
+}
+
+.ProseMirror ul[data-type="taskList"] input[type="checkbox"] {
+    appearance: none;
+    display: grid;
+    place-content: center;
+    width: 22px;
+    height: 22px;
+    margin: 0;
+    border: 1.5px solid var(--color-paddock-ink);
+    border-radius: 6px;
+    background-color: transparent;
+    cursor: pointer;
+}
+
+.ProseMirror ul[data-type="taskList"] input[type="checkbox"]::before {
+    content: "";
+    width: 10px;
+    height: 6px;
+    border-left: 2px solid var(--color-paddock-on-fill);
+    border-bottom: 2px solid var(--color-paddock-on-fill);
+    transform: translateY(-1px) rotate(-45deg);
+    opacity: 0;
+}
+
+.ProseMirror ul[data-type="taskList"] input[type="checkbox"]:checked {
+    background-color: var(--color-paddock-lime);
+}
+
+.ProseMirror ul[data-type="taskList"] input[type="checkbox"]:checked::before {
+    opacity: 1;
 }
 
 .ProseMirror ul[data-type="taskList"] li > div {
     flex: 1 1 auto;
+    min-width: 0;
+}
+
+.ProseMirror ul[data-type="taskList"] li > div > p {
+    margin: 0;
 }
 
 .ProseMirror ul[data-type="taskList"] li[data-checked="true"] > div {
     text-decoration: line-through;
-    color: var(--color-brand-subtle);
+    color: var(--color-paddock-subtle);
 }
 
 .ProseMirror ul:not([data-type="taskList"]) {
     list-style-type: disc;
     padding-left: 1.5rem;
-    margin: 0.5rem 0;
+    margin: 0.75rem 0;
 }
 
 .ProseMirror ol {
     list-style-type: decimal;
     padding-left: 1.5rem;
-    margin: 0.5rem 0;
+    margin: 0.75rem 0;
+}
+
+.ProseMirror ul:not([data-type="taskList"]) li p,
+.ProseMirror ol li p {
+    margin: 0.25rem 0;
 }
 
 .ProseMirror code {
-    background-color: var(--color-brand-muted);
-    font-family: var(--font-brand-mono), monospace;
+    background-color: color-mix(
+        in srgb,
+        var(--color-paddock-ink) 7%,
+        transparent
+    );
+    font-family: var(--font-paddock-mono), ui-monospace, monospace;
     font-size: 0.875em;
-    padding: 0.15em 0.35em;
-    border: 1px solid var(--color-brand-border);
-    border-radius: var(--radius-brand);
+    padding: 0.15em 0.4em;
+    border: 1px solid var(--color-paddock-rule);
+    border-radius: 4px;
 }
 
+/* Code blocks sit on the deep ground, which stays dark in both themes, so the
+   dark syntax theme reads the same everywhere. */
 .ProseMirror pre {
-    background-color: var(--color-brand-code-bg);
-    color: var(--color-brand-code-fg);
-    font-family: var(--font-brand-mono), monospace;
-    padding: 1rem;
-    margin: 1rem 0;
-    border-radius: var(--radius-brand);
+    background-color: var(--color-paddock-deep);
+    color: var(--color-paddock-night-fg);
+    font-family: var(--font-paddock-mono), ui-monospace, monospace;
+    padding: 1rem 1.25rem;
+    margin: 1.25rem 0;
+    border-radius: var(--radius-paddock);
     overflow-x: auto;
+    line-height: 1.6;
 }
 
 .ProseMirror pre code {
@@ -463,22 +557,33 @@ time,
     width: 100%;
     table-layout: auto;
     overflow: hidden;
+    font-size: 1rem;
 }
 
 .ProseMirror td,
 .ProseMirror th {
     min-width: 1em;
-    border: 2px solid var(--color-brand-ink);
+    border: 1px solid
+        color-mix(in srgb, var(--color-paddock-ink) 30%, transparent);
     padding: 8px 12px;
     vertical-align: top;
     box-sizing: border-box;
     position: relative;
 }
 
+.ProseMirror td p,
+.ProseMirror th p {
+    margin: 0;
+}
+
 .ProseMirror th {
     font-weight: 700;
     text-align: left;
-    background-color: var(--color-brand-muted);
+    background-color: color-mix(
+        in srgb,
+        var(--color-paddock-ink) 6%,
+        transparent
+    );
 }
 
 .ProseMirror .selectedCell:after {
@@ -489,7 +594,7 @@ time,
     right: 0;
     top: 0;
     bottom: 0;
-    background: color-mix(in srgb, var(--color-brand-accent) 15%, transparent);
+    background: color-mix(in srgb, var(--color-paddock-lime) 35%, transparent);
     pointer-events: none;
 }
 
@@ -499,7 +604,7 @@ time,
     top: 0;
     bottom: -2px;
     width: 4px;
-    background-color: var(--color-brand-accent);
+    background-color: var(--color-paddock-ink);
     pointer-events: none;
 }
 
@@ -508,16 +613,22 @@ time,
     max-width: 100%;
     height: auto;
     display: block;
-    margin: 1rem auto;
-    border: 2px solid var(--color-brand-ink);
-    box-shadow: var(--shadow-brand-subtle);
+    margin: 1.25rem auto;
+    border: 1px solid var(--color-paddock-rule);
+    border-radius: var(--radius-paddock);
 }
 
+/* Selected the way focus is drawn: lime ring, ink edge outside it */
 .ProseMirror img.ProseMirror-selectednode {
-    outline: 3px solid var(--color-brand-accent);
+    outline: 2px solid var(--color-paddock-ink);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 2px var(--color-paddock-lime);
 }
 
-/* Real-Time Collaboration Cursor */
+/* Real-Time Collaboration Cursor — a peer's caret with their name flag.
+   The colours are set inline from the peer's user id (see
+   `collaboration-cursor-render.ts`); the flag's text is on-fill because the
+   presence hues stay light in both themes. */
 .collaboration-cursor__caret {
     border-left: 2px solid;
     border-right: 0;
@@ -529,20 +640,20 @@ time,
 }
 
 .collaboration-cursor__label {
-    border-radius: var(--radius-brand);
-    color: #fff;
-    font-family: var(--font-brand-mono);
+    position: absolute;
+    left: -1px;
+    bottom: calc(100% + 3px);
+    padding: 3px 8px;
+    border-radius: 4px;
+    color: var(--color-paddock-on-fill);
+    font-family: var(--font-paddock-sans), ui-sans-serif, system-ui, sans-serif;
     font-size: 10px;
     font-weight: 700;
-    left: -2px;
-    line-height: normal;
-    padding: 2px 5px;
-    position: absolute;
-    top: -1.4em;
+    line-height: 1.2;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
     user-select: none;
     white-space: nowrap;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

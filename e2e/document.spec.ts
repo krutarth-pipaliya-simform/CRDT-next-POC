@@ -70,7 +70,7 @@ test.describe("Collaborative Document Editor (FR-8, FR-9, FR-10)", () => {
         // Navigate to Workspace Documents
         await page.goto(`/${testWorkspaceId}/documents`);
         await expect(
-            page.getByRole("heading", { name: "Documents", exact: true }),
+            page.getByRole("heading", { name: "The Documents", exact: true }),
         ).toBeVisible({ timeout: 15000 });
 
         // Click create new document

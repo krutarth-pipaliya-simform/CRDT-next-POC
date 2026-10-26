@@ -1,12 +1,17 @@
 "use client";
 
+import type { ReactNode } from "react";
 import {
-    CheckCircle2,
+    AlertCircle,
+    Check,
     CloudOff,
     Loader2,
+    Lock,
     RefreshCw,
-    AlertCircle,
 } from "lucide-react";
+
+import { cn } from "@/lib/cn";
+import { formatClockTime } from "@/lib/format-time";
 
 import type { SaveState } from "../types";
 
@@ -17,32 +22,72 @@ export interface SaveStatusIndicatorProps {
     isReadOnly?: boolean;
 }
 
+type PillTone = "ink" | "warning" | "danger";
+
+const PILL_TONES: Record<PillTone, string> = {
+    ink: "border-paddock-rule text-paddock-ink",
+    warning: "border-paddock-warning text-paddock-warning",
+    danger: "border-paddock-danger text-paddock-danger",
+};
+
+interface StatusPillProps {
+    tone: PillTone;
+    icon: ReactNode;
+    children: ReactNode;
+}
+
+function StatusPill({ tone, icon, children }: StatusPillProps) {
+    return (
+        <span
+            className={cn(
+                "paddock-mono inline-flex h-[2.125rem] items-center gap-1.5 rounded-full border px-3 text-xs whitespace-nowrap",
+                PILL_TONES[tone],
+            )}
+        >
+            <span aria-hidden="true" className="inline-flex">
+                {icon}
+            </span>
+            {children}
+        </span>
+    );
+}
+
+const ICON = "size-[0.8125rem]";
+
+/**
+ * One pill that answers "is my work safe?". A read-only session never saves,
+ * so in that state the pill says so instead of reporting a save.
+ */
 export function SaveStatusIndicator({
     saveState,
     lastSavedAt,
     onSaveNow,
     isReadOnly = false,
 }: SaveStatusIndicatorProps) {
-    const formattedTime = lastSavedAt
-        ? new Intl.DateTimeFormat("en-US", {
-              hour: "numeric",
-              minute: "numeric",
-              second: "numeric",
-          }).format(lastSavedAt)
-        : null;
+    const formattedTime = lastSavedAt ? formatClockTime(lastSavedAt) : null;
 
-    if (!isReadOnly && (saveState === "saving" || saveState === "pending")) {
+    if (isReadOnly) {
         return (
-            <div
-                role="status"
-                aria-live="polite"
-                className="flex items-center gap-1.5 px-2.5 py-1 text-xs text-brand-subtle bg-brand-muted border border-brand-border rounded-brand"
-            >
-                <Loader2
-                    className="w-3.5 h-3.5 animate-spin text-brand-accent"
-                    aria-hidden="true"
-                />
-                <span>Saving...</span>
+            <div role="status" aria-live="polite">
+                <StatusPill
+                    tone="warning"
+                    icon={<Lock className={ICON} strokeWidth={2.2} />}
+                >
+                    Read only
+                </StatusPill>
+            </div>
+        );
+    }
+
+    if (saveState === "saving" || saveState === "pending") {
+        return (
+            <div role="status" aria-live="polite">
+                <StatusPill
+                    tone="ink"
+                    icon={<Loader2 className={cn(ICON, "animate-spin")} />}
+                >
+                    Saving…
+                </StatusPill>
             </div>
         );
     }
@@ -52,45 +97,49 @@ export function SaveStatusIndicator({
             <div
                 role="status"
                 aria-live="assertive"
-                className="flex items-center gap-2 px-2.5 py-1 text-xs text-brand-danger bg-brand-danger/10 border border-brand-danger rounded-brand"
+                className="flex items-center gap-2"
             >
-                <AlertCircle className="w-3.5 h-3.5" aria-hidden="true" />
-                <span>Save failed</span>
-                {onSaveNow && (
+                <StatusPill
+                    tone="danger"
+                    icon={<AlertCircle className={ICON} strokeWidth={2.2} />}
+                >
+                    Save failed
+                </StatusPill>
+                {onSaveNow ? (
                     <button
                         type="button"
                         onClick={onSaveNow}
-                        className="flex items-center gap-1 px-1.5 py-0.5 ml-1 text-[12px] font-bold uppercase bg-brand-danger text-brand-on-fill hover:opacity-90 rounded-brand focus-visible:outline-2 focus-visible:outline-brand-ink"
+                        className="paddock-press inline-flex h-11 cursor-pointer items-center gap-1.5 rounded-paddock bg-paddock-danger px-3.5 text-[0.8125rem] font-semibold text-paddock-on-danger"
                     >
-                        <RefreshCw className="w-2.5 h-2.5" aria-hidden="true" />
+                        <RefreshCw className="size-3.5" aria-hidden="true" />
                         Retry
                     </button>
-                )}
+                ) : null}
             </div>
         );
     }
 
     if (saveState === "offline") {
         return (
-            <div
-                role="status"
-                aria-live="polite"
-                className="flex items-center gap-1.5 px-2.5 py-1 text-xs text-brand-warning bg-brand-warning/10 border border-brand-warning rounded-brand"
-            >
-                <CloudOff className="w-3.5 h-3.5" aria-hidden="true" />
-                <span>Offline (saved locally)</span>
+            <div role="status" aria-live="polite">
+                <StatusPill
+                    tone="warning"
+                    icon={<CloudOff className={ICON} strokeWidth={2.2} />}
+                >
+                    Offline (saved locally)
+                </StatusPill>
             </div>
         );
     }
 
     return (
-        <div
-            role="status"
-            aria-live="polite"
-            className="flex items-center gap-1.5 px-2.5 py-1 text-xs text-brand-success bg-brand-success/10 border border-brand-success/30 rounded-brand"
-        >
-            <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
-            <span>Saved {formattedTime ? `at ${formattedTime}` : ""}</span>
+        <div role="status" aria-live="polite">
+            <StatusPill
+                tone="ink"
+                icon={<Check className={ICON} strokeWidth={2.4} />}
+            >
+                {formattedTime ? `Saved at ${formattedTime}` : "Saved"}
+            </StatusPill>
         </div>
     );
 }

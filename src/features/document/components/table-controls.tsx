@@ -1,12 +1,59 @@
 "use client";
 
+import type { ReactNode } from "react";
 import type { Editor } from "@tiptap/react";
 import { Columns, Plus, Rows, Trash2 } from "lucide-react";
+
+import { Tag } from "@/components/paddock/tag";
+import { cn } from "@/lib/cn";
 
 export interface TableControlsProps {
     editor: Editor | null;
 }
 
+interface TableActionProps {
+    /** Hover hint; the visible text is the accessible name. */
+    title: string;
+    onClick: () => void;
+    destructive?: boolean;
+    children: ReactNode;
+}
+
+function TableAction({
+    title,
+    onClick,
+    destructive = false,
+    children,
+}: TableActionProps) {
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            title={title}
+            className={cn(
+                "inline-flex h-11 cursor-pointer items-center gap-1.5 rounded-full px-3.5 text-[0.8125rem] font-semibold whitespace-nowrap transition-colors",
+                destructive
+                    ? "text-paddock-night-fg hover:bg-paddock-danger hover:text-paddock-on-danger"
+                    : "text-paddock-night-fg hover:bg-paddock-night-fg/14",
+            )}
+        >
+            {children}
+        </button>
+    );
+}
+
+const ICON = "size-3.5";
+
+function Divider() {
+    return (
+        <span
+            aria-hidden="true"
+            className="mx-0.5 h-5 w-px bg-paddock-night-rule"
+        />
+    );
+}
+
+/** Row, column and table actions, shown under the toolbar while the caret is in a table. */
 export function TableControls({ editor }: TableControlsProps) {
     if (!editor || !editor.isActive("table")) {
         return null;
@@ -15,134 +62,81 @@ export function TableControls({ editor }: TableControlsProps) {
     return (
         <div
             role="toolbar"
-            aria-label="Table Controls"
-            className="flex flex-wrap items-center gap-1 p-1 bg-brand-surface border border-brand-border rounded-brand text-xs shadow-brand-subtle my-2"
+            aria-label="Table controls"
+            className="paddock-night flex w-fit max-w-full flex-wrap items-center justify-center gap-y-0.5 rounded-[1.75rem] p-1.5"
         >
-            <span className="px-2 text-brand-subtle font-bold uppercase text-[12px]">
-                Table:
-            </span>
+            <Tag tone="night-subtle" className="px-3">
+                Table
+            </Tag>
 
-            {/* Row Actions */}
-            <button
-                type="button"
+            <TableAction
+                title="Add row above"
                 onClick={() => editor.chain().focus().addRowBefore().run()}
-                title="Add Row Above"
-                aria-label="Add Row Above"
-                className="flex items-center gap-1 px-2 py-1 bg-brand-muted hover:bg-brand-border border border-brand-border text-brand-ink rounded-brand transition-colors"
             >
-                <Plus
-                    className="w-3 h-3 text-brand-accent"
-                    aria-hidden="true"
-                />
-                <Rows className="w-3 h-3" aria-hidden="true" />
-                <span>Row Above</span>
-            </button>
-
-            <button
-                type="button"
+                <Plus className={ICON} aria-hidden="true" />
+                <Rows className={ICON} aria-hidden="true" />
+                Row above
+            </TableAction>
+            <TableAction
+                title="Add row below"
                 onClick={() => editor.chain().focus().addRowAfter().run()}
-                title="Add Row Below"
-                aria-label="Add Row Below"
-                className="flex items-center gap-1 px-2 py-1 bg-brand-muted hover:bg-brand-border border border-brand-border text-brand-ink rounded-brand transition-colors"
             >
-                <Plus
-                    className="w-3 h-3 text-brand-accent"
-                    aria-hidden="true"
-                />
-                <Rows className="w-3 h-3" aria-hidden="true" />
-                <span>Row Below</span>
-            </button>
-
-            <button
-                type="button"
+                <Plus className={ICON} aria-hidden="true" />
+                <Rows className={ICON} aria-hidden="true" />
+                Row below
+            </TableAction>
+            <TableAction
+                title="Delete row"
+                destructive
                 onClick={() => editor.chain().focus().deleteRow().run()}
-                title="Delete Row"
-                aria-label="Delete Row"
-                className="flex items-center gap-1 px-2 py-1 bg-brand-muted hover:bg-brand-border border border-brand-border text-brand-danger rounded-brand transition-colors"
             >
-                <Trash2
-                    className="w-3 h-3 text-brand-danger"
-                    aria-hidden="true"
-                />
-                <span>Delete Row</span>
-            </button>
+                <Trash2 className={ICON} aria-hidden="true" />
+                Delete row
+            </TableAction>
 
-            <div
-                className="w-[1px] h-4 bg-brand-border mx-1"
-                aria-hidden="true"
-            />
+            <Divider />
 
-            {/* Column Actions */}
-            <button
-                type="button"
+            <TableAction
+                title="Add column before"
                 onClick={() => editor.chain().focus().addColumnBefore().run()}
-                title="Add Column Before"
-                aria-label="Add Column Before"
-                className="flex items-center gap-1 px-2 py-1 bg-brand-muted hover:bg-brand-border border border-brand-border text-brand-ink rounded-brand transition-colors"
             >
-                <Plus
-                    className="w-3 h-3 text-brand-accent"
-                    aria-hidden="true"
-                />
-                <Columns className="w-3 h-3" aria-hidden="true" />
-                <span>Col Left</span>
-            </button>
-
-            <button
-                type="button"
+                <Plus className={ICON} aria-hidden="true" />
+                <Columns className={ICON} aria-hidden="true" />
+                Column left
+            </TableAction>
+            <TableAction
+                title="Add column after"
                 onClick={() => editor.chain().focus().addColumnAfter().run()}
-                title="Add Column After"
-                aria-label="Add Column After"
-                className="flex items-center gap-1 px-2 py-1 bg-brand-muted hover:bg-brand-border border border-brand-border text-brand-ink rounded-brand transition-colors"
             >
-                <Plus
-                    className="w-3 h-3 text-brand-accent"
-                    aria-hidden="true"
-                />
-                <Columns className="w-3 h-3" aria-hidden="true" />
-                <span>Col Right</span>
-            </button>
-
-            <button
-                type="button"
+                <Plus className={ICON} aria-hidden="true" />
+                <Columns className={ICON} aria-hidden="true" />
+                Column right
+            </TableAction>
+            <TableAction
+                title="Delete column"
+                destructive
                 onClick={() => editor.chain().focus().deleteColumn().run()}
-                title="Delete Column"
-                aria-label="Delete Column"
-                className="flex items-center gap-1 px-2 py-1 bg-brand-muted hover:bg-brand-border border border-brand-border text-brand-danger rounded-brand transition-colors"
             >
-                <Trash2
-                    className="w-3 h-3 text-brand-danger"
-                    aria-hidden="true"
-                />
-                <span>Delete Col</span>
-            </button>
+                <Trash2 className={ICON} aria-hidden="true" />
+                Delete column
+            </TableAction>
 
-            <div
-                className="w-[1px] h-4 bg-brand-border mx-1"
-                aria-hidden="true"
-            />
+            <Divider />
 
-            {/* Header and Delete Table */}
-            <button
-                type="button"
+            <TableAction
+                title="Toggle header row"
                 onClick={() => editor.chain().focus().toggleHeaderRow().run()}
-                title="Toggle Header Row"
-                aria-label="Toggle Header Row"
-                className="px-2 py-1 bg-brand-muted hover:bg-brand-border border border-brand-border text-brand-ink rounded-brand transition-colors"
             >
-                Toggle Header
-            </button>
-
-            <button
-                type="button"
+                Toggle header
+            </TableAction>
+            <TableAction
+                title="Delete table"
+                destructive
                 onClick={() => editor.chain().focus().deleteTable().run()}
-                title="Delete Table"
-                aria-label="Delete Table"
-                className="flex items-center gap-1 px-2 py-1 bg-brand-danger/10 hover:bg-brand-danger/20 border border-brand-danger text-brand-danger rounded-brand transition-colors"
             >
-                <Trash2 className="w-3 h-3" aria-hidden="true" />
-                <span>Delete Table</span>
-            </button>
+                <Trash2 className={ICON} aria-hidden="true" />
+                Delete table
+            </TableAction>
         </div>
     );
 }

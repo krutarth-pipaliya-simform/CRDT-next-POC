@@ -3,6 +3,8 @@
 import { useImperativeHandle, useState, type ReactNode, type Ref } from "react";
 import type { Editor, Range } from "@tiptap/core";
 
+import { cn } from "@/lib/cn";
+
 export interface CommandItem {
     title: string;
     description: string;
@@ -19,6 +21,10 @@ export interface SlashMenuListProps {
 export interface SlashMenuListRef {
     onKeyDown: (props: { event: KeyboardEvent }) => boolean;
 }
+
+/** A floating sheet, so it is one of the few surfaces that earns a shadow. */
+const PANEL =
+    "rounded-paddock-card border-[1.5px] border-paddock-ink bg-paddock-sheet text-paddock-ink shadow-paddock-float";
 
 export function SlashMenuList({ items, command, ref }: SlashMenuListProps) {
     const [selectedIndex, setSelectedIndex] = useState(0);
@@ -54,7 +60,12 @@ export function SlashMenuList({ items, command, ref }: SlashMenuListProps) {
 
     if (items.length === 0) {
         return (
-            <div className="p-3 bg-brand-surface border-2 border-brand-ink text-brand-subtle text-xs rounded-brand shadow-brand-card">
+            <div
+                className={cn(
+                    PANEL,
+                    "px-4 py-3 text-[0.8125rem] text-paddock-subtle",
+                )}
+            >
                 No matching commands
             </div>
         );
@@ -64,11 +75,14 @@ export function SlashMenuList({ items, command, ref }: SlashMenuListProps) {
         <div
             role="menu"
             aria-label="Slash commands"
-            className="w-72 max-h-80 overflow-y-auto p-1.5 bg-brand-surface border-2 border-brand-ink rounded-brand shadow-brand-card z-50 flex flex-col gap-0.5 no-scrollbar"
+            className={cn(
+                PANEL,
+                "paddock-in no-scrollbar z-50 flex max-h-80 w-72 max-w-[calc(100vw-2rem)] flex-col gap-0.5 overflow-y-auto p-1.5",
+            )}
         >
-            <div className="px-2 py-1 text-[12px] font-bold text-brand-subtle">
-                Insert Block
-            </div>
+            <p className="paddock-tag m-0 px-2.5 pt-1.5 pb-1 text-[0.6875rem] text-paddock-subtle">
+                Insert a block
+            </p>
             {items.map((item, index) => {
                 const isSelected = index === selectedIndex;
                 return (
@@ -78,35 +92,38 @@ export function SlashMenuList({ items, command, ref }: SlashMenuListProps) {
                         role="menuitem"
                         onClick={() => command(item)}
                         onMouseEnter={() => setSelectedIndex(index)}
-                        className={`flex items-center gap-2.5 px-2.5 py-2 w-full text-left rounded-brand transition-colors ${
+                        className={cn(
+                            "flex min-h-11 w-full cursor-pointer items-center gap-2.5 rounded-paddock px-2.5 py-2 text-left transition-colors",
                             isSelected
-                                ? "bg-brand-ink text-brand-surface"
-                                : "bg-transparent text-brand-ink hover:bg-brand-muted"
-                        }`}
+                                ? "bg-paddock-inverse text-paddock-on-inverse"
+                                : "bg-transparent text-paddock-ink hover:bg-paddock-ink/8",
+                        )}
                     >
-                        <div
-                            className={`p-1 rounded-brand border ${
+                        <span
+                            className={cn(
+                                "flex size-8 shrink-0 items-center justify-center rounded-paddock border",
                                 isSelected
-                                    ? "border-brand-surface/40 bg-brand-surface/10 text-brand-surface"
-                                    : "border-brand-border bg-brand-muted text-brand-ink"
-                            }`}
+                                    ? "border-paddock-on-inverse/30 text-paddock-on-inverse"
+                                    : "border-paddock-rule bg-paddock-paper text-paddock-ink",
+                            )}
                         >
                             {item.icon}
-                        </div>
-                        <div className="flex flex-col min-w-0">
-                            <span className="text-xs font-bold truncate">
+                        </span>
+                        <span className="flex min-w-0 flex-col">
+                            <span className="truncate text-[0.8125rem] font-bold">
                                 {item.title}
                             </span>
                             <span
-                                className={`text-[12px] truncate ${
+                                className={cn(
+                                    "truncate text-xs",
                                     isSelected
-                                        ? "text-brand-surface/70"
-                                        : "text-brand-subtle"
-                                }`}
+                                        ? "text-paddock-on-inverse/75"
+                                        : "text-paddock-subtle",
+                                )}
                             >
                                 {item.description}
                             </span>
-                        </div>
+                        </span>
                     </button>
                 );
             })}
