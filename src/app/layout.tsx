@@ -64,14 +64,14 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
                     dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }}
                 />
             </head>
-            <body className="min-h-full flex flex-col max-w-full overflow-x-hidden bg-paddock-paper">
+            <body className="min-h-full flex flex-col max-w-full overflow-x-hidden">
                 <ThemeProvider>
                     {/* Paddock is the product's design language: every route
                         renders inside its scope, fonts and tokens. */}
                     <PaddockRoot className="flex-1 flex flex-col w-full max-w-full min-w-0">
                         {children}
+                        <AppToaster />
                     </PaddockRoot>
-                    <AppToaster />
                 </ThemeProvider>
             </body>
         </html>

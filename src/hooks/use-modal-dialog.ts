@@ -47,6 +47,14 @@ export function useModalDialog(
                     ? document.activeElement
                     : null;
             dialog.showModal();
+            // React handles `autoFocus` itself instead of writing the
+            // attribute, so `showModal()` would land on the first focusable
+            // control (usually the close button). A field marked
+            // `data-autofocus` takes focus instead.
+            const preferred = dialog.querySelector("[data-autofocus]");
+            if (preferred instanceof HTMLElement) {
+                preferred.focus();
+            }
         }
 
         if (!open && dialog.open) {

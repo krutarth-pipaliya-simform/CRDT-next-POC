@@ -27,6 +27,12 @@ export interface PaddockDialogProps {
  * inert and unscrollable, Escape and backdrop close, focus returns to the
  * trigger. The header and footer stay put while a long body scrolls inside
  * the dialog, never the page behind it.
+ *
+ * The `<dialog>` stays mounted so focus can return to its trigger, but the
+ * body and footer only render while it is open: a closed dialog's text would
+ * otherwise sit in the DOM, duplicating names that are also on the page (a
+ * card per member, each with its own dialog), and its form state would
+ * survive a close.
  */
 export function PaddockDialog({
     open,
@@ -81,9 +87,9 @@ export function PaddockDialog({
                 />
             </header>
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-6 sm:px-8">
-                {children}
+                {open ? children : null}
             </div>
-            {footer ? (
+            {open && footer ? (
                 <footer className="flex shrink-0 flex-wrap items-center justify-end gap-2.5 border-t border-paddock-rule px-6 py-4.5 sm:px-8">
                     {footer}
                 </footer>

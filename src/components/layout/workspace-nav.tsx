@@ -42,6 +42,12 @@ export function WorkspaceNav({
         current: isSectionCurrent(pathname, section),
     }));
 
+    const roleTag = (
+        <span data-testid="workspace-role">
+            <Tag>{WORKSPACE_ROLE_LABELS[userRole]}</Tag>
+        </span>
+    );
+
     return (
         <div className="border-b border-paddock-rule">
             <div
@@ -55,12 +61,10 @@ export function WorkspaceNav({
                         title={`${members.length} ${members.length === 1 ? "person has" : "people have"} access`}
                     >
                         <AvatarStack people={members} max={6} />
-                        <Tag>{WORKSPACE_ROLE_LABELS[userRole]}</Tag>
+                        {roleTag}
                     </Link>
                 ) : (
-                    <Tag className="py-2">
-                        {WORKSPACE_ROLE_LABELS[userRole]}
-                    </Tag>
+                    <span className="py-2">{roleTag}</span>
                 )}
             </div>
         </div>

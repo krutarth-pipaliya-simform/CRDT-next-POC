@@ -11,8 +11,8 @@ let previousOverflow = "";
  *
  * Counted rather than toggled: a dialog opened from inside the menu overlay
  * must not unlock the page when it closes while the menu is still open.
- * `scrollbar-gutter: stable` keeps the layout from shifting when the
- * scrollbar disappears.
+ * The layout does not shift when the scrollbar goes away, because `html`
+ * always reserves its gutter (`scrollbar-gutter: stable` in `globals.css`).
  */
 export function useScrollLock(active: boolean): void {
     useEffect(() => {
@@ -22,7 +22,6 @@ export function useScrollLock(active: boolean): void {
         if (activeLocks === 0) {
             previousOverflow = root.style.overflow;
             root.style.overflow = "hidden";
-            root.style.scrollbarGutter = "stable";
         }
         activeLocks += 1;
 
@@ -30,7 +29,6 @@ export function useScrollLock(active: boolean): void {
             activeLocks -= 1;
             if (activeLocks === 0) {
                 root.style.overflow = previousOverflow;
-                root.style.scrollbarGutter = "";
             }
         };
     }, [active]);
