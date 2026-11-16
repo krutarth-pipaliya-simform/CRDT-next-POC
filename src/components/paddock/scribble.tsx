@@ -5,8 +5,7 @@ import type { CssVariableStyle } from "./paddock-styles";
 export type ScribbleShape = "loop" | "underline" | "squiggle";
 /**
  * - `load`   draws once after mount (with `delayMs`)
- * - `hover`  draws when the nearest `.group` ancestor is hovered or focused,
- *            and stays drawn under an `aria-current="page"` ancestor
+ * - `hover`  draws when the nearest `.group` ancestor is hovered or focused
  * - `static` is always drawn
  */
 export type ScribbleTrigger = "load" | "hover" | "static";

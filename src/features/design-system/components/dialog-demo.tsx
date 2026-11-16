@@ -11,9 +11,11 @@ import {
 } from "@/components/paddock/paddock-field";
 
 const COLUMN_OPTIONS = [
+    { value: "BACKLOG", label: "Backlog" },
     { value: "TODO", label: "To do" },
     { value: "IN_PROGRESS", label: "In progress" },
-    { value: "DONE", label: "Done" },
+    { value: "REVIEW", label: "Review" },
+    { value: "DONE", label: "Completed" },
 ];
 
 const PRIORITY_OPTIONS = [

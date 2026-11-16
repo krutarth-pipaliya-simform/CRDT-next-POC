@@ -768,11 +768,11 @@ export default function PaddockDesignSystemPage() {
                     eyebrow="Navigation"
                     serif="Find"
                     heavy="your way"
-                    intro="Links between pages are links with aria-current; switches inside a page are tabs. The scribble marks where you are, but the text colour says it too."
+                    intro="Links between pages are links with aria-current; switches inside a page are tabs. A lime pill marks where you are; the scribble only ever answers hover and focus, so the two never look alike."
                 >
                     <Specimen
                         title="Workspace tabs"
-                        usage="The section bar under the header. An ink scribble draws in on hover and focus and stays under the current page."
+                        usage="The section bar under the header. The current page is a lime pill and ignores hover; other tabs turn ink and draw an ink scribble on hover and focus."
                         components={[
                             "WorkspaceTabs",
                             "AvatarStack",
@@ -885,8 +885,10 @@ export default function PaddockDesignSystemPage() {
                     >
                         <div className="flex flex-col gap-6">
                             <SpecimenRow label="Status">
+                                <StatusPill status="BACKLOG" />
                                 <StatusPill status="TODO" />
                                 <StatusPill status="IN_PROGRESS" />
+                                <StatusPill status="REVIEW" />
                                 <StatusPill status="DONE" />
                             </SpecimenRow>
                             <SpecimenRow label="Priority">

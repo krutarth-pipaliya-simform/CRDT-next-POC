@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { ContourBackground } from "@/components/paddock/contour-background";
 import { DisplayHeading } from "@/components/paddock/display-heading";
 import { auth } from "@/features/auth/lib/auth";
+import { requireUserId } from "@/features/auth/lib/session";
 import { CreateWorkspaceDialog } from "@/features/workspace/components/create-workspace-dialog";
 import { PaginationControls } from "@/features/workspace/components/pagination-controls";
 import {
@@ -107,8 +108,10 @@ export default async function DashboardPage({
             ? parseInt(awaitedParams.page) || 1
             : 1;
 
+    // The proxy redirects signed-out visitors optimistically; this is the
+    // check that holds even if a request reaches the page without it.
+    const currentUserId = await requireUserId("/dashboard");
     const session = await auth();
-    const currentUserId = session?.user?.id || "";
     const signedInAs = session?.user?.name || session?.user?.email;
 
     // Fetch data based on active tab

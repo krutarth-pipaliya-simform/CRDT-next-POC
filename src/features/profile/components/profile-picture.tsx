@@ -5,15 +5,18 @@ import {
     useId,
     useRef,
     useState,
+    useTransition,
     type ChangeEvent,
 } from "react";
 import Image from "next/image";
 
 import { PaddockButton } from "@/components/paddock/paddock-button";
+import { PaddockDialog } from "@/components/paddock/paddock-dialog";
 import { paddockPresenceVar } from "@/components/paddock/paddock-presence";
 import {
     removeProfilePicture,
     uploadProfilePicture,
+    type RemoveProfilePictureResult,
 } from "@/features/profile/actions/upload-image";
 import { cn } from "@/lib/cn";
 
@@ -35,10 +38,10 @@ export function ProfilePicture({
         uploadProfilePicture,
         null,
     );
-    const [removeState, removeAction, isRemoving] = useActionState(
-        removeProfilePicture,
-        null,
-    );
+    const [removeState, setRemoveState] =
+        useState<RemoveProfilePictureResult | null>(null);
+    const [isRemoving, startRemoving] = useTransition();
+    const [confirmOpen, setConfirmOpen] = useState(false);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const fileInputId = useId();
@@ -50,6 +53,21 @@ export function ProfilePicture({
             const url = URL.createObjectURL(file);
             setPreviewUrl(url);
         }
+    };
+
+    const closeConfirm = () => {
+        if (isRemoving) return;
+        setConfirmOpen(false);
+        setRemoveState(null);
+    };
+
+    const handleRemove = () => {
+        setRemoveState(null);
+        startRemoving(async () => {
+            const result = await removeProfilePicture();
+            setRemoveState(result);
+            if (result.success) setConfirmOpen(false);
+        });
     };
 
     const displayUrl =
@@ -103,11 +121,6 @@ export function ProfilePicture({
                             {uploadState.error}
                         </ProfileNotice>
                     )}
-                    {removeState?.error && (
-                        <ProfileNotice intent="danger">
-                            {removeState.error}
-                        </ProfileNotice>
-                    )}
                     {uploadState?.success && (
                         <ProfileNotice intent="success">
                             {uploadState.data?.message}
@@ -157,18 +170,18 @@ export function ProfilePicture({
 
                         {(initialImageUrl || displayUrl) &&
                             !removeState?.success && (
-                                <form action={removeAction}>
-                                    <PaddockButton
-                                        type="submit"
-                                        variant="outline"
-                                        voice="plain"
-                                        size="sm"
-                                        disabled={isRemoving}
-                                        className="border-paddock-danger text-paddock-danger"
-                                    >
-                                        {isRemoving ? "Removing..." : "Remove"}
-                                    </PaddockButton>
-                                </form>
+                                <PaddockButton
+                                    variant="outline"
+                                    voice="plain"
+                                    size="sm"
+                                    onClick={() => {
+                                        setRemoveState(null);
+                                        setConfirmOpen(true);
+                                    }}
+                                    className="border-paddock-danger text-paddock-danger"
+                                >
+                                    Remove
+                                </PaddockButton>
                             )}
                     </div>
                     <p
@@ -179,6 +192,50 @@ export function ProfilePicture({
                     </p>
                 </div>
             </div>
+
+            {/* Stays mounted so focus can return to the trigger on close. */}
+            <PaddockDialog
+                open={confirmOpen}
+                onClose={closeConfirm}
+                titleSerif="Remove"
+                titleHeavy="picture"
+                className="w-[30rem]"
+                footer={
+                    <>
+                        <PaddockButton
+                            variant="outline"
+                            voice="plain"
+                            onClick={closeConfirm}
+                            disabled={isRemoving}
+                        >
+                            Cancel
+                        </PaddockButton>
+                        <PaddockButton
+                            variant="danger"
+                            voice="plain"
+                            onClick={handleRemove}
+                            disabled={isRemoving}
+                        >
+                            {isRemoving ? "Removing..." : "Remove picture"}
+                        </PaddockButton>
+                    </>
+                }
+            >
+                <div className="flex flex-col gap-4">
+                    <p className="m-0 text-base">
+                        Remove your profile picture? Your initials will show in
+                        its place everywhere, and the uploaded image is deleted.
+                    </p>
+                    {removeState?.error ? (
+                        <p
+                            role="alert"
+                            className="m-0 text-sm font-semibold text-paddock-danger"
+                        >
+                            {removeState.error}
+                        </p>
+                    ) : null}
+                </div>
+            </PaddockDialog>
         </ProfileSection>
     );
 }

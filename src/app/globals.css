@@ -967,8 +967,10 @@ time,
 
 .paddock-root .paddock-scribble[data-trigger="static"] path,
 .paddock-root .group:hover .paddock-scribble[data-trigger="hover"] path,
-.paddock-root .group:focus-visible .paddock-scribble[data-trigger="hover"] path,
-.paddock-root [aria-current="page"] .paddock-scribble path {
+.paddock-root
+    .group:focus-visible
+    .paddock-scribble[data-trigger="hover"]
+    path {
     stroke-dashoffset: 0;
 }
 

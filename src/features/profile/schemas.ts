@@ -21,5 +21,21 @@ export const updatePasswordSchema = z
         path: ["confirmPassword"],
     });
 
+/**
+ * Where the profile page was opened from. Only a same-origin path is kept:
+ * one leading slash, never `//` or `/\` (both read as another host), no
+ * whitespace, and never the profile page itself. Anything else is dropped, so
+ * the link back can never become an open redirect.
+ */
+export const profileSearchParamsSchema = z.object({
+    from: z
+        .string()
+        .max(512)
+        .regex(/^\/(?![/\\])\S*$/)
+        .refine((path) => !/^\/profile(?:[/?#]|$)/.test(path))
+        .optional()
+        .catch(undefined),
+});
+
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 export type UpdatePasswordInput = z.infer<typeof updatePasswordSchema>;

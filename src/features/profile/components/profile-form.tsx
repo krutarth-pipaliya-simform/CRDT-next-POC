@@ -43,7 +43,7 @@ export function ProfileForm({ initialName }: ProfileFormProps) {
 
                 <div>
                     <PaddockButton type="submit" disabled={isPending}>
-                        {isPending ? "Saving..." : "Save Profile"}
+                        {isPending ? "Saving..." : "Save name"}
                     </PaddockButton>
                 </div>
             </form>

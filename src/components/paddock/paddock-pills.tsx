@@ -1,4 +1,4 @@
-import { Check, Circle, CircleDashed } from "lucide-react";
+import { Check, Circle, CircleDashed, CircleDot, Inbox } from "lucide-react";
 
 import {
     TASK_PRIORITY_LABELS,
@@ -19,6 +19,11 @@ const STATUS_TREATMENT: Record<
     TaskStatusValue,
     { className: string; Icon: typeof Check }
 > = {
+    BACKLOG: {
+        className:
+            "border-[1.5px] border-dashed border-paddock-rule text-paddock-subtle",
+        Icon: Inbox,
+    },
     TODO: {
         className:
             "border-[1.5px] border-dashed border-paddock-ink text-paddock-ink",
@@ -27,6 +32,11 @@ const STATUS_TREATMENT: Record<
     IN_PROGRESS: {
         className: "border-[1.5px] border-paddock-ink text-paddock-ink",
         Icon: Circle,
+    },
+    REVIEW: {
+        className:
+            "border-[1.5px] border-paddock-ink bg-paddock-ink/8 text-paddock-ink",
+        Icon: CircleDot,
     },
     DONE: {
         className:
@@ -42,7 +52,7 @@ export interface StatusPillProps {
 
 /**
  * Status is not a person, so it gets no hue: the states differ by outline
- * (dashed, solid, filled), by icon and by the word itself.
+ * (faint dashed, dashed, solid, tinted, filled), by icon and by the word itself.
  */
 export function StatusPill({ status, className }: StatusPillProps) {
     const { className: treatment, Icon } = STATUS_TREATMENT[status];

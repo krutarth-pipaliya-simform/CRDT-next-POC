@@ -58,3 +58,17 @@ export function formatDayLabel(
         year: date.getFullYear() === now.getFullYear() ? undefined : "numeric",
     });
 }
+
+/**
+ * A calendar date ("Oct 27, 2026") for billing periods and invoices. Fixed to
+ * en-US so a server-rendered date and its hydrated twin always agree.
+ */
+export function formatCalendarDate(value: Date | string | null): string | null {
+    if (value === null) return null;
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) return null;
+
+    return new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(
+        date,
+    );
+}

@@ -12,6 +12,7 @@ import {
 import { Tag } from "@/components/paddock/tag";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { logoutAction } from "@/features/auth/actions/logout";
+import { profileHref } from "@/features/profile/lib/profile-href";
 import { useCurrentWorkspace } from "@/hooks/use-current-workspace";
 import { WORKSPACE_ROLE_LABELS } from "@/schemas/workspace";
 
@@ -59,7 +60,7 @@ export function AppMenu({ workspaces, recentDocuments }: AppMenuProps) {
               workspacesItem,
               {
                   label: "Profile",
-                  href: "/profile",
+                  href: profileHref(pathname),
                   current: pathname === "/profile",
               },
           ];
@@ -90,7 +91,7 @@ export function AppMenu({ workspaces, recentDocuments }: AppMenuProps) {
                         ) : null}
                         <div className="flex flex-wrap items-center justify-center gap-x-5.5 gap-y-2">
                             <Link
-                                href="/profile"
+                                href={profileHref(pathname)}
                                 onClick={() => setOpen(false)}
                                 className={footerLink}
                             >

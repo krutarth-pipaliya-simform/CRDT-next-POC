@@ -3,9 +3,11 @@
 import { useCallback, useRef, useState, type KeyboardEvent } from "react";
 import { LogOut, UserRound } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import { PaddockAvatar } from "@/components/paddock/paddock-avatar";
 import { logoutAction } from "@/features/auth/actions/logout";
+import { profileHref } from "@/features/profile/lib/profile-href";
 import { useOutsideClick } from "@/hooks/use-outside-click";
 
 export interface AccountMenuProps {
@@ -27,6 +29,7 @@ const itemClasses =
  */
 export function AccountMenu({ user }: AccountMenuProps) {
     const [open, setOpen] = useState(false);
+    const pathname = usePathname();
     const containerRef = useRef<HTMLDivElement>(null);
     const close = useCallback(() => setOpen(false), []);
 
@@ -67,7 +70,7 @@ export function AccountMenu({ user }: AccountMenuProps) {
                         ) : null}
                     </div>
                     <Link
-                        href="/profile"
+                        href={profileHref(pathname)}
                         onClick={close}
                         className={itemClasses}
                     >

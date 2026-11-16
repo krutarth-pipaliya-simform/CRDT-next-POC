@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { BackLink, type BackLinkProps } from "@/components/paddock/back-link";
 import { ContourBackground } from "@/components/paddock/contour-background";
 import { DisplayHeading } from "@/components/paddock/display-heading";
 import { Tag } from "@/components/paddock/tag";
@@ -8,6 +9,11 @@ import { cn } from "@/lib/cn";
 import { PAGE_CONTAINER } from "./layout-styles";
 
 export interface PageHeaderProps {
+    /**
+     * The way back up, for a page that is not a top-level section: profile,
+     * a workspace's overview. Sits above the eyebrow.
+     */
+    back?: Omit<BackLinkProps, "className">;
     /** The light half of the two-voice title: "Your". */
     serif?: string;
     /** The weighted half: "workspaces". */
@@ -33,6 +39,7 @@ export interface PageHeaderProps {
  * it outside the page's content container.
  */
 export function PageHeader({
+    back,
     serif,
     heavy,
     title,
@@ -52,6 +59,7 @@ export function PageHeader({
                 )}
             >
                 <div className="min-w-0">
+                    {back ? <BackLink {...back} className="mb-6" /> : null}
                     {eyebrow ? (
                         <Tag as="p" className="mb-4">
                             {eyebrow}

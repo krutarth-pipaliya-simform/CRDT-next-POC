@@ -6,9 +6,15 @@ import { auth } from "@/features/auth/lib/auth";
 import { PasswordForm } from "@/features/profile/components/password-form";
 import { ProfileForm } from "@/features/profile/components/profile-form";
 import { ProfilePicture } from "@/features/profile/components/profile-picture";
+import { resolveProfileBackLink } from "@/features/profile/lib/resolve-profile-back-link";
+import { profileSearchParamsSchema } from "@/features/profile/schemas";
 import { db } from "@/lib/db";
 
-export default async function ProfilePage() {
+export interface ProfilePageProps {
+    searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
+
+export default async function ProfilePage({ searchParams }: ProfilePageProps) {
     const session = await auth();
     if (!session?.user?.id) {
         redirect("/login");
@@ -21,6 +27,11 @@ export default async function ProfilePage() {
     if (!user) {
         redirect("/login");
     }
+
+    // Back to wherever profile was opened from, so leaving it never costs
+    // the workspace the user was in.
+    const { from } = profileSearchParamsSchema.parse(await searchParams);
+    const back = await resolveProfileBackLink(from);
 
     // Determine initials
     const initials = user.name
@@ -37,6 +48,7 @@ export default async function ProfilePage() {
     return (
         <main className="pb-24">
             <PageHeader
+                back={back}
                 eyebrow={identity || undefined}
                 serif="Account"
                 heavy="Settings"

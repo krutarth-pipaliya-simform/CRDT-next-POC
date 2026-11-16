@@ -71,7 +71,6 @@ export default async function WorkspacePage({
             heavy: "Chat",
             description: "Real-time discussion with everyone in the workspace.",
             href: `/${workspaceId}/chat`,
-            badge: "Active",
         },
         {
             serif: "The",
@@ -79,7 +78,6 @@ export default async function WorkspacePage({
             description:
                 "Productivity metrics and workspace activity over time.",
             href: `/${workspaceId}/analytics`,
-            badge: "Insights",
         },
         ...(role === "ADMIN"
             ? [
@@ -89,7 +87,6 @@ export default async function WorkspacePage({
                       description:
                           "Manage the workspace name, team members, invitations and danger zone.",
                       href: `/${workspaceId}/settings`,
-                      badge: "Admin",
                   },
               ]
             : []),
@@ -105,6 +102,11 @@ export default async function WorkspacePage({
     return (
         <main>
             <PageHeader
+                back={{
+                    href: "/dashboard",
+                    label: "All workspaces",
+                    "aria-label": "Back to all workspaces",
+                }}
                 eyebrow="Workspace overview"
                 serif={serif}
                 heavy={heavy}
@@ -180,13 +182,18 @@ export default async function WorkspacePage({
                                 >
                                     <NotchedCard
                                         tone="deep"
+                                        // The tab only carries a real count
+                                        // ("Open 3 tasks"); sections with no
+                                        // number to show go without one.
                                         tab={
-                                            <>
-                                                <span className="text-paddock-night-fg">
-                                                    Open
-                                                </span>{" "}
-                                                {link.badge}
-                                            </>
+                                            link.badge ? (
+                                                <>
+                                                    <span className="text-paddock-night-fg">
+                                                        Open
+                                                    </span>{" "}
+                                                    {link.badge}
+                                                </>
+                                            ) : undefined
                                         }
                                         bodyClassName="flex min-h-58 flex-col justify-between gap-6.5 px-7 pt-7.5 pb-14"
                                     >

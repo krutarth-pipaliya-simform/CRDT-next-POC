@@ -48,13 +48,13 @@ export async function updateProfile(
         revalidatePath("/profile");
         return {
             success: true,
-            data: { message: "Profile updated successfully" },
+            data: { message: "Name updated successfully" },
         };
     } catch (error) {
         console.error("Update profile error:", error);
         return {
             success: false,
-            error: "Failed to update profile",
+            error: "Failed to update name",
             code: "INTERNAL_ERROR",
         };
     }
