@@ -9,6 +9,7 @@ const config = {
     // Pure modules run in node; hooks and components opt in to jsdom with a
     // `@jest-environment jsdom` docblock at the top of the test file.
     testEnvironment: "node",
+    globalSetup: "<rootDir>/jest.global-setup.mjs",
     setupFiles: ["<rootDir>/jest.env.ts"],
     setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
 
