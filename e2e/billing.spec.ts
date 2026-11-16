@@ -1,3 +1,5 @@
+import { readFile } from "node:fs/promises";
+
 import { expect, test, type Page } from "@playwright/test";
 import bcrypt from "bcryptjs";
 
@@ -12,6 +14,7 @@ test.describe("Billing & Analytics Dashboard", () => {
     let memberId: string;
     let freeWorkspaceId: string;
     let proWorkspaceId: string;
+    let enterpriseWorkspaceId: string;
     let emptyWorkspaceId: string;
     const testPassword = "password123";
 
@@ -134,6 +137,31 @@ test.describe("Billing & Analytics Dashboard", () => {
             },
         });
 
+        const enterpriseWorkspace = await db.workspace.create({
+            data: {
+                name: "Billing Enterprise Workspace",
+                members: { create: [{ userId: adminId, role: "ADMIN" }] },
+                subscription: {
+                    create: {
+                        plan: "ENTERPRISE",
+                        status: "ACTIVE",
+                        currentPeriodEnd: new Date(
+                            Date.now() + 30 * 24 * 60 * 60 * 1000,
+                        ),
+                    },
+                },
+                tasks: {
+                    create: {
+                        title: "Enterprise workspace task",
+                        status: "REVIEW",
+                        priority: "HIGH",
+                        position: 1024,
+                    },
+                },
+            },
+        });
+        enterpriseWorkspaceId = enterpriseWorkspace.id;
+
         const emptyWorkspace = await db.workspace.create({
             data: {
                 name: "Billing Empty Workspace",
@@ -147,7 +175,12 @@ test.describe("Billing & Analytics Dashboard", () => {
         await db.workspace.deleteMany({
             where: {
                 id: {
-                    in: [freeWorkspaceId, proWorkspaceId, emptyWorkspaceId],
+                    in: [
+                        freeWorkspaceId,
+                        proWorkspaceId,
+                        enterpriseWorkspaceId,
+                        emptyWorkspaceId,
+                    ],
                 },
             },
         });
@@ -182,9 +215,22 @@ test.describe("Billing & Analytics Dashboard", () => {
         );
         await expect(page.getByTestId("plan-card-free")).toBeVisible();
         await expect(page.getByTestId("plan-card-pro")).toBeVisible();
+        await expect(page.getByTestId("plan-card-enterprise")).toBeVisible();
         await expect(page.getByTestId("upgrade-button")).toBeVisible();
         // No Stripe customer yet, so there is nothing to manage in the portal.
         await expect(page.getByTestId("manage-billing-button")).toHaveCount(0);
+        await expect(page.getByTestId("cancel-plan-button")).toHaveCount(0);
+
+        // FR-21: the history section is there, empty until the first payment.
+        await expect(
+            page.getByRole("heading", { name: "Billing history" }),
+        ).toBeVisible();
+        await expect(page.getByTestId("invoice-history")).toContainText(
+            "No invoices yet",
+        );
+        await expect(page.getByTestId("payment-history")).toContainText(
+            "No payments yet",
+        );
     });
 
     test("reports an active Pro subscription with a portal entry point", async ({
@@ -199,6 +245,34 @@ test.describe("Billing & Analytics Dashboard", () => {
         );
         await expect(page.getByTestId("manage-billing-button")).toBeVisible();
         await expect(page.getByTestId("upgrade-button")).toHaveCount(0);
+        // A paying workspace switches plan and cancels in place.
+        await expect(page.getByTestId("cancel-plan-button")).toBeVisible();
+        await expect(
+            page.getByTestId("plan-card-enterprise").getByRole("button"),
+        ).toContainText("Upgrade to Enterprise");
+
+        await page.getByTestId("cancel-plan-button").click();
+        const dialog = page.getByRole("dialog", { name: "Cancel Pro" });
+        await expect(dialog).toBeVisible();
+        await dialog.getByRole("button", { name: "Keep plan" }).click();
+        await expect(dialog).toBeHidden();
+    });
+
+    test("gives Enterprise a year of analytics history", async ({ page }) => {
+        await loginAs(page, adminEmail);
+        await page.goto(`/${enterpriseWorkspaceId}/analytics`);
+
+        await expect(page.getByTestId("plan-badge")).toHaveAttribute(
+            "data-plan",
+            "ENTERPRISE",
+        );
+        await page.getByRole("link", { name: "Last 12 months" }).click();
+        await expect(page).toHaveURL(
+            `/${enterpriseWorkspaceId}/analytics?range=365d`,
+        );
+        await expect(page.getByTestId("stat-tasks-created")).toContainText(
+            "last 12 months",
+        );
     });
 
     test("keeps billing settings out of reach for a non-admin member", async ({
@@ -229,6 +303,7 @@ test.describe("Billing & Analytics Dashboard", () => {
         for (const chart of [
             "chart-completion-rate",
             "chart-activity",
+            "chart-member-growth",
             "chart-status",
             "chart-priority",
             "chart-contributors",
@@ -239,6 +314,52 @@ test.describe("Billing & Analytics Dashboard", () => {
                 { timeout: 15000 },
             );
         }
+    });
+
+    test("exports chart data as CSV and the chart as PNG (FR-18)", async ({
+        page,
+    }) => {
+        await loginAs(page, adminEmail);
+        await page.goto(`/${freeWorkspaceId}/analytics`);
+        await expect(page.getByTestId("chart-activity")).toHaveAttribute(
+            "data-chart-ready",
+            "true",
+            { timeout: 15000 },
+        );
+
+        const csvDownload = page.waitForEvent("download");
+        await page
+            .getByRole("button", {
+                name: "Download Workspace activity data as CSV",
+            })
+            .click();
+        const csv = await csvDownload;
+        expect(csv.suggestedFilename()).toBe("workspace-activity.csv");
+        const content = await readFile(await csv.path(), "utf8");
+        const [header, ...rows] = content.replace(/^\uFEFF/, "").split("\r\n");
+        expect(header).toBe(
+            "Date,Tasks created,Tasks completed,Documents,Messages",
+        );
+        expect(rows).toHaveLength(7);
+
+        // FR-17: two members joined the free workspace in this window.
+        const growthCsv = page.waitForEvent("download");
+        await page
+            .getByRole("button", {
+                name: "Download Member growth data as CSV",
+            })
+            .click();
+        const growth = await readFile(await (await growthCsv).path(), "utf8");
+        expect(growth.trim().split("\r\n").at(-1)).toMatch(/,2$/);
+
+        const pngDownload = page.waitForEvent("download");
+        await page
+            .getByRole("button", { name: "Download Member growth as PNG" })
+            .click();
+        const png = await pngDownload;
+        expect(png.suggestedFilename()).toBe("member-growth.png");
+        const bytes = await readFile(await png.path());
+        expect(bytes.subarray(1, 4).toString()).toBe("PNG");
     });
 
     test("locks longer history on Free and falls back to 7 days", async ({
@@ -255,6 +376,10 @@ test.describe("Billing & Analytics Dashboard", () => {
         await expect(
             page.getByRole("button", { name: "Last 90 days" }),
         ).toBeDisabled();
+        // Each locked range names the cheapest plan that unlocks it.
+        const yearRange = page.getByRole("button", { name: /Last 12 months/ });
+        await expect(yearRange).toBeDisabled();
+        await expect(yearRange).toContainText("Enterprise");
 
         // A hand-typed range must be refused by the server, not just hidden in the UI.
         await page.goto(`/${freeWorkspaceId}/analytics?range=90d`);

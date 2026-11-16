@@ -2,6 +2,7 @@ import type { SubscriptionStatus } from "@prisma/client";
 import type Stripe from "stripe";
 
 import { db } from "@/lib/db";
+import { planForPriceId } from "@/lib/stripe";
 
 import "server-only";
 
@@ -66,7 +67,7 @@ export async function syncSubscriptionToWorkspace(
     const currentPeriodEnd = resolvePeriodEnd(subscription);
 
     const data = {
-        plan: "PRO" as const,
+        plan: planForPriceId(stripePriceId),
         status,
         stripeCustomerId,
         stripeSubscriptionId: subscription.id,

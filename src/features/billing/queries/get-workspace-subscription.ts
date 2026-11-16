@@ -16,6 +16,7 @@ const FREE_SUBSCRIPTION: WorkspaceSubscription = {
     cancelAtPeriodEnd: false,
     currentPeriodEnd: null,
     hasStripeCustomer: false,
+    hasStripeSubscription: false,
 };
 
 /**
@@ -48,6 +49,7 @@ export const getWorkspaceSubscription = cache(
             cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
             currentPeriodEnd: subscription.currentPeriodEnd,
             hasStripeCustomer: Boolean(subscription.stripeCustomerId),
+            hasStripeSubscription: Boolean(subscription.stripeSubscriptionId),
         };
     },
 );

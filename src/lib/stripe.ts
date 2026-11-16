@@ -1,6 +1,7 @@
 import Stripe from "stripe";
 
 import { env } from "@/lib/env";
+import type { PaidPlanValue } from "@/schemas/billing";
 
 import "server-only";
 
@@ -11,6 +12,8 @@ import "server-only";
 export interface StripeContext {
     stripe: Stripe;
     proPriceId: string;
+    /** `null` until STRIPE_ENTERPRISE_PRICE_ID is set. */
+    enterprisePriceId: string | null;
     webhookSecret: string;
 }
 
@@ -68,7 +71,36 @@ export function getStripeContext(): StripeContextResult {
         data: {
             stripe: getStripeClient(secretKey),
             proPriceId,
+            enterprisePriceId: env.STRIPE_ENTERPRISE_PRICE_ID ?? null,
             webhookSecret,
         },
     };
+}
+
+/** True when the Enterprise plan can be bought, on top of the base config. */
+export function isEnterpriseConfigured(): boolean {
+    return isStripeConfigured() && Boolean(env.STRIPE_ENTERPRISE_PRICE_ID);
+}
+
+/** The Stripe price for a paid plan, or `null` when that plan is not set up. */
+export function priceIdForPlan(
+    context: StripeContext,
+    plan: PaidPlanValue,
+): string | null {
+    return plan === "ENTERPRISE"
+        ? context.enterprisePriceId
+        : context.proPriceId;
+}
+
+/**
+ * Which paid plan a Stripe price stands for. The plan is read off the price
+ * Stripe reports, never off what the client asked for, so a webhook replay or
+ * a portal plan switch always lands on the plan actually being paid for. An
+ * unrecognised price (an old Pro price, say) reads as Pro.
+ */
+export function planForPriceId(priceId: string | null): PaidPlanValue {
+    if (priceId && priceId === env.STRIPE_ENTERPRISE_PRICE_ID) {
+        return "ENTERPRISE";
+    }
+    return "PRO";
 }

@@ -9,9 +9,16 @@ export interface PlanBadgeProps {
     className?: string;
 }
 
+const PLAN_TREATMENT: Record<SubscriptionPlanValue, string> = {
+    FREE: "border-[1.5px] border-paddock-ink text-paddock-ink",
+    PRO: "border-[1.5px] border-paddock-lime bg-paddock-lime text-paddock-on-fill",
+    ENTERPRISE:
+        "border-[1.5px] border-paddock-inverse bg-paddock-inverse text-paddock-on-inverse",
+};
+
 /**
- * The workspace's plan as a pill. Pro is the only filled one (lime, with
- * on-fill text); Free is an ink outline. The word carries the state, so the
+ * The workspace's plan as a pill. Pro is lime with on-fill text, Enterprise
+ * an inverse fill, Free an ink outline. The word carries the state, so the
  * fill is never the only signal.
  */
 export function PlanBadge({ plan, className }: PlanBadgeProps) {
@@ -22,9 +29,7 @@ export function PlanBadge({ plan, className }: PlanBadgeProps) {
             className={cn(
                 paddockPillBase,
                 "py-1.5",
-                plan === "PRO"
-                    ? "border-[1.5px] border-paddock-lime bg-paddock-lime text-paddock-on-fill"
-                    : "border-[1.5px] border-paddock-ink text-paddock-ink",
+                PLAN_TREATMENT[plan],
                 className,
             )}
         >

@@ -1,5 +1,5 @@
 import type { AnalyticsRangeValue } from "@/schemas/analytics";
-import type { SubscriptionPlanValue } from "@/schemas/billing";
+import type { PaidPlanValue, SubscriptionPlanValue } from "@/schemas/billing";
 
 export interface PlanDefinition {
     id: SubscriptionPlanValue;
@@ -42,9 +42,49 @@ export const PLANS: Record<SubscriptionPlanValue, PlanDefinition> = {
         ],
         analyticsRanges: ["7d", "30d", "90d"],
     },
+    ENTERPRISE: {
+        id: "ENTERPRISE",
+        name: "Enterprise",
+        price: "$49",
+        cadence: "per workspace / month",
+        tagline:
+            "A year of history for organisations that plan by the quarter.",
+        features: [
+            "Everything in Pro",
+            "12-month analytics history",
+            "In-app invoice and payment history",
+            "Switch plans with prorated billing",
+        ],
+        analyticsRanges: ["7d", "30d", "90d", "365d"],
+    },
 };
 
-export const PLAN_ORDER: SubscriptionPlanValue[] = ["FREE", "PRO"];
+export const PLAN_ORDER: SubscriptionPlanValue[] = [
+    "FREE",
+    "PRO",
+    "ENTERPRISE",
+];
+
+export const PAID_PLANS: PaidPlanValue[] = ["PRO", "ENTERPRISE"];
+
+/** Whether moving from one plan to another is an upgrade (by catalog order). */
+export function isUpgrade(
+    from: SubscriptionPlanValue,
+    to: SubscriptionPlanValue,
+): boolean {
+    return PLAN_ORDER.indexOf(to) > PLAN_ORDER.indexOf(from);
+}
+
+/** The cheapest plan that includes an analytics window, for "locked" labels. */
+export function cheapestPlanWithRange(
+    range: AnalyticsRangeValue,
+): SubscriptionPlanValue {
+    return (
+        PLAN_ORDER.find((plan) =>
+            PLANS[plan].analyticsRanges.includes(range),
+        ) ?? "ENTERPRISE"
+    );
+}
 
 /** Whether a plan is allowed to query the given analytics window. */
 export function planAllowsRange(

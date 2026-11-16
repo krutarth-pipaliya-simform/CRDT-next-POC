@@ -3,7 +3,7 @@
 import { auth } from "@/features/auth/lib/auth";
 import { getWorkspaceRole } from "@/features/workspace/lib/rbac";
 import { db } from "@/lib/db";
-import { getStripeContext } from "@/lib/stripe";
+import { getStripeContext, priceIdForPlan } from "@/lib/stripe";
 import { getAppUrl } from "@/lib/url";
 import { createCheckoutSessionSchema } from "@/schemas/billing";
 
@@ -12,7 +12,9 @@ export type CreateCheckoutSessionResult =
     | { success: false; error: string };
 
 /**
- * Start a Stripe Checkout Session that upgrades a workspace to Pro.
+ * Start a Stripe Checkout Session that upgrades a Free workspace to a paid
+ * plan. A workspace that already pays switches plan in place instead
+ * (`changeSubscriptionPlanAction`), so it never ends up with two subscriptions.
  *
  * The workspace id is stamped into both the session metadata and the resulting
  * subscription metadata, which is how the webhook attributes the payment later —
@@ -36,7 +38,7 @@ export async function createCheckoutSessionAction(
         };
     }
 
-    const { workspaceId } = validated.data;
+    const { workspaceId, plan } = validated.data;
 
     const role = await getWorkspaceRole(workspaceId);
     if (role !== "ADMIN") {
@@ -50,7 +52,14 @@ export async function createCheckoutSessionAction(
     if (!stripeContext.success) {
         return { success: false, error: stripeContext.error };
     }
-    const { stripe, proPriceId } = stripeContext.data;
+    const { stripe } = stripeContext.data;
+    const priceId = priceIdForPlan(stripeContext.data, plan);
+    if (!priceId) {
+        return {
+            success: false,
+            error: "The Enterprise plan is not configured. Set STRIPE_ENTERPRISE_PRICE_ID.",
+        };
+    }
 
     const [workspace, existing] = await Promise.all([
         db.workspace.findUnique({
@@ -64,10 +73,14 @@ export async function createCheckoutSessionAction(
         return { success: false, error: "Workspace not found" };
     }
 
-    if (existing?.plan === "PRO" && existing.status === "ACTIVE") {
+    if (
+        existing &&
+        existing.plan !== "FREE" &&
+        (existing.status === "ACTIVE" || existing.status === "TRIALING")
+    ) {
         return {
             success: false,
-            error: "This workspace is already on the Pro plan",
+            error: "This workspace already has a paid plan. Switch plans instead.",
         };
     }
 
@@ -95,7 +108,7 @@ export async function createCheckoutSessionAction(
         const checkout = await stripe.checkout.sessions.create({
             mode: "subscription",
             customer: customerId,
-            line_items: [{ price: proPriceId, quantity: 1 }],
+            line_items: [{ price: priceId, quantity: 1 }],
             client_reference_id: workspaceId,
             metadata: { workspaceId },
             subscription_data: { metadata: { workspaceId } },

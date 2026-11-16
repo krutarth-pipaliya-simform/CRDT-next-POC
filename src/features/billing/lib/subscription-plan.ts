@@ -6,7 +6,7 @@ import type { SubscriptionPlanValue } from "@/schemas/billing";
 const ENTITLED_STATUSES: SubscriptionStatus[] = ["ACTIVE", "TRIALING"];
 
 /**
- * The plan a workspace may actually use. A Pro subscription that has lapsed
+ * The plan a workspace may actually use. A paid subscription that has lapsed
  * (`PAST_DUE`, `CANCELED`, `INCOMPLETE`) silently reads as Free so entitlement
  * checks never have to repeat the status logic.
  */
@@ -14,8 +14,8 @@ export function resolveEffectivePlan(
     plan: SubscriptionPlan,
     status: SubscriptionStatus,
 ): SubscriptionPlanValue {
-    if (plan === "PRO" && ENTITLED_STATUSES.includes(status)) {
-        return "PRO";
+    if (plan !== "FREE" && ENTITLED_STATUSES.includes(status)) {
+        return plan;
     }
     return "FREE";
 }
