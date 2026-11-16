@@ -9,6 +9,8 @@ import { Tag } from "@/components/paddock/tag";
 import { Wordmark } from "@/components/paddock/wordmark";
 import { auth } from "@/features/auth/lib/auth";
 import { PLANS } from "@/features/billing/lib/plans";
+import { LatestAnnouncement } from "@/features/cms/components/latest-announcement";
+import { CONTENT_SECTIONS } from "@/features/cms/lib/content-sections";
 import { ConvergenceCases } from "@/features/marketing/components/convergence-cases";
 import { LandingHeader } from "@/features/marketing/components/landing-header";
 import { MergeBand } from "@/features/marketing/components/merge-band";
@@ -28,6 +30,8 @@ export default async function LandingPage() {
             <LandingHeader signedIn={signedIn} />
 
             <main className="w-full flex-1">
+                <LatestAnnouncement className="mx-auto w-full max-w-[77rem] px-4 pt-4 sm:px-6" />
+
                 {/* Hero: the claim, then the demo proving it underneath. */}
                 <section
                     aria-label="Introduction"
@@ -171,6 +175,20 @@ export default async function LandingPage() {
                         >
                             <Wordmark size="sm" />
                         </Link>
+                        <nav
+                            aria-label="Content"
+                            className="flex flex-wrap gap-x-5.5"
+                        >
+                            {CONTENT_SECTIONS.map((section) => (
+                                <Link
+                                    key={section.href}
+                                    href={section.href}
+                                    className={FOOTER_LINK}
+                                >
+                                    {section.label}
+                                </Link>
+                            ))}
+                        </nav>
                         <nav aria-label="Account" className="flex gap-5.5">
                             {signedIn ? (
                                 <Link href="/dashboard" className={FOOTER_LINK}>

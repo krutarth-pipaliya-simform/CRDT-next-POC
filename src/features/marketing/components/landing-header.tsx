@@ -3,6 +3,7 @@ import Link from "next/link";
 import { PaddockLinkButton } from "@/components/paddock/paddock-button";
 import { Wordmark } from "@/components/paddock/wordmark";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { CONTENT_SECTIONS } from "@/features/cms/lib/content-sections";
 
 import { MergeGlyph } from "./merge-glyph";
 
@@ -27,6 +28,21 @@ export function LandingHeader({ signedIn }: LandingHeaderProps) {
                 >
                     <Wordmark />
                 </Link>
+
+                <nav
+                    aria-label="Content"
+                    className="hidden items-center gap-5 md:flex lg:absolute lg:left-44"
+                >
+                    {CONTENT_SECTIONS.map((section) => (
+                        <Link
+                            key={section.href}
+                            href={section.href}
+                            className="paddock-tag text-[0.6875rem] text-paddock-ink no-underline hover:underline"
+                        >
+                            {section.label}
+                        </Link>
+                    ))}
+                </nav>
 
                 <MergeGlyph className="absolute top-1/2 left-1/2 hidden size-[2.125rem] -translate-x-1/2 -translate-y-1/2 text-paddock-ink lg:block" />
 

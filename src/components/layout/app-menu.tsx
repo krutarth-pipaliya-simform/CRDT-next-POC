@@ -12,6 +12,7 @@ import {
 import { Tag } from "@/components/paddock/tag";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { logoutAction } from "@/features/auth/actions/logout";
+import { CONTENT_SECTIONS } from "@/features/cms/lib/content-sections";
 import { profileHref } from "@/features/profile/lib/profile-href";
 import { useCurrentWorkspace } from "@/hooks/use-current-workspace";
 import { WORKSPACE_ROLE_LABELS } from "@/schemas/workspace";
@@ -104,6 +105,16 @@ export function AppMenu({ workspaces, recentDocuments }: AppMenuProps) {
                             >
                                 All workspaces
                             </Link>
+                            {CONTENT_SECTIONS.map((section) => (
+                                <Link
+                                    key={section.href}
+                                    href={section.href}
+                                    onClick={() => setOpen(false)}
+                                    className={footerLink}
+                                >
+                                    {section.label}
+                                </Link>
+                            ))}
                             <form action={logoutAction}>
                                 <button
                                     type="submit"
