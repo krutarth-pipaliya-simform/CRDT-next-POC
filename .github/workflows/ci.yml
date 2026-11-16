@@ -1,0 +1,212 @@
+name: CI
+
+# Pull request validation: lint, type-check, unit tests + coverage, build, e2e.
+# The `sonar` job at the bottom runs after `quality` and consumes its coverage
+# artifact; it is skipped cleanly when SONAR_TOKEN is not available.
+#
+# RULES FOR MAINTAINERS (also in AGENTS.md):
+#  * Installs use `npm ci --legacy-peer-deps` (Tiptap's strict peer range).
+#  * A new REQUIRED variable in src/lib/env.ts must be added to the `env` blocks
+#    below (CI_APP_ENV) and to the builder stage of the Dockerfile.
+#  * Optional integrations (Stripe, OAuth, SMTP, Sentry) stay UNCONFIGURED in CI.
+
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop, main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "24"
+  # Non-secret values only. src/lib/env.ts has no SKIP_ENV_VALIDATION switch,
+  # so `next build` and the app need DATABASE_URL (a URL) and AUTH_SECRET.
+  DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+  DIRECT_URL: postgresql://ci:ci@localhost:5432/ci
+  AUTH_SECRET: ci-only-not-a-secret
+  NEXT_TELEMETRY_DISABLED: "1"
+
+jobs:
+  quality:
+    name: Lint, type-check, unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+      - name: Generate Prisma client
+        run: npx prisma generate
+      - name: Lint
+        run: npm run lint
+      - name: Type-check
+        run: npm run type-check
+      # `npm run test:coverage` is provided by the Jest setup (writes coverage/lcov.info).
+      - name: Unit tests with coverage
+        run: npm run test:coverage
+      - name: Upload coverage
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v5
+        with:
+          name: coverage
+          path: coverage/
+          if-no-files-found: warn
+          retention-days: 7
+
+  collab-server:
+    name: Collab server build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - run: npm ci
+      - run: npm run type-check
+      - run: npm run build
+
+  build:
+    name: Next.js build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - name: Cache Next.js build cache
+        uses: actions/cache@v4
+        with:
+          path: .next/cache
+          key: nextjs-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ hashFiles('src/**', 'next.config.ts') }}
+          restore-keys: |
+            nextjs-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
+      - run: npm ci --legacy-peer-deps
+      - name: Build (prisma generate && next build)
+        run: npm run build
+
+  e2e:
+    name: Playwright e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci -d ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      # Makes playwright.config.ts retry, forbid .only, run 1 worker and NOT
+      # reuse an existing server. It then runs `npm run dev` (next dev on 3000
+      # + the collab server on 1234), which also lets the password-reset spec
+      # read the dev-only reset link. No Stripe/OAuth/SMTP: billing.spec.ts
+      # seeds subscriptions directly and the other specs do not need them.
+      CI: "true"
+      AUTH_TRUST_HOST: "true"
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci --legacy-peer-deps
+      - name: Create database schema
+        # The checked-in migrations lag behind schema.prisma, so use db push.
+        run: npx prisma db push
+      - name: Get Playwright version
+        id: pw
+        run: echo "version=$(npm ls @playwright/test --depth=0 --json | node -p 'JSON.parse(require("fs").readFileSync(0,"utf8")).dependencies["@playwright/test"].version')" >> "$GITHUB_OUTPUT"
+      - name: Cache Playwright browsers
+        id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
+      - name: Install Playwright browsers
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+      - name: Install Playwright system dependencies
+        if: steps.pw-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+      # No specs are excluded: all of e2e/*.spec.ts run against the dev stack.
+      - name: Run e2e tests
+        run: npm run test:e2e
+      - name: Upload Playwright report
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v5
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+
+  sonar:
+    name: Sonar analysis
+    runs-on: ubuntu-latest
+    needs: quality
+    timeout-minutes: 20
+    steps:
+      # Secrets are unavailable in job-level `if`, so gate on a step output.
+      # Fork PRs and repos without SONAR_TOKEN skip cleanly (green).
+      - name: Check Sonar configuration
+        id: gate
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          if [ -z "$SONAR_TOKEN" ]; then
+            echo "::notice title=Sonar skipped::SONAR_TOKEN is not available (not configured, or a fork PR). Skipping analysis."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v6
+        if: steps.gate.outputs.enabled == 'true'
+        with:
+          fetch-depth: 0 # full history for blame / new-code detection
+      - name: Download coverage
+        if: steps.gate.outputs.enabled == 'true'
+        uses: actions/download-artifact@v5
+        with:
+          name: coverage
+          path: coverage
+      # Works for SonarQube Server (set vars.SONAR_HOST_URL) and SonarQube Cloud
+      # (leave SONAR_HOST_URL unset; set SONAR_ORGANIZATION). Project key and
+      # organization come from repo variables; defaults live in sonar-project.properties.
+      # `sonar.qualitygate.wait=true` makes the step fail when the gate fails.
+      - name: SonarQube scan
+        if: steps.gate.outputs.enabled == 'true'
+        uses: SonarSource/sonarqube-scan-action@v8
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+        with:
+          args: >
+            -Dsonar.qualitygate.wait=true
+            -Dsonar.projectKey=${{ vars.SONAR_PROJECT_KEY || github.event.repository.name }}
+            ${{ vars.SONAR_ORGANIZATION && format('-Dsonar.organization={0}', vars.SONAR_ORGANIZATION) || '' }}
