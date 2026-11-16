@@ -1,0 +1,82 @@
+# Local / prod-like stack: postgres + schema sync + Next app + collab server.
+#   cp .env.example .env   # fill AUTH_SECRET (and optional OAuth/SMTP/Stripe)
+#   docker compose up --build
+# Values come from `.env` (compose reads it automatically). DATABASE_URL in
+# .env is IGNORED here: the app talks to the `postgres` service below.
+# NEXT_PUBLIC_COLLAB_WS_URL is baked into the client bundle at BUILD time and
+# must be the address the BROWSER uses to reach the collab server.
+
+name: crdt-workspace
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-crdt}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-crdt}
+      POSTGRES_DB: ${POSTGRES_DB:-crdt}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # One-shot: create/update the schema. The checked-in migrations are behind
+  # schema.prisma, so the project uses `prisma db push` (same as CI).
+  migrate:
+    image: ${APP_IMAGE:-crdt-app}-tools:${APP_TAG:-local}
+    build:
+      context: .
+      target: tools
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-crdt}:${POSTGRES_PASSWORD:-crdt}@postgres:5432/${POSTGRES_DB:-crdt}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  app:
+    image: ${APP_IMAGE:-crdt-app}:${APP_TAG:-local}
+    build:
+      context: .
+      target: runner
+      args:
+        NEXT_PUBLIC_COLLAB_WS_URL: ${NEXT_PUBLIC_COLLAB_WS_URL:-ws://localhost:1234}
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      # Explicit values win over env_file.
+      DATABASE_URL: postgresql://${POSTGRES_USER:-crdt}:${POSTGRES_PASSWORD:-crdt}@postgres:5432/${POSTGRES_DB:-crdt}
+      AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET in .env}
+      # Auth.js rejects unknown Host headers in production; the app sits behind
+      # this port mapping or a reverse proxy, so trust it. Set APP_URL for emails.
+      AUTH_TRUST_HOST: "true"
+    volumes:
+      - uploads:/app/storage
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      collab:
+        condition: service_started
+
+  collab:
+    image: ${COLLAB_IMAGE:-crdt-collab}:${APP_TAG:-local}
+    build:
+      context: ./server
+    restart: unless-stopped
+    ports:
+      - "${COLLAB_PORT:-1234}:1234"
+    environment:
+      # Comma-separated origins allowed to connect; "*" is for local use only.
+      CORS_ORIGIN: ${COLLAB_CORS_ORIGIN:-*}
+
+volumes:
+  pgdata:
+  uploads:

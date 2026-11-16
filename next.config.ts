@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs/config";
 
 const nextConfig: NextConfig = {
+    // Self-contained server bundle (.next/standalone) for the Docker image.
+    output: "standalone",
     images: {
         remotePatterns: [
             {
