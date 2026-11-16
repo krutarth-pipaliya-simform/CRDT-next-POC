@@ -1,12 +1,6 @@
 "use client";
 
-import {
-    useCallback,
-    useMemo,
-    useRef,
-    useState,
-    type KeyboardEvent,
-} from "react";
+import { useCallback, useMemo, useRef, type KeyboardEvent } from "react";
 import { Bell } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -15,6 +9,7 @@ import { toast } from "sonner";
 import { Tag } from "@/components/paddock/tag";
 import { useOutsideClick } from "@/hooks/use-outside-click";
 import { cn } from "@/lib/cn";
+import { useShellPanel } from "@/stores/shell-ui-store";
 
 import { NotificationItem } from "./notification-item";
 import { useNotificationStream } from "../hooks/use-notification-stream";
@@ -34,9 +29,8 @@ const STREAM_STATUS = {
 } as const;
 
 export function NotificationBell() {
-    const [isOpen, setIsOpen] = useState(false);
+    const { open: isOpen, toggle, close } = useShellPanel("notifications");
     const dropdownRef = useRef<HTMLDivElement>(null);
-    const close = useCallback(() => setIsOpen(false), []);
     const params = useParams();
     // The inbox spans every workspace; inside one, "all activity" means that
     // workspace's, not whichever sent the newest notification.
@@ -69,15 +63,15 @@ export function NotificationBell() {
     const handleRead = useCallback(
         (notificationId: string) => {
             void markRead(notificationId);
-            setIsOpen(false);
+            close();
         },
-        [markRead],
+        [markRead, close],
     );
 
     function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
         if (event.key === "Escape" && isOpen) {
             event.stopPropagation();
-            setIsOpen(false);
+            close();
         }
     }
 
@@ -88,7 +82,7 @@ export function NotificationBell() {
         <div className="relative" ref={dropdownRef} onKeyDown={handleKeyDown}>
             <button
                 type="button"
-                onClick={() => setIsOpen(!isOpen)}
+                onClick={toggle}
                 aria-expanded={isOpen}
                 aria-haspopup="true"
                 aria-label={

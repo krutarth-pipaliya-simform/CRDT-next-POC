@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState, type KeyboardEvent } from "react";
+import { useRef, type KeyboardEvent } from "react";
 import { LogOut, UserRound } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -9,6 +9,7 @@ import { PaddockAvatar } from "@/components/paddock/paddock-avatar";
 import { logoutAction } from "@/features/auth/actions/logout";
 import { profileHref } from "@/features/profile/lib/profile-href";
 import { useOutsideClick } from "@/hooks/use-outside-click";
+import { useShellPanel } from "@/stores/shell-ui-store";
 
 export interface AccountMenuProps {
     user: {
@@ -28,17 +29,16 @@ const itemClasses =
  * finding the full-screen menu.
  */
 export function AccountMenu({ user }: AccountMenuProps) {
-    const [open, setOpen] = useState(false);
+    const { open, toggle, close } = useShellPanel("account");
     const pathname = usePathname();
     const containerRef = useRef<HTMLDivElement>(null);
-    const close = useCallback(() => setOpen(false), []);
 
     useOutsideClick(containerRef, close, open);
 
     function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
         if (event.key === "Escape" && open) {
             event.stopPropagation();
-            setOpen(false);
+            close();
         }
     }
 
@@ -50,7 +50,7 @@ export function AccountMenu({ user }: AccountMenuProps) {
         >
             <button
                 type="button"
-                onClick={() => setOpen((value) => !value)}
+                onClick={toggle}
                 aria-expanded={open}
                 aria-haspopup="true"
                 aria-label={`Account menu, ${user.name}`}
