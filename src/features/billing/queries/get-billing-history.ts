@@ -1,3 +1,5 @@
+import { reportError } from "@/lib/report-error";
+
 import { getManagedSubscription } from "../lib/managed-subscription";
 import type { BillingHistory } from "../types";
 
@@ -61,7 +63,7 @@ export async function getBillingHistory(
             })),
         };
     } catch (error) {
-        console.error("[billing] history fetch failed", error);
+        reportError("[billing] history fetch failed", error);
         return {
             status: "unavailable",
             reason: "Stripe did not return the billing history. Try again shortly.",

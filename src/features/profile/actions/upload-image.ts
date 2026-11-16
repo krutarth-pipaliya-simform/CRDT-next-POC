@@ -6,6 +6,7 @@ import path from "path";
 
 import { auth } from "@/features/auth/lib/auth";
 import { db } from "@/lib/db";
+import { reportError } from "@/lib/report-error";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
@@ -127,7 +128,7 @@ export async function uploadProfilePicture(
             data: { message: "Profile picture updated successfully", imageUrl },
         };
     } catch (error) {
-        console.error("Upload profile picture error:", error);
+        reportError("Upload profile picture error:", error);
         return {
             success: false,
             error: "Failed to upload image",
@@ -163,7 +164,7 @@ export async function removeProfilePicture(): Promise<RemoveProfilePictureResult
             data: { message: "Profile picture removed successfully" },
         };
     } catch (error) {
-        console.error("Remove profile picture error:", error);
+        reportError("Remove profile picture error:", error);
         return {
             success: false,
             error: "Failed to remove image",

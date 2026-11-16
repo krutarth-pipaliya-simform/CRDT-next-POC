@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/features/auth/lib/auth";
 import { updateProfileSchema } from "@/features/profile/schemas";
 import { db } from "@/lib/db";
+import { reportError } from "@/lib/report-error";
 
 export type UpdateProfileResult =
     | {
@@ -51,7 +52,7 @@ export async function updateProfile(
             data: { message: "Name updated successfully" },
         };
     } catch (error) {
-        console.error("Update profile error:", error);
+        reportError("Update profile error:", error);
         return {
             success: false,
             error: "Failed to update name",

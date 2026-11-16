@@ -6,6 +6,7 @@ import {
     syncSubscriptionToWorkspace,
 } from "@/features/billing/lib/sync-subscription";
 import { db } from "@/lib/db";
+import { reportError } from "@/lib/report-error";
 import { getStripeContext } from "@/lib/stripe";
 import { stripeMetadataSchema } from "@/schemas/billing";
 
@@ -160,7 +161,7 @@ export async function POST(request: Request): Promise<Response> {
         ) {
             return Response.json({ received: true, duplicate: true });
         }
-        console.error("[stripe-webhook] could not record event", error);
+        reportError("[stripe-webhook] could not record event", error);
         return new Response("Webhook ledger unavailable", { status: 500 });
     }
 
@@ -177,7 +178,7 @@ export async function POST(request: Request): Promise<Response> {
                 break;
         }
     } catch (error) {
-        console.error(`[stripe-webhook] ${event.type} failed`, error);
+        reportError(`[stripe-webhook] ${event.type} failed`, error);
         // Release the claim so Stripe's retry can reprocess this event.
         await db.stripeWebhookEvent
             .delete({ where: { id: event.id } })

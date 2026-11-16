@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import { reportError } from "@/lib/report-error";
 import { priceIdForPlan } from "@/lib/stripe";
 import {
     changeSubscriptionPlanSchema,
@@ -95,7 +96,7 @@ export async function changeSubscriptionPlanAction(
 
         await syncSubscriptionToWorkspace(workspaceId, updated);
     } catch (error) {
-        console.error("[billing] plan change failed", error);
+        reportError("[billing] plan change failed", error);
         return { success: false, error: "Stripe could not change the plan" };
     }
 

@@ -3,6 +3,7 @@
 import { auth } from "@/features/auth/lib/auth";
 import { getWorkspaceRole } from "@/features/workspace/lib/rbac";
 import { db } from "@/lib/db";
+import { reportError } from "@/lib/report-error";
 import { getStripeContext, priceIdForPlan } from "@/lib/stripe";
 import { getAppUrl } from "@/lib/url";
 import { createCheckoutSessionSchema } from "@/schemas/billing";
@@ -125,7 +126,7 @@ export async function createCheckoutSessionAction(
 
         return { success: true, data: { url: checkout.url } };
     } catch (error) {
-        console.error("[billing] checkout session failed", error);
+        reportError("[billing] checkout session failed", error);
         return { success: false, error: "Failed to start checkout" };
     }
 }

@@ -3,6 +3,7 @@
 import { sendPasswordResetEmail } from "@/features/auth/lib/email";
 import { createPasswordResetToken } from "@/features/auth/lib/password-reset-tokens";
 import { db } from "@/lib/db";
+import { reportError } from "@/lib/report-error";
 import { getAppUrl } from "@/lib/url";
 import { forgotPasswordSchema } from "@/schemas/auth";
 
@@ -63,7 +64,7 @@ export async function requestPasswordResetAction(
                 process.env.NODE_ENV !== "production" ? resetUrl : undefined,
         };
     } catch (error) {
-        console.error("Request password reset error:", error);
+        reportError("Request password reset error:", error);
         return {
             success: false,
             error: "We could not send the reset email. Try again in a minute.",

@@ -3,6 +3,7 @@
 import { sendVerificationEmail } from "@/features/auth/lib/email";
 import { generateVerificationToken } from "@/features/auth/lib/tokens";
 import { db } from "@/lib/db";
+import { reportError } from "@/lib/report-error";
 import { getAppUrl } from "@/lib/url";
 
 export type ResendVerificationResult =
@@ -65,7 +66,7 @@ export async function resendVerificationAction(
                     : undefined,
         };
     } catch (error) {
-        console.error("Resend verification error:", error);
+        reportError("Resend verification error:", error);
         return { error: "Failed to send verification email" };
     }
 }
