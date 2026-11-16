@@ -1,6 +1,7 @@
 import { getWorkspaceRole } from "@/features/workspace/lib/rbac";
 import { db } from "@/lib/db";
 
+import { chatMessageSelect, toChatBroadcast } from "../lib/message-select";
 import { CHAT_HISTORY_LIMIT, type ChatMessage } from "../types";
 
 import "server-only";
@@ -22,29 +23,14 @@ export async function getWorkspaceMessages(
 
     const rows = await db.message.findMany({
         where: { workspaceId },
-        select: {
-            id: true,
-            body: true,
-            createdAt: true,
-            author: {
-                select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                    image: true,
-                },
-            },
-        },
+        select: chatMessageSelect,
         orderBy: { createdAt: "desc" },
         take: limit,
     });
 
     // Queried newest-first so the LIMIT keeps the latest window, then reversed for display
     return rows.reverse().map((row) => ({
-        id: row.id,
-        body: row.body,
-        createdAt: row.createdAt.toISOString(),
-        author: row.author,
+        ...toChatBroadcast(row),
         deliveryState: "sent" as const,
     }));
 }

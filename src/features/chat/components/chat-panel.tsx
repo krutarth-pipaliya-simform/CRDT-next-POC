@@ -1,11 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { DisplayHeading } from "@/components/paddock/display-heading";
 
 import { useWorkspaceChat } from "../hooks/use-workspace-chat";
-import type { ChatMessage } from "../types";
+import type { ChatMessage, ChatReadReceipt } from "../types";
 import { MessageComposer } from "./message-composer";
 import { MessageList } from "./message-list";
 import { PeoplePanel } from "./people-panel";
@@ -16,6 +16,7 @@ export interface ChatPanelProps {
     workspaceId: string;
     workspaceName: string;
     initialMessages: ChatMessage[];
+    initialReadReceipts: ChatReadReceipt[];
     currentUser: {
         id: string;
         name: string;
@@ -63,15 +64,19 @@ export function ChatPanel({
     workspaceId,
     workspaceName,
     initialMessages,
+    initialReadReceipts,
     currentUser,
     canPost,
 }: ChatPanelProps) {
     const frameRef = useFillViewport();
+    // The log opens scrolled to the newest message
+    const [isViewingLatest, setIsViewingLatest] = useState(true);
     const {
         messages,
         participants,
         typingUsers,
         connectionStatus,
+        seenBy,
         sendMessage,
         notifyTyping,
         retryMessage,
@@ -80,11 +85,13 @@ export function ChatPanel({
         initialMessages,
         currentUser,
         canPost,
+        initialReadReceipts,
+        isViewingLatest,
     });
 
     const handleSend = useCallback(
-        (body: string) => {
-            void sendMessage(body);
+        (body: string, file: File | null) => {
+            void sendMessage(body, file);
         },
         [sendMessage],
     );
@@ -130,7 +137,9 @@ export function ChatPanel({
                 <MessageList
                     messages={messages}
                     currentUserId={currentUser.id}
+                    seenBy={seenBy}
                     onRetry={handleRetry}
+                    onViewingLatestChange={setIsViewingLatest}
                 />
 
                 <div className="shrink-0 px-4 pb-4 sm:px-5">

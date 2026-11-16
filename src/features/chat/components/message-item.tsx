@@ -5,13 +5,17 @@ import { paddockPresenceVar } from "@/components/paddock/paddock-presence";
 import { cn } from "@/lib/cn";
 import { formatClockTime } from "@/lib/format-time";
 
-import type { ChatMessage } from "../types";
+import type { ChatAuthor, ChatMessage } from "../types";
+import { MessageAttachment } from "./message-attachment";
+import { ReadReceipt } from "./read-receipt";
 
 export interface MessageItemProps {
     message: ChatMessage;
     /** Collapses the avatar and author line when the previous message shares an author. */
     isGrouped: boolean;
     isOwn: boolean;
+    /** Other members whose read cursor stops at this message. */
+    seenBy?: ChatAuthor[];
     onRetry: (messageId: string) => void;
 }
 
@@ -25,6 +29,7 @@ export function MessageItem({
     message,
     isGrouped,
     isOwn,
+    seenBy,
     onRetry,
 }: MessageItemProps) {
     const authorName = message.author.name || message.author.email || "Unknown";
@@ -86,9 +91,22 @@ export function MessageItem({
                     </div>
                 )}
 
-                <p className="m-0 text-[0.96875rem] leading-[1.55] [overflow-wrap:anywhere] whitespace-pre-wrap">
-                    {message.body}
-                </p>
+                {message.body.length > 0 && (
+                    <p className="m-0 text-[0.96875rem] leading-[1.55] [overflow-wrap:anywhere] whitespace-pre-wrap">
+                        {message.body}
+                    </p>
+                )}
+
+                {message.attachment && (
+                    <MessageAttachment
+                        attachment={message.attachment}
+                        isAvailable={message.deliveryState === "sent"}
+                    />
+                )}
+
+                {seenBy && seenBy.length > 0 && (
+                    <ReadReceipt readers={seenBy} />
+                )}
 
                 {isFailed && (
                     <p className="m-0 mt-1 text-[0.8125rem] font-semibold text-paddock-danger">

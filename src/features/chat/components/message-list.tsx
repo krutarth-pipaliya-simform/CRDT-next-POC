@@ -5,13 +5,17 @@ import { ArrowDown } from "lucide-react";
 
 import { formatDayLabel } from "@/lib/format-time";
 
-import type { ChatMessage } from "../types";
+import type { ChatAuthor, ChatMessage } from "../types";
 import { MessageItem } from "./message-item";
 
 export interface MessageListProps {
     messages: ChatMessage[];
     currentUserId: string;
+    /** Other members whose read cursor stops at each message, keyed by message id. */
+    seenBy: ReadonlyMap<string, ChatAuthor[]>;
     onRetry: (messageId: string) => void;
+    /** Reports whether the reader is at the newest message, which is what counts as "read". */
+    onViewingLatestChange?: (isViewingLatest: boolean) => void;
 }
 
 /** Consecutive messages from one author within this window render as a single group. */
@@ -27,7 +31,9 @@ function isSameDay(a: string, b: string): boolean {
 export function MessageList({
     messages,
     currentUserId,
+    seenBy,
     onRetry,
+    onViewingLatestChange,
 }: MessageListProps) {
     const scrollRef = useRef<HTMLDivElement>(null);
     const isPinnedRef = useRef(true);
@@ -40,7 +46,13 @@ export function MessageList({
         if (!container || !isPinnedRef.current) return;
 
         container.scrollTop = container.scrollHeight;
-    }, [messages]);
+    }, [messages, seenBy]);
+
+    const setPinned = (pinned: boolean) => {
+        if (pinned !== isPinnedRef.current) onViewingLatestChange?.(pinned);
+        isPinnedRef.current = pinned;
+        setShowJump(!pinned);
+    };
 
     const handleScroll = () => {
         const container = scrollRef.current;
@@ -50,8 +62,7 @@ export function MessageList({
             container.scrollHeight -
             container.scrollTop -
             container.clientHeight;
-        isPinnedRef.current = distanceFromBottom <= AUTOSCROLL_THRESHOLD_PX;
-        setShowJump(!isPinnedRef.current);
+        setPinned(distanceFromBottom <= AUTOSCROLL_THRESHOLD_PX);
     };
 
     const jumpToLatest = () => {
@@ -59,8 +70,7 @@ export function MessageList({
         if (!container) return;
 
         container.scrollTop = container.scrollHeight;
-        isPinnedRef.current = true;
-        setShowJump(false);
+        setPinned(true);
     };
 
     if (messages.length === 0) {
@@ -127,6 +137,7 @@ export function MessageList({
                                     message={message}
                                     isGrouped={isGrouped}
                                     isOwn={message.author.id === currentUserId}
+                                    seenBy={seenBy.get(message.id)}
                                     onRetry={onRetry}
                                 />
                             </Fragment>

@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { auth } from "@/features/auth/lib/auth";
 import { ChatPanel } from "@/features/chat/components/chat-panel";
+import { getChatReadReceipts } from "@/features/chat/queries/get-chat-read-receipts";
 import { getWorkspaceMessages } from "@/features/chat/queries/get-workspace-messages";
 import {
     getWorkspaceRole,
@@ -33,7 +34,10 @@ export default async function ChatPage({ params }: ChatPageProps) {
     const role = await getWorkspaceRole(workspaceId);
     const canPost = role === "ADMIN" || role === "MEMBER";
 
-    const messages = await getWorkspaceMessages(workspaceId);
+    const [messages, readReceipts] = await Promise.all([
+        getWorkspaceMessages(workspaceId),
+        getChatReadReceipts(workspaceId),
+    ]);
 
     // No hero: the chat fills the viewport under the shell, and its own
     // header carries the page heading.
@@ -43,6 +47,7 @@ export default async function ChatPage({ params }: ChatPageProps) {
                 workspaceId={workspaceId}
                 workspaceName={workspace.name}
                 initialMessages={messages}
+                initialReadReceipts={readReceipts}
                 currentUser={{
                     id: session.user.id,
                     name: session.user.name || session.user.email || "You",

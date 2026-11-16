@@ -190,6 +190,15 @@ Every page of the product is built in Paddock: off-white paper, olive ink, one a
     - **E2E**: `e2e/password-reset.spec.ts` (3 scenarios) plus new billing/analytics scenarios for Enterprise history, plan-card actions, the cancel dialog, billing history, and CSV/PNG export. `E2E_PORT=3001 npm run test:e2e` runs the suite against a server on another port.
     - **Headless CMS Content (PRD 11)**: blog articles, product announcements, documentation and release notes are read from a Strapi v5 REST API (`src/features/cms/`), not hardcoded. Public pages: `/blog`, `/blog/[slug]`, `/announcements`, `/docs`, `/docs/[slug]` (grouped by section), `/changelog`; a latest-announcement strip appears on the landing page and dashboard. Bodies are Strapi Blocks JSON rendered by React (no raw HTML; unsafe link schemes are dropped). Responses are Zod-validated, cached for five minutes and tagged `cms`; `POST /api/cms/revalidate` (shared secret `CMS_REVALIDATE_SECRET`) lets a Strapi publish webhook refresh them. Content-type definitions and setup steps live in `cms/`.
 
+14. **Chat File Sharing & Read Receipts (FR-11)**
+    - **One File per Message**: the composer's paperclip, a file dropped on the composer, or a pasted file attaches one file; a message may be the file alone. Allowed: PNG, JPG, GIF, WebP, PDF, TXT, Markdown, CSV, ZIP, DOCX, XLSX, PPTX, up to 8 MB (`CHAT_ATTACHMENT_KINDS` / `CHAT_ATTACHMENT_MAX_BYTES` in `src/schemas/chat.ts`). SVG and HTML are refused because they can carry script. The composer checks name and size with the same Zod schema the server uses, so a refused file never uploads.
+    - **Server Checks the Bytes**: `sendMessageAction` takes `FormData`, validates it with Zod, and then `sniffAttachment` checks the file's leading bytes against its extension (PNG/JPEG/GIF/WebP/PDF/ZIP signatures; text must be valid UTF-8 without NULs). The browser's MIME type is never trusted; the stored type comes from the allow-list. The file is written under `storage/uploads/chat/<workspaceId>/<uuid>.<ext>`, then the `Message` row is persisted with its `attachment*` columns, and only then fanned out on the CRDT room. If the row fails, the file is deleted.
+    - **Authorised Downloads**: `/api/uploads/chat/…` serves a file only when a message row points at it and the caller can read that workspace's chat (Admin, Member or Guest). Signed-out requests get 401; anyone else gets the same 404 as a missing file. Responses are `private, no-cache`, `nosniff` and sandboxed; images are served inline, everything else as an attachment with its original name.
+    - **Bubbles**: images render as a preview that opens full size; other files as a named download chip with the size.
+    - **Read Receipts**: when a Member or Admin has the channel open on a visible tab and is scrolled to the newest message, `markChatReadAction` moves their `ChatReadCursor` forward to that message's own `createdAt` (the client names a message, never a time, and the cursor never moves back). The persisted receipt is then written to the room's shared `Y.Map` (`receipts`), so other open clients move the "Seen by" avatars under the latest message each member has read without a reload. Readers never see their own receipt, and an author is not listed under their own message. Guests neither write a cursor nor appear in receipts, matching how they leave no presence or typing trace.
+    - **Shared Upload Storage**: `src/lib/upload-storage.ts` (`saveUpload` / `readUpload` / `deleteUpload`) is now the only code that touches `storage/uploads`; profile pictures and document images use it too, and it refuses path segments that could climb out of the upload root. `serverActions.bodySizeLimit` is raised to 9 MB, which also lets document images up to their stated 5 MB through (the 1 MB default rejected them).
+    - **E2E**: `e2e/chat-files-and-receipts.spec.ts` (4 scenarios): a file and an image surviving a reload and downloading byte-for-byte; a refused SVG, an oversized PDF and a text file disguised as a PNG (rejected by the server, nothing stored); a chat file refused to a non-member (404) and to a signed-out request (401) but served to a member; and a live "Seen by" receipt in a second session that survives a reload.
+
 ## Getting Started
 
 1. **Environment Setup**
@@ -273,6 +282,16 @@ Open [http://localhost:3000](http://localhost:3000) with your browser. You will 
 - **"Professional" is labelled "Pro"** in the product, as before.
 - **Enterprise cannot be bought until `STRIPE_ENTERPRISE_PRICE_ID` is set**; no Enterprise price was created in the Stripe account.
 - **Zoom is pointer-only.** The ECharts slider cannot be operated from the keyboard; the same data is available through the CSV export and each chart's text label.
+
+## Known Limitations (Chat Files & Read Receipts)
+
+- **Files live on the server's disk.** Like profile pictures and document images, chat files are in `storage/uploads`, so a multi-instance or serverless deployment needs object storage behind `src/lib/upload-storage.ts`.
+- **Deleting a workspace leaves its chat files on disk.** The rows cascade away, so the files become unreachable (the route needs a row), but they are not removed.
+- **Signature checks are shallow.** The leading bytes must match the extension; an Office file is only checked to be a ZIP, and there is no virus scanning.
+- **Images are served at full size.** Previews are not thumbnailed, and they bypass the Next image optimiser because it would fetch without the reader's session.
+- **A failed file message can be retried only until reload.** The `File` is held in memory for the retry button.
+- **Receipts cover the loaded window.** A member whose cursor is older than the 50 messages on screen shows no receipt.
+- **The CRDT room is not authenticated.** Any client connected to the collaboration server could write a fake message or receipt into the room. Entries are parsed with Zod (attachment URLs must point at `/api/uploads/chat/`), and a reload shows only what PostgreSQL holds; this is the same trust model chat messages already had.
 
 ## Known Limitations (Design System)
 
