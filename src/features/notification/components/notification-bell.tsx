@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useRef, useState, type KeyboardEvent } from "react";
+import {
+    useCallback,
+    useMemo,
+    useRef,
+    useState,
+    type KeyboardEvent,
+} from "react";
 import { Bell } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -12,12 +18,11 @@ import { cn } from "@/lib/cn";
 
 import { NotificationItem } from "./notification-item";
 import { useNotificationStream } from "../hooks/use-notification-stream";
+import { useNotificationStore } from "../stores/notification-store-provider";
 import type { NotificationPayload } from "../types";
 
-export interface NotificationBellProps {
-    initialNotifications: NotificationPayload[];
-    initialUnreadCount: number;
-}
+/** Notifications the dropdown keeps listing as new ones arrive. */
+const BELL_LIST_LIMIT = 30;
 
 const STREAM_STATUS = {
     live: { label: "Live updates connected", dot: "bg-paddock-lime" },
@@ -28,10 +33,7 @@ const STREAM_STATUS = {
     offline: { label: "Live updates disconnected", dot: "bg-paddock-danger" },
 } as const;
 
-export function NotificationBell({
-    initialNotifications,
-    initialUnreadCount,
-}: NotificationBellProps) {
+export function NotificationBell() {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const close = useCallback(() => setIsOpen(false), []);
@@ -50,12 +52,19 @@ export function NotificationBell({
         });
     }, []);
 
-    const { notifications, unreadCount, status, markRead, markAllRead } =
-        useNotificationStream({
-            initialNotifications,
-            initialUnreadCount,
-            onNotification: handleIncoming,
-        });
+    // The bell is in every header, so it owns the live stream; the store it
+    // feeds is shared with the activity feed.
+    useNotificationStream({ onNotification: handleIncoming });
+
+    const allNotifications = useNotificationStore((s) => s.notifications);
+    const unreadCount = useNotificationStore((s) => s.unreadCount);
+    const status = useNotificationStore((s) => s.status);
+    const markRead = useNotificationStore((s) => s.markRead);
+    const markAllRead = useNotificationStore((s) => s.markAllRead);
+    const notifications = useMemo(
+        () => allNotifications.slice(0, BELL_LIST_LIMIT),
+        [allNotifications],
+    );
 
     const handleRead = useCallback(
         (notificationId: string) => {

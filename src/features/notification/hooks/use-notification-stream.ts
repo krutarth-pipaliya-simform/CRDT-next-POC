@@ -1,37 +1,22 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 
 import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
+import { notificationPayloadSchema } from "@/schemas/notification";
 
-import { markAllNotificationsReadAction } from "../actions/mark-all-notifications-read";
-import { markNotificationReadAction } from "../actions/mark-notification-read";
+import { useNotificationStoreApi } from "../stores/notification-store-provider";
 import type { NotificationPayload } from "../types";
 
-export type StreamStatus = "connecting" | "live" | "offline";
-
 export interface UseNotificationStreamOptions {
-    initialNotifications: NotificationPayload[];
-    initialUnreadCount: number;
     /** Called once per notification newly received over the stream. */
     onNotification?: (notification: NotificationPayload) => void;
-    /** Maximum notifications retained client-side. */
-    limit?: number;
     /**
-     * Refresh the page's server data when notifications arrive. Only one
-     * consumer per page needs to: the header bell always does, so a second
-     * stream on the same page (the activity feed) turns it off.
+     * Refresh the page's server data when notifications arrive. The header
+     * bell owns the stream, so it is the one refresher per page.
      */
     refreshOnNotification?: boolean;
-}
-
-export interface UseNotificationStreamResult {
-    notifications: NotificationPayload[];
-    unreadCount: number;
-    status: StreamStatus;
-    markRead: (notificationId: string) => Promise<void>;
-    markAllRead: (workspaceId?: string) => Promise<void>;
 }
 
 const RECONNECT_DELAY_MS = 5_000;
@@ -40,55 +25,34 @@ const MAX_RECONNECT_DELAY_MS = 60_000;
 const REFRESH_DEBOUNCE_MS = 750;
 
 /**
- * Subscribes to `/api/notifications/stream` and keeps a live notification list.
+ * Connects `/api/notifications/stream` and feeds the notification store.
  *
- * The server-rendered list seeds the state, then SSE frames prepend onto it — so the
- * bell is correct on first paint and stays current without polling.
+ * The stream is a side effect, not state: the list, the unread count and the
+ * connection status all live in the store, which the server-rendered inbox
+ * seeded, so the bell is correct on first paint and stays current without
+ * polling. Mount this once, in the header bell.
  */
 export function useNotificationStream({
-    initialNotifications,
-    initialUnreadCount,
     onNotification,
-    limit = 30,
     refreshOnNotification = true,
-}: UseNotificationStreamOptions): UseNotificationStreamResult {
+}: UseNotificationStreamOptions = {}): void {
+    const store = useNotificationStoreApi();
     const router = useRouter();
     const refresh = useDebouncedCallback(
         () => router.refresh(),
         REFRESH_DEBOUNCE_MS,
     );
     const onNotificationRef = useRef(onNotification);
-    const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
-        null,
-    );
-    const seededSignatureRef = useRef<string | null>(null);
-
-    const [notifications, setNotifications] =
-        useState<NotificationPayload[]>(initialNotifications);
-    const [unreadCount, setUnreadCount] = useState<number>(initialUnreadCount);
-    const [status, setStatus] = useState<StreamStatus>("connecting");
 
     useEffect(() => {
         onNotificationRef.current = onNotification;
     }, [onNotification]);
 
-    // Re-seed only when the server actually sends a different list, so a plain
-    // re-render never clobbers notifications marked read optimistically here
     useEffect(() => {
-        const signature = initialNotifications
-            .map((item) => `${item.id}:${item.readAt ?? ""}`)
-            .join("|");
-
-        if (signature === seededSignatureRef.current) return;
-
-        seededSignatureRef.current = signature;
-        setNotifications(initialNotifications);
-        setUnreadCount(initialUnreadCount);
-    }, [initialNotifications, initialUnreadCount]);
-
-    useEffect(() => {
+        const { receive, setStatus } = store.getState();
         let source: EventSource | null = null;
         let disposed = false;
+        let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
         // Doubles after each failure, so a stream that keeps failing (an
         // expired session) stops retrying every few seconds.
         let reconnectDelay = RECONNECT_DELAY_MS;
@@ -96,7 +60,9 @@ export function useNotificationStream({
         const handleNotification = (event: MessageEvent<string>) => {
             let payload: NotificationPayload;
             try {
-                payload = JSON.parse(event.data) as NotificationPayload;
+                payload = notificationPayloadSchema.parse(
+                    JSON.parse(event.data),
+                );
             } catch (error) {
                 console.error(
                     "[Notifications] Received an unparsable SSE frame:",
@@ -105,16 +71,12 @@ export function useNotificationStream({
                 return;
             }
 
-            setNotifications((prev) => {
-                if (prev.some((item) => item.id === payload.id)) {
-                    return prev;
-                }
-                return [payload, ...prev].slice(0, limit);
-            });
-
-            if (!payload.readAt) {
-                setUnreadCount((prev) => prev + 1);
-            }
+            // A duplicate frame is ignored by the store, and so is its toast.
+            const known = store
+                .getState()
+                .notifications.some((item) => item.id === payload.id);
+            receive(payload);
+            if (known) return;
 
             onNotificationRef.current?.(payload);
 
@@ -149,7 +111,7 @@ export function useNotificationStream({
                 source = null;
 
                 if (disposed) return;
-                reconnectTimerRef.current = setTimeout(connect, reconnectDelay);
+                reconnectTimer = setTimeout(connect, reconnectDelay);
                 reconnectDelay = Math.min(
                     reconnectDelay * 2,
                     MAX_RECONNECT_DELAY_MS,
@@ -161,67 +123,11 @@ export function useNotificationStream({
 
         return () => {
             disposed = true;
-            if (reconnectTimerRef.current) {
-                clearTimeout(reconnectTimerRef.current);
-                reconnectTimerRef.current = null;
+            if (reconnectTimer) {
+                clearTimeout(reconnectTimer);
+                reconnectTimer = null;
             }
             source?.close();
         };
-    }, [limit, refresh, refreshOnNotification]);
-
-    const markRead = useCallback(async (notificationId: string) => {
-        let alreadyRead = false;
-        const readAt = new Date().toISOString();
-
-        setNotifications((prev) =>
-            prev.map((item) => {
-                if (item.id !== notificationId) return item;
-                alreadyRead = item.readAt !== null;
-                return alreadyRead ? item : { ...item, readAt };
-            }),
-        );
-
-        if (alreadyRead) return;
-
-        setUnreadCount((prev) => Math.max(0, prev - 1));
-
-        const result = await markNotificationReadAction({ notificationId });
-        if (result.success) {
-            setUnreadCount(result.data.unreadCount);
-        }
-    }, []);
-
-    const markAllRead = useCallback(
-        async (workspaceId?: string) => {
-            const readAt = new Date().toISOString();
-            const inScope = (item: NotificationPayload) =>
-                item.readAt === null &&
-                (workspaceId === undefined || item.workspaceId === workspaceId);
-
-            const clearedCount = notifications.filter(inScope).length;
-
-            setNotifications((prev) =>
-                prev.map((item) =>
-                    inScope(item) ? { ...item, readAt } : item,
-                ),
-            );
-
-            // A workspace-scoped clear leaves other workspaces' unread intact
-            setUnreadCount((prev) =>
-                workspaceId === undefined
-                    ? 0
-                    : Math.max(0, prev - clearedCount),
-            );
-
-            const result = await markAllNotificationsReadAction(
-                workspaceId ? { workspaceId } : {},
-            );
-            if (result.success) {
-                setUnreadCount(result.data.unreadCount);
-            }
-        },
-        [notifications],
-    );
-
-    return { notifications, unreadCount, status, markRead, markAllRead };
+    }, [refresh, refreshOnNotification, store]);
 }

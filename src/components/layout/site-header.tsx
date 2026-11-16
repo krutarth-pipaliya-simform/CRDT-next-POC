@@ -6,8 +6,6 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { auth } from "@/features/auth/lib/auth";
 import { getRecentDocuments } from "@/features/document/queries/get-recent-documents";
 import { NotificationBell } from "@/features/notification/components/notification-bell";
-import { toNotificationPayload } from "@/features/notification/lib/serialize";
-import { getNotifications } from "@/features/notification/queries/get-notifications";
 import { getWorkspacesForUser } from "@/features/workspace/queries/get-workspaces";
 import { db } from "@/lib/db";
 import { formatRelativeTime } from "@/lib/format-time";
@@ -59,8 +57,7 @@ export async function SiteHeader() {
         );
     }
 
-    const [inbox, memberships, recent] = await Promise.all([
-        getNotifications(),
+    const [memberships, recent] = await Promise.all([
         getWorkspacesForUser(user.id),
         getRecentDocuments(),
     ]);
@@ -94,12 +91,7 @@ export async function SiteHeader() {
                 </Link>
                 <WorkspaceSwitcher workspaces={workspaces} />
                 <div className="flex shrink-0 items-center gap-2.5">
-                    <NotificationBell
-                        initialNotifications={inbox.notifications.map(
-                            toNotificationPayload,
-                        )}
-                        initialUnreadCount={inbox.unreadCount}
-                    />
+                    <NotificationBell />
                     <AccountMenu
                         user={{
                             id: user.id,

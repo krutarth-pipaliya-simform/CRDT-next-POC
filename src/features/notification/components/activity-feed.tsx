@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 
 import { DisplayHeading } from "@/components/paddock/display-heading";
 import { PaddockButton } from "@/components/paddock/paddock-button";
@@ -8,17 +8,20 @@ import { Tag } from "@/components/paddock/tag";
 import { cn } from "@/lib/cn";
 
 import {
-    useNotificationStream,
+    mergeNotifications,
     type StreamStatus,
-} from "../hooks/use-notification-stream";
-import { ACTIVITY_FEED_LIMIT, type NotificationPayload } from "../types";
+} from "../stores/notification-store";
+import {
+    useNotificationStore,
+    useNotificationStoreApi,
+} from "../stores/notification-store-provider";
+import type { NotificationPayload } from "../types";
 
 import { NotificationItem } from "./notification-item";
 
 export interface ActivityFeedProps {
     workspaceId: string;
     initialActivity: NotificationPayload[];
-    initialUnreadCount: number;
 }
 
 /** The connection state is a word as well as a dot, so it is never colour alone. */
@@ -34,20 +37,31 @@ const FRAME =
 export function ActivityFeed({
     workspaceId,
     initialActivity,
-    initialUnreadCount,
 }: ActivityFeedProps) {
-    const { notifications, unreadCount, status, markRead, markAllRead } =
-        useNotificationStream({
-            initialNotifications: initialActivity,
-            initialUnreadCount,
-            limit: ACTIVITY_FEED_LIMIT,
-            // The header bell on this page already refreshes on each one.
-            refreshOnNotification: false,
-        });
+    // The header bell owns the stream and the one refresher; the feed only
+    // reads the shared store.
+    const store = useNotificationStoreApi();
+    const stored = useNotificationStore((s) => s.notifications);
+    const unreadCount = useNotificationStore((s) => s.unreadCount);
+    const status = useNotificationStore((s) => s.status);
+    const markRead = useNotificationStore((s) => s.markRead);
+    const markAllRead = useNotificationStore((s) => s.markAllRead);
 
-    // The shared stream carries every workspace; this feed shows only the current one
-    const workspaceActivity = notifications.filter(
-        (item) => item.workspaceId === workspaceId,
+    // Hand the store this workspace's server-rendered history, so the bell
+    // and a later visit see it too.
+    useEffect(() => {
+        store.getState().mergeFromServer(initialActivity);
+    }, [initialActivity, store]);
+
+    // The store carries every workspace; this feed shows only the current
+    // one. Merging the props in the render keeps the first paint (and the
+    // server render) complete before the effect above has run.
+    const workspaceActivity = useMemo(
+        () =>
+            mergeNotifications(initialActivity, stored).filter(
+                (item) => item.workspaceId === workspaceId,
+            ),
+        [initialActivity, stored, workspaceId],
     );
     const workspaceUnread = workspaceActivity.filter(
         (item) => item.readAt === null,
