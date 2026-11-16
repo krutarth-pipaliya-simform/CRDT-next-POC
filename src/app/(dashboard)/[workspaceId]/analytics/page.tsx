@@ -16,6 +16,7 @@ import {
     ActivityChart,
     CompletionGauge,
     ContributorBars,
+    MemberGrowthChart,
     PriorityBars,
     StatusDonut,
 } from "@/features/dashboard/components/chart-widgets";
@@ -170,7 +171,7 @@ export default async function AnalyticsPage({
                         <div className="flex flex-wrap gap-4">
                             <ChartCard
                                 title="Task completion rate"
-                                description="Share of the board that reached Done"
+                                description="Share of the board that reached Completed"
                                 className="flex-[1_1_20rem]"
                             >
                                 <CompletionGauge
@@ -186,6 +187,16 @@ export default async function AnalyticsPage({
                                 className="flex-[2_1_40rem]"
                             >
                                 <ActivityChart points={analytics.activity} />
+                            </ChartCard>
+
+                            <ChartCard
+                                title="Member growth"
+                                description={`People on the workspace · ${rangeLabel}`}
+                                className="flex-[2_1_40rem]"
+                            >
+                                <MemberGrowthChart
+                                    points={analytics.memberGrowth}
+                                />
                             </ChartCard>
 
                             <ChartCard

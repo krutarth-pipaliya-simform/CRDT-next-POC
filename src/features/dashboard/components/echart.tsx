@@ -2,8 +2,19 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { ECharts, EChartsOption } from "echarts";
+import { Download } from "lucide-react";
 
+import { PaddockButton } from "@/components/paddock/paddock-button";
 import { cn } from "@/lib/cn";
+
+import {
+    type CsvTable,
+    downloadCsv,
+    downloadFile,
+    exportFileName,
+    toCsv,
+} from "../lib/chart-export";
+import { readChartPalette } from "../lib/chart-theme";
 
 export interface EChartProps {
     option: EChartsOption;
@@ -13,6 +24,12 @@ export interface EChartProps {
     ariaLabel: string;
     className?: string;
     testId?: string;
+    /**
+     * Export (FR-18): when given, PNG and CSV download buttons sit above the
+     * chart. `title` names the files and the buttons; `csv` is the chart's
+     * data as a table.
+     */
+    exportable?: { title: string; csv: CsvTable };
 }
 
 /**
@@ -28,6 +45,7 @@ export function EChart({
     ariaLabel,
     className,
     testId,
+    exportable,
 }: EChartProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const chartRef = useRef<ECharts | null>(null);
@@ -75,15 +93,81 @@ export function EChart({
         chartRef.current.setOption(option, true);
     }, [option, ready]);
 
-    return (
+    const exportPng = () => {
+        const chart = chartRef.current;
+        if (!chart || !exportable) return;
+        // The canvas is transparent; paint the card colour behind it so the
+        // image matches what is on screen.
+        const url = chart.getDataURL({
+            type: "png",
+            pixelRatio: 2,
+            backgroundColor: readChartPalette().surface,
+        });
+        downloadFile(exportFileName(exportable.title, "png"), url);
+    };
+
+    const exportCsv = () => {
+        if (!exportable) return;
+        downloadCsv(
+            exportFileName(exportable.title, "csv"),
+            toCsv(exportable.csv),
+        );
+    };
+
+    const canvas = (
         <div
             ref={containerRef}
             role="img"
             aria-label={ariaLabel}
             data-testid={testId}
             data-chart-ready={ready ? "true" : "false"}
-            className={cn("w-full", className)}
+            className={cn("w-full", !exportable && className)}
             style={{ height }}
         />
+    );
+
+    if (!exportable) {
+        return canvas;
+    }
+
+    return (
+        <div className={cn("flex min-w-0 flex-col gap-1", className)}>
+            <div className="-mt-2 flex justify-end gap-1">
+                <PaddockButton
+                    variant="ghost"
+                    voice="plain"
+                    surface="night"
+                    size="sm"
+                    onClick={exportPng}
+                    disabled={!ready}
+                    aria-label={`Download ${exportable.title} as PNG`}
+                    className="px-3"
+                >
+                    <Download
+                        aria-hidden="true"
+                        className="size-4"
+                        strokeWidth={2.2}
+                    />
+                    PNG
+                </PaddockButton>
+                <PaddockButton
+                    variant="ghost"
+                    voice="plain"
+                    surface="night"
+                    size="sm"
+                    onClick={exportCsv}
+                    aria-label={`Download ${exportable.title} data as CSV`}
+                    className="px-3"
+                >
+                    <Download
+                        aria-hidden="true"
+                        className="size-4"
+                        strokeWidth={2.2}
+                    />
+                    CSV
+                </PaddockButton>
+            </div>
+            {canvas}
+        </div>
     );
 }

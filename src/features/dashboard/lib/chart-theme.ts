@@ -1,3 +1,5 @@
+import type { DataZoomComponentOption } from "echarts";
+
 import type { ResolvedTheme } from "@/lib/theme";
 
 /**
@@ -160,4 +162,62 @@ export function baseChartStyles(palette: ChartPalette) {
         axisLine: { lineStyle: { color: palette.rule } },
         splitLine: { lineStyle: { color: palette.rule } },
     };
+}
+
+/**
+ * Zoom for a time series (FR-18): wheel, pinch and drag inside the plot, plus
+ * a slider under it showing the whole range. Leave `SLIDER_SPACE` pixels of
+ * grid bottom for the slider.
+ */
+export const SLIDER_SPACE = 44;
+
+/**
+ * A token colour at reduced opacity. ECharts takes one colour string for a
+ * fill, so the alpha is folded into it; a non-hex value is returned as is.
+ */
+export function withAlpha(color: string, alpha: number): string {
+    const hex = color.trim().match(/^#([0-9a-f]{6})$/i);
+    if (!hex) {
+        return color;
+    }
+    const value = parseInt(hex[1], 16);
+    const r = (value >> 16) & 255;
+    const g = (value >> 8) & 255;
+    const b = value & 255;
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+export function timeSeriesZoom(
+    palette: ChartPalette,
+): DataZoomComponentOption[] {
+    return [
+        { type: "inside", filterMode: "none" },
+        {
+            type: "slider",
+            filterMode: "none",
+            height: 20,
+            bottom: 4,
+            borderColor: palette.rule,
+            backgroundColor: "transparent",
+            fillerColor: withAlpha(palette.accent, 0.14),
+            dataBackground: {
+                lineStyle: { color: palette.faint },
+                areaStyle: { color: palette.track },
+            },
+            selectedDataBackground: {
+                lineStyle: { color: palette.accent },
+                areaStyle: { color: palette.accent, opacity: 0.2 },
+            },
+            handleStyle: {
+                color: palette.strong,
+                borderColor: palette.surface,
+            },
+            moveHandleStyle: { color: palette.muted },
+            textStyle: {
+                color: palette.muted,
+                fontFamily: palette.fontMono,
+                fontSize: 10,
+            },
+        },
+    ];
 }

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Lock } from "lucide-react";
 
-import { PLANS } from "@/features/billing/lib/plans";
+import { PLANS, cheapestPlanWithRange } from "@/features/billing/lib/plans";
 import { cn } from "@/lib/cn";
 import { RANGE_LABELS, type AnalyticsRangeValue } from "@/schemas/analytics";
 import type { SubscriptionPlanValue } from "@/schemas/billing";
@@ -9,11 +9,11 @@ import type { SubscriptionPlanValue } from "@/schemas/billing";
 export interface AnalyticsRangeTabsProps {
     workspaceId: string;
     activeRange: AnalyticsRangeValue;
-    /** Ranges outside this plan's allowance render disabled with a Pro tag. */
+    /** Ranges outside this plan's allowance render disabled, tagged with the plan that unlocks them. */
     plan: SubscriptionPlanValue;
 }
 
-const RANGES: AnalyticsRangeValue[] = ["7d", "30d", "90d"];
+const RANGES: AnalyticsRangeValue[] = ["7d", "30d", "90d", "365d"];
 
 const SEGMENT =
     "inline-flex h-11 items-center gap-2 whitespace-nowrap rounded-full px-4.5 text-sm font-semibold no-underline";
@@ -21,7 +21,8 @@ const SEGMENT =
 /**
  * The date-range switch, as a pill track. Each range is a link, because it
  * changes the URL the server reads; the current one carries `aria-current`.
- * A range the plan does not include is a disabled button with a Pro tag —
+ * A range the plan does not include is a disabled button tagged with the
+ * cheapest plan that includes it —
  * the server refuses it anyway, so this only says why it cannot be picked.
  */
 export function AnalyticsRangeTabs({
@@ -57,7 +58,7 @@ export function AnalyticsRangeTabs({
                                     className="size-2.5"
                                     strokeWidth={2.6}
                                 />
-                                Pro
+                                {PLANS[cheapestPlanWithRange(range)].name}
                             </span>
                         </button>
                     );

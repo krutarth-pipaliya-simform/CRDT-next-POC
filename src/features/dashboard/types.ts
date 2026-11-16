@@ -24,6 +24,16 @@ export interface ActivityPoint {
     messages: number;
 }
 
+export interface MemberGrowthPoint {
+    /** ISO date (UTC) the bucket covers. */
+    date: string;
+    label: string;
+    /** Members who joined that day. */
+    joined: number;
+    /** Members on the workspace at the end of that day. */
+    total: number;
+}
+
 export interface StatusSlice {
     status: TaskStatus;
     label: string;
@@ -47,6 +57,7 @@ export interface WorkspaceAnalytics {
     range: AnalyticsRangeValue;
     totals: AnalyticsTotals;
     activity: ActivityPoint[];
+    memberGrowth: MemberGrowthPoint[];
     statusBreakdown: StatusSlice[];
     priorityBreakdown: PrioritySlice[];
     contributors: ContributorStat[];

@@ -8,10 +8,16 @@ import { useTheme } from "@/hooks/use-theme";
 import type {
     ActivityPoint,
     ContributorStat,
+    MemberGrowthPoint,
     PrioritySlice,
     StatusSlice,
 } from "../types";
-import { baseChartStyles, readChartPalette } from "../lib/chart-theme";
+import {
+    SLIDER_SPACE,
+    baseChartStyles,
+    readChartPalette,
+    timeSeriesZoom,
+} from "../lib/chart-theme";
 
 import { EChart } from "./echart";
 
@@ -96,6 +102,17 @@ export function CompletionGauge({
             height={240}
             testId="chart-completion-rate"
             ariaLabel={`Task completion rate: ${completionRate}% — ${tasksDone} of ${tasksTotal} tasks done`}
+            exportable={{
+                title: "Task completion rate",
+                csv: {
+                    headers: [
+                        "Tasks done",
+                        "Tasks total",
+                        "Completion rate (%)",
+                    ],
+                    rows: [[tasksDone, tasksTotal, completionRate]],
+                },
+            }}
         />
     );
 }
@@ -165,10 +182,13 @@ export function ActivityChart({ points }: ActivityChartProps) {
             grid: {
                 top: 44,
                 left: 4,
-                right: 12,
-                bottom: 4,
+                // The line runs edge to edge (boundaryGap: false), so the last
+                // date label is centred on the right edge; leave it room.
+                right: 24,
+                bottom: SLIDER_SPACE,
                 containLabel: true,
             },
+            dataZoom: timeSeriesZoom(palette),
             xAxis: {
                 type: "category",
                 data: labels,
@@ -215,17 +235,42 @@ export function ActivityChart({ points }: ActivityChartProps) {
     return (
         <EChart
             option={option}
-            height={300}
+            height={340}
             testId="chart-activity"
             ariaLabel={`Workspace activity over ${points.length} days, ${totals} events in total`}
+            exportable={{
+                title: "Workspace activity",
+                csv: {
+                    headers: [
+                        "Date",
+                        "Tasks created",
+                        "Tasks completed",
+                        "Documents",
+                        "Messages",
+                    ],
+                    rows: points.map((point) => [
+                        point.date,
+                        point.tasksCreated,
+                        point.tasksCompleted,
+                        point.documents,
+                        point.messages,
+                    ]),
+                },
+            }}
         />
     );
 }
 
-/** One colour per status, read from the chart tokens so the HTML legend matches. */
+/**
+ * One colour per status, read from the chart tokens so the HTML legend
+ * matches. The columns are a sequence, so the colours are a ramp from the
+ * quietest neutral to lime.
+ */
 const STATUS_TOKENS = {
-    TODO: "muted",
-    IN_PROGRESS: "strong",
+    BACKLOG: "open",
+    TODO: "faint",
+    IN_PROGRESS: "muted",
+    REVIEW: "strong",
     DONE: "accent",
 } as const;
 
@@ -298,6 +343,13 @@ export function StatusDonut({ slices }: StatusDonutProps) {
                 className="w-[170px] shrink-0"
                 testId="chart-status"
                 ariaLabel={`Task status distribution — ${summary}`}
+                exportable={{
+                    title: "Status distribution",
+                    csv: {
+                        headers: ["Status", "Tasks"],
+                        rows: slices.map((slice) => [slice.label, slice.count]),
+                    },
+                }}
             />
             {/* The chart is an image; this list is the same data as text. */}
             <ul
@@ -406,6 +458,13 @@ export function PriorityBars({ slices }: PriorityBarsProps) {
             height={220}
             testId="chart-priority"
             ariaLabel={`Task priority mix — ${summary}`}
+            exportable={{
+                title: "Priority mix",
+                csv: {
+                    headers: ["Priority", "Tasks"],
+                    rows: slices.map((slice) => [slice.label, slice.count]),
+                },
+            }}
         />
     );
 }
@@ -512,6 +571,121 @@ export function ContributorBars({ contributors }: ContributorBarsProps) {
             height={Math.max(160, contributors.length * 40 + 56)}
             testId="chart-contributors"
             ariaLabel={`Contributor throughput — ${summary}`}
+            exportable={{
+                title: "Contributors",
+                csv: {
+                    headers: ["Member", "Assigned", "Completed"],
+                    rows: contributors.map((contributor) => [
+                        contributor.name,
+                        contributor.assigned,
+                        contributor.completed,
+                    ]),
+                },
+            }}
+        />
+    );
+}
+
+export interface MemberGrowthChartProps {
+    points: MemberGrowthPoint[];
+}
+
+/**
+ * User growth (FR-17): members on the workspace over time, as a lime line,
+ * with the people who joined each day as quiet bars on a second axis. Zooms
+ * like the activity chart, since a year of days is too many to read at once.
+ */
+export function MemberGrowthChart({ points }: MemberGrowthChartProps) {
+    const { resolvedTheme } = useTheme();
+
+    const option = useMemo<EChartsOption>(() => {
+        const palette = readChartPalette(resolvedTheme);
+        const base = baseChartStyles(palette);
+
+        return {
+            textStyle: base.textStyle,
+            tooltip: { ...base.tooltip, trigger: "axis" },
+            legend: {
+                ...base.legend,
+                bottom: undefined,
+                top: 0,
+                left: 0,
+            },
+            grid: {
+                top: 44,
+                left: 4,
+                right: 4,
+                bottom: SLIDER_SPACE,
+                containLabel: true,
+            },
+            dataZoom: timeSeriesZoom(palette),
+            xAxis: {
+                type: "category",
+                data: points.map((point) => point.label),
+                axisLine: base.axisLine,
+                axisTick: { show: false },
+                axisLabel: { ...base.axisLabel, hideOverlap: true },
+            },
+            yAxis: [
+                {
+                    type: "value",
+                    minInterval: 1,
+                    axisLine: { show: false },
+                    splitLine: base.splitLine,
+                    axisLabel: base.axisLabel,
+                },
+                {
+                    type: "value",
+                    minInterval: 1,
+                    axisLine: { show: false },
+                    splitLine: { show: false },
+                    axisLabel: base.axisLabel,
+                },
+            ],
+            series: [
+                {
+                    name: "Members",
+                    type: "line",
+                    step: "end",
+                    showSymbol: false,
+                    lineStyle: { width: 3, color: palette.accent },
+                    itemStyle: { color: palette.accent },
+                    areaStyle: { color: palette.accent, opacity: 0.12 },
+                    data: points.map((point) => point.total),
+                },
+                {
+                    name: "Joined",
+                    type: "bar",
+                    yAxisIndex: 1,
+                    barMaxWidth: 10,
+                    itemStyle: { color: palette.muted, borderRadius: 2 },
+                    data: points.map((point) => point.joined),
+                },
+            ],
+        };
+    }, [points, resolvedTheme]);
+
+    const first = points[0]?.total ?? 0;
+    const last = points.at(-1)?.total ?? 0;
+    const joined = points.reduce((sum, point) => sum + point.joined, 0);
+
+    return (
+        <EChart
+            option={option}
+            height={300}
+            testId="chart-member-growth"
+            ariaLabel={`Member growth over ${points.length} days: ${joined} joined, from ${first} to ${last} members`}
+            exportable={{
+                title: "Member growth",
+                csv: {
+                    headers: ["Date", "Joined", "Members"],
+                    rows: points.map((point) => [
+                        point.date,
+                        point.joined,
+                        point.total,
+                    ]),
+                },
+            }}
         />
     );
 }

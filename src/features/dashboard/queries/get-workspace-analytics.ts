@@ -7,6 +7,7 @@ import { RANGE_DAYS, type AnalyticsRangeValue } from "@/schemas/analytics";
 import type {
     ActivityPoint,
     ContributorStat,
+    MemberGrowthPoint,
     PrioritySlice,
     StatusSlice,
     WorkspaceAnalytics,
@@ -15,9 +16,11 @@ import type {
 import "server-only";
 
 const STATUS_LABELS: Record<TaskStatus, string> = {
+    BACKLOG: "Backlog",
     TODO: "To Do",
     IN_PROGRESS: "In Progress",
-    DONE: "Done",
+    REVIEW: "Review",
+    DONE: "Completed",
 };
 
 const PRIORITY_LABELS: Record<TaskPriority, string> = {
@@ -27,7 +30,13 @@ const PRIORITY_LABELS: Record<TaskPriority, string> = {
     URGENT: "Urgent",
 };
 
-const STATUS_ORDER: TaskStatus[] = ["TODO", "IN_PROGRESS", "DONE"];
+const STATUS_ORDER: TaskStatus[] = [
+    "BACKLOG",
+    "TODO",
+    "IN_PROGRESS",
+    "REVIEW",
+    "DONE",
+];
 const PRIORITY_ORDER: TaskPriority[] = ["LOW", "MEDIUM", "HIGH", "URGENT"];
 
 /** How many contributors the leaderboard shows before it stops being readable. */
@@ -139,6 +148,7 @@ export async function getWorkspaceAnalytics(
             where: { workspaceId },
             select: {
                 id: true,
+                joinedAt: true,
                 user: { select: { name: true, email: true } },
             },
         }),
@@ -190,6 +200,28 @@ export async function getWorkspaceAnalytics(
     for (const message of messagesInRange) {
         increment(buckets, message.createdAt, "messages");
     }
+
+    // Member growth: everyone who joined before the window is the starting
+    // total, and each day adds the people who joined on it. Members who left
+    // are gone from the table, so the line counts current members by join
+    // date rather than reconstructing past headcounts.
+    const joinsByDay = new Map<string, number>();
+    let runningTotal = 0;
+    for (const member of members) {
+        if (member.joinedAt < since) {
+            runningTotal += 1;
+        } else {
+            const key = dayKey(member.joinedAt);
+            joinsByDay.set(key, (joinsByDay.get(key) ?? 0) + 1);
+        }
+    }
+    const memberGrowth: MemberGrowthPoint[] = Array.from(buckets.keys()).map(
+        (date) => {
+            const joined = joinsByDay.get(date) ?? 0;
+            runningTotal += joined;
+            return { date, label: dayLabel(date), joined, total: runningTotal };
+        },
+    );
 
     const tasksDone = statusCounts.get("DONE") ?? 0;
     const completionRate =
@@ -243,6 +275,7 @@ export async function getWorkspaceAnalytics(
             members: memberCount,
         },
         activity: Array.from(buckets.values()),
+        memberGrowth,
         statusBreakdown,
         priorityBreakdown,
         contributors,
