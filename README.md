@@ -187,6 +187,7 @@ Every page of the product is built in Paddock: off-white paper, olive ink, one a
     - **Invoice & Payment History (FR-21)**: the billing page lists the workspace's last 24 invoices (number, period, amount, status, hosted page and PDF) and payments (card, amount, refunds, receipt), read live from Stripe for admins only.
     - **Analytics Zoom, Export & User Growth (FR-17, FR-18)**: time-series charts zoom by wheel, pinch, drag or a slider; every chart has PNG and CSV download buttons (CSV cells that would run as spreadsheet formulas are neutralised); a new **Member growth** chart plots members over time from `WorkspaceMember.joinedAt`. The legend toggles series, and the date range remains the server-enforced filter.
     - **E2E**: `e2e/password-reset.spec.ts` (3 scenarios) plus new billing/analytics scenarios for Enterprise history, plan-card actions, the cancel dialog, billing history, and CSV/PNG export. `E2E_PORT=3001 npm run test:e2e` runs the suite against a server on another port.
+    - **Headless CMS Content (PRD 11)**: blog articles, product announcements, documentation and release notes are read from a Strapi v5 REST API (`src/features/cms/`), not hardcoded. Public pages: `/blog`, `/blog/[slug]`, `/announcements`, `/docs`, `/docs/[slug]` (grouped by section), `/changelog`; a latest-announcement strip appears on the landing page and dashboard. Bodies are Strapi Blocks JSON rendered by React (no raw HTML; unsafe link schemes are dropped). Responses are Zod-validated, cached for five minutes and tagged `cms`; `POST /api/cms/revalidate` (shared secret `CMS_REVALIDATE_SECRET`) lets a Strapi publish webhook refresh them. Content-type definitions and setup steps live in `cms/`.
 
 ## Getting Started
 
@@ -234,7 +235,20 @@ Every page of the product is built in Paddock: off-white paper, olive ink, one a
 
     Without these, the billing page renders a "Stripe is not configured" notice and the upgrade button is disabled — the rest of the app is unaffected.
 
+5. **Headless CMS (Strapi)**
+
+    Optional. Set `CMS_API_URL` and `CMS_API_TOKEN` (and `CMS_REVALIDATE_SECRET` for the publish webhook) in `.env`; see `cms/README.md` for the content types and token. Without them the content pages show a "Content is not set up" notice and everything else works. No Strapi instance? Run the fixture: `node e2e/fixtures/cms-server.mjs` and use `CMS_API_URL="http://localhost:4103"`, `CMS_API_TOKEN="fixture-token"`. `npm run test:e2e` starts the fixture on port 4103 automatically (`E2E_CMS_PORT` overrides it).
+
 Open [http://localhost:3000](http://localhost:3000) with your browser. You will be automatically redirected to the `/login` screen due to the `proxy.ts` auth guard.
+
+## Known Limitations (Headless CMS)
+
+- **Verified against a fixture, not a live Strapi.** The response shape and query syntax follow Strapi's v5 REST docs (flat attributes plus `documentId`, `meta.pagination`, `sort[0]`, `pagination[page]`, `filters[slug][$eq]`), but only `e2e/fixtures/cms-server.mjs` was exercised. The Blocks list `format` values (`ordered` / `unordered`) and block field names come from `@strapi/blocks-react-renderer`, whose README does not spell them all out.
+- **Unknown or malformed blocks are skipped silently** rather than failing the page.
+- **Missing slugs return HTTP 200** with the not-found page, because the route group streams a loading skeleton first (the page carries `noindex`). Remove `(content)/loading.tsx` if a true 404 status matters more than the skeleton.
+- **No cover images, localisation, draft preview or search.** Body images work; articles have no cover field.
+- **Changes appear within five minutes** unless the revalidation webhook is wired up. The webhook invalidates every CMS response, not just the entry that changed.
+- **The CMS is a single origin trusted for content**: `ctaUrl` and links are restricted to http(s), mailto and site-relative paths, but content authors are assumed to be staff.
 
 ## Known Limitations (PRD Gap Closure)
 

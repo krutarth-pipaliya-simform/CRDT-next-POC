@@ -14,6 +14,28 @@ export const publicRoutes: string[] = [
 ];
 
 /**
+ * Public CMS sections. A path is public when it equals one of these or sits
+ * beneath it (`/blog/some-slug`).
+ */
+export const publicRoutePrefixes: string[] = [
+    "/blog",
+    "/docs",
+    "/changelog",
+    "/announcements",
+];
+
+/** True when the path is one of `publicRoutes` or under a public prefix. */
+export function isPublicPath(pathname: string): boolean {
+    return (
+        publicRoutes.includes(pathname) ||
+        publicRoutePrefixes.some(
+            (prefix) =>
+                pathname === prefix || pathname.startsWith(`${prefix}/`),
+        )
+    );
+}
+
+/**
  * An array of routes that are used for authentication.
  * These routes will redirect logged in users to the default redirect path.
  */

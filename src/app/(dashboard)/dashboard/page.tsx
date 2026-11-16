@@ -7,6 +7,7 @@ import { ContourBackground } from "@/components/paddock/contour-background";
 import { DisplayHeading } from "@/components/paddock/display-heading";
 import { auth } from "@/features/auth/lib/auth";
 import { requireUserId } from "@/features/auth/lib/session";
+import { LatestAnnouncement } from "@/features/cms/components/latest-announcement";
 import { CreateWorkspaceDialog } from "@/features/workspace/components/create-workspace-dialog";
 import { PaginationControls } from "@/features/workspace/components/pagination-controls";
 import {
@@ -149,6 +150,7 @@ export default async function DashboardPage({
             />
 
             <div className={PAGE_CONTAINER}>
+                <LatestAnnouncement className="mb-6" />
                 <DashboardListSwitch
                     items={dashboardTabs}
                     activeValue={activeTab}

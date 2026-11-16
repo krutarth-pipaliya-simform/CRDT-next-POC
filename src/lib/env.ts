@@ -20,6 +20,13 @@ const envSchema = z.object({
     // Optional on its own: without it the Enterprise plan is shown but cannot
     // be bought, and the rest of billing works as before.
     STRIPE_ENTERPRISE_PRICE_ID: z.string().min(1).optional(),
+
+    // Headless CMS (Strapi v5 REST). Optional at boot: without them the
+    // content pages render a "not configured" notice. See `cms/README.md`.
+    CMS_API_URL: z.url().optional(),
+    CMS_API_TOKEN: z.string().min(1).optional(),
+    // Shared secret a Strapi webhook sends to POST /api/cms/revalidate.
+    CMS_REVALIDATE_SECRET: z.string().min(1).optional(),
 });
 
 export const env = envSchema.parse(process.env);

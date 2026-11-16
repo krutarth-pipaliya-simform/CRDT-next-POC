@@ -4,7 +4,7 @@ import {
     DEFAULT_UNAUTHENTICATED_REDIRECT,
     apiAuthPrefix,
     authRoutes,
-    publicRoutes,
+    isPublicPath,
 } from "@/lib/routes";
 
 export const proxy = auth((req) => {
@@ -12,7 +12,7 @@ export const proxy = auth((req) => {
     const isLoggedIn = !!req.auth;
 
     const isApiAuthRoute = nextUrl.pathname.startsWith(apiAuthPrefix);
-    const isPublicRoute = publicRoutes.includes(nextUrl.pathname);
+    const isPublicRoute = isPublicPath(nextUrl.pathname);
     const isAuthRoute = authRoutes.includes(nextUrl.pathname);
 
     if (isApiAuthRoute) {
@@ -45,6 +45,6 @@ export const proxy = auth((req) => {
 
 export const config = {
     matcher: [
-        "/((?!api/auth|api/uploads|api/webhooks|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+        "/((?!api/auth|api/uploads|api/webhooks|api/cms|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
     ],
 };
