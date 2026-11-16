@@ -13,7 +13,10 @@
         "type-check": "tsc --noEmit",
         "prepare": "husky",
         "postinstall": "prisma generate",
-        "test:e2e": "playwright test"
+        "test:e2e": "playwright test",
+        "test": "TZ=UTC jest",
+        "test:watch": "TZ=UTC jest --watch",
+        "test:coverage": "TZ=UTC jest --coverage"
     },
     "dependencies": {
         "@auth/prisma-adapter": "^2.11.3",
@@ -75,7 +78,12 @@
     "devDependencies": {
         "@playwright/test": "^1.62.1",
         "@tailwindcss/postcss": "^4",
+        "@testing-library/dom": "^10.4.2",
+        "@testing-library/jest-dom": "^7.0.1",
+        "@testing-library/react": "^16.3.3",
+        "@testing-library/user-event": "^14.6.12",
         "@types/bcryptjs": "^2.4.6",
+        "@types/jest": "^30.0.0",
         "@types/node": "^20.19.43",
         "@types/nodemailer": "^8.0.1",
         "@types/pg": "^8.23.1",
@@ -87,6 +95,8 @@
         "eslint-config-next": "16.3.1",
         "eslint-config-prettier": "^10.1.8",
         "husky": "^9.1.7",
+        "jest": "^30.5.2",
+        "jest-environment-jsdom": "^30.5.2",
         "lint-staged": "^17.3.0",
         "prettier": "^3.9.6",
         "prisma": "^7.9.1",
