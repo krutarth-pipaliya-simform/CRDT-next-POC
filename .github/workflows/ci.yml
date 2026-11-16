@@ -49,6 +49,10 @@ jobs:
         run: npx prisma generate
       - name: Lint
         run: npm run lint
+      - name: Generate route types
+        # tsc needs the generated route types (LayoutProps, AppRoutes); on a
+        # fresh checkout they do not exist until this or a build has run.
+        run: npx next typegen
       - name: Type-check
         run: npm run type-check
       # `npm run test:coverage` is provided by the Jest setup (writes coverage/lcov.info).
@@ -135,6 +139,11 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
       - run: npm ci --legacy-peer-deps
+      - name: Install collab server dependencies
+        # `npm run dev` starts server/src/index.ts, whose packages (express,
+        # ws, helmet) are declared only in server/package.json.
+        run: npm ci
+        working-directory: server
       - name: Create database schema
         # The checked-in migrations lag behind schema.prisma, so use db push.
         run: npx prisma db push
