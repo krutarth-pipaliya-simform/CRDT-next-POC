@@ -15,6 +15,11 @@ function normalize(value: string): string {
     return value.trim().toLowerCase();
 }
 
+/** "ada." -> "ada": sentence punctuation after a handle is not part of it. */
+function stripTrailingPunctuation(value: string): string {
+    return value.replace(/[._-]+$/, "");
+}
+
 function handleFromEmail(email: string): string {
     return normalize(email.split("@")[0] ?? "");
 }
@@ -56,11 +61,13 @@ export function resolveMentionedUserIds(
     const mentioned = new Set<string>();
 
     for (const match of body.matchAll(MENTION_PATTERN)) {
-        const captured = normalize(match[1] ?? "");
+        const captured = stripTrailingPunctuation(normalize(match[1] ?? ""));
         if (captured.length === 0) continue;
 
         // Prefer the longest interpretation ("@Ada Lovelace"), then fall back to "@Ada"
-        const firstWord = captured.split(" ")[0] ?? "";
+        const firstWord = stripTrailingPunctuation(
+            captured.split(" ")[0] ?? "",
+        );
         const userId = byHandle.get(captured) ?? byHandle.get(firstWord);
 
         if (userId) {

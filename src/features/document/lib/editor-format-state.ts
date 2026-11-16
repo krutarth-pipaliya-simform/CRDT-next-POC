@@ -1,6 +1,16 @@
-import type { Editor } from "@tiptap/react";
-
 export const HEADING_LEVELS: Array<1 | 2 | 3 | 4> = [1, 2, 3, 4];
+
+/**
+ * The slice of the Tiptap `Editor` the menus read. Naming it lets tests pass a
+ * small fake instead of building a real editor.
+ */
+export interface FormatStateEditor {
+    can(): { undo(): boolean; redo(): boolean };
+    isActive(
+        nameOrAttributes: string | Record<string, unknown>,
+        attributes?: Record<string, unknown>,
+    ): boolean;
+}
 
 const ALIGNMENTS = ["left", "center", "right", "justify"] as const;
 
@@ -10,7 +20,7 @@ const ALIGNMENTS = ["left", "center", "right", "justify"] as const;
  * transaction, but the menus re-render only when one of these values changes,
  * never on plain typing.
  */
-export function selectFormatState(editor: Editor) {
+export function selectFormatState(editor: FormatStateEditor) {
     return {
         canUndo: editor.can().undo(),
         canRedo: editor.can().redo(),

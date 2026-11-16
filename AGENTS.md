@@ -252,6 +252,15 @@ All TypeScript/React source files MUST strictly follow these ordering and naming
 - **The Dev Server Must Restart After a Schema Change**: `@prisma/client` is loaded once per process, so after `prisma db push` + `prisma generate` a running `next dev` rejects new enum values until restarted.
 - **E2E on Another Port**: `E2E_PORT=3001 npm run test:e2e` targets a server on that port. The collab server also reads `PORT`, so a custom port is passed to `next dev --port`, never through `PORT`.
 
+### Unit Testing (Binding)
+
+- **Jest, Colocated.** Unit tests use Jest through `next/jest` (`jest.config.mjs`) and live next to the code as `<file>.test.ts(x)` under `src/`. Playwright specs stay in `e2e/`; Jest never looks there, in `server/`, `.next/` or `.claude/`. Shared helpers are in `src/test/` (`mock-db.ts`, `mock-auth.ts`, `factories.ts`).
+- **Commands.** `npm test` (once), `npm run test:watch`, `npm run test:coverage` (writes `coverage/lcov.info`; CI calls these names, do not rename them). Install test packages with `--legacy-peer-deps`.
+- **Threshold.** `coverageThreshold` is 80% for statements, branches, functions and lines over `collectCoverageFrom`. A new file under `src/lib`, `src/schemas`, `src/hooks`, `src/stores`, a feature's `lib/`, `stores/`, `hooks/`, `schemas`, or a Paddock/layout logic module gets a test in the same change. Never add an exclusion to reach the number: an exclusion needs a comment saying why the file is integration-shaped, and Server Actions, queries, routes and feature components stay out of the globs because Playwright covers them.
+- **What a test must assert.** Behaviour: edge cases, error paths and security-relevant logic (formula-injection guarding, token hashing, path-escape guards, file sniffing, RBAC, entitlement, open-redirect guards). No assertion-free tests and no snapshot dumps. Debounce and timers use fake timers; dates assume `TZ=UTC` (set by `jest.global-setup.mjs`).
+- **Boundaries Are Mocked, Not Reached.** No test touches the database, network or `.env`. Use `jest.mock("@/lib/db", () => jest.requireActual("@/test/mock-db"))` and the `mock-auth` equivalent; module-level env (`@/lib/env`) is mocked with an empty object that the test fills. Prefer typed helpers to casts in tests; where a library type cannot be built (dnd-kit's sensor context), keep the single cast inside one documented helper.
+- **Environment.** Pure modules run in node; a hook or component test opts into jsdom with a `@jest-environment jsdom` docblock. ESM-only packages (`lowlight` and its deps) are transformed via `ESM_ONLY_PACKAGES` in `jest.config.mjs`; add to it when a new ESM-only import fails with "Must use import to load ES Module".
+
 ### Dependency Hygiene (Binding)
 
 - **Install With `--legacy-peer-deps`**: Tiptap's strict `@tiptap/core` peer range means a plain `npm install` fails. Every install in this repo uses `--legacy-peer-deps`.
