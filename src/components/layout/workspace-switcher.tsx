@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useRef, useState, type KeyboardEvent } from "react";
+import { useRef, type KeyboardEvent } from "react";
 import { Check, ChevronDown } from "lucide-react";
 import Link from "next/link";
 
 import { useCurrentWorkspace } from "@/hooks/use-current-workspace";
 import { useOutsideClick } from "@/hooks/use-outside-click";
+import { useShellPanel } from "@/stores/shell-ui-store";
 import { cn } from "@/lib/cn";
 
 import type { ShellWorkspace } from "./types";
@@ -21,9 +22,8 @@ export interface WorkspaceSwitcherProps {
  */
 export function WorkspaceSwitcher({ workspaces }: WorkspaceSwitcherProps) {
     const { workspace: current } = useCurrentWorkspace(workspaces);
-    const [open, setOpen] = useState(false);
+    const { open, toggle, close } = useShellPanel("switcher");
     const containerRef = useRef<HTMLDivElement>(null);
-    const close = useCallback(() => setOpen(false), []);
 
     useOutsideClick(containerRef, close, open);
 
@@ -32,7 +32,7 @@ export function WorkspaceSwitcher({ workspaces }: WorkspaceSwitcherProps) {
     function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
         if (event.key === "Escape" && open) {
             event.stopPropagation();
-            setOpen(false);
+            close();
         }
     }
 
@@ -44,7 +44,7 @@ export function WorkspaceSwitcher({ workspaces }: WorkspaceSwitcherProps) {
         >
             <button
                 type="button"
-                onClick={() => setOpen((value) => !value)}
+                onClick={toggle}
                 aria-expanded={open}
                 aria-haspopup="true"
                 className="paddock-press flex h-12 max-w-full min-w-0 cursor-pointer items-center gap-2.5 rounded-full border-[1.5px] border-paddock-ink bg-transparent pr-4 pl-1.5 font-semibold text-paddock-ink"

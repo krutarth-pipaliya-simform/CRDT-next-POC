@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -16,6 +15,7 @@ import { CONTENT_SECTIONS } from "@/features/cms/lib/content-sections";
 import { profileHref } from "@/features/profile/lib/profile-href";
 import { useCurrentWorkspace } from "@/hooks/use-current-workspace";
 import { WORKSPACE_ROLE_LABELS } from "@/schemas/workspace";
+import { useShellPanel } from "@/stores/shell-ui-store";
 
 import type { ShellRecentDocument, ShellWorkspace } from "./types";
 import { isSectionCurrent, workspaceSections } from "./workspace-sections";
@@ -36,7 +36,7 @@ const footerLink =
  * footer carries the theme control, so it is one tap away on every page.
  */
 export function AppMenu({ workspaces, recentDocuments }: AppMenuProps) {
-    const [open, setOpen] = useState(false);
+    const { open, toggle, close } = useShellPanel("menu");
     const pathname = usePathname();
     const { workspaceId, workspace } = useCurrentWorkspace(workspaces);
 
@@ -68,15 +68,11 @@ export function AppMenu({ workspaces, recentDocuments }: AppMenuProps) {
 
     return (
         <>
-            <BurgerButton
-                open={open}
-                controls={MENU_ID}
-                onClick={() => setOpen((value) => !value)}
-            />
+            <BurgerButton open={open} controls={MENU_ID} onClick={toggle} />
             <MenuOverlay
                 id={MENU_ID}
                 open={open}
-                onClose={() => setOpen(false)}
+                onClose={close}
                 items={items}
                 cards={recentDocuments.map((document) => ({
                     title: document.title,
@@ -93,14 +89,14 @@ export function AppMenu({ workspaces, recentDocuments }: AppMenuProps) {
                         <div className="flex flex-wrap items-center justify-center gap-x-5.5 gap-y-2">
                             <Link
                                 href={profileHref(pathname)}
-                                onClick={() => setOpen(false)}
+                                onClick={close}
                                 className={footerLink}
                             >
                                 Profile
                             </Link>
                             <Link
                                 href="/dashboard"
-                                onClick={() => setOpen(false)}
+                                onClick={close}
                                 className={footerLink}
                             >
                                 All workspaces
@@ -109,7 +105,7 @@ export function AppMenu({ workspaces, recentDocuments }: AppMenuProps) {
                                 <Link
                                     key={section.href}
                                     href={section.href}
-                                    onClick={() => setOpen(false)}
+                                    onClick={close}
                                     className={footerLink}
                                 >
                                     {section.label}

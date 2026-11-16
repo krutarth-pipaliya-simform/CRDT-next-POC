@@ -5,7 +5,6 @@ import { PAGE_CONTAINER } from "@/components/layout/layout-styles";
 import { PageHeader } from "@/components/layout/page-header";
 import { ActivityFeed } from "@/features/notification/components/activity-feed";
 import { toNotificationPayload } from "@/features/notification/lib/serialize";
-import { getNotifications } from "@/features/notification/queries/get-notifications";
 import { getWorkspaceActivity } from "@/features/notification/queries/get-workspace-activity";
 import {
     ACTIVITY_FEED_LIMIT,
@@ -40,10 +39,10 @@ export default async function ActivityPage({ params }: ActivityPageProps) {
         notFound();
     }
 
-    const [activity, inbox] = await Promise.all([
-        getWorkspaceActivity(workspaceId, ACTIVITY_FEED_LIMIT),
-        getNotifications(ACTIVITY_FEED_LIMIT),
-    ]);
+    const activity = await getWorkspaceActivity(
+        workspaceId,
+        ACTIVITY_FEED_LIMIT,
+    );
 
     return (
         <main className="pb-24">
@@ -64,7 +63,6 @@ export default async function ActivityPage({ params }: ActivityPageProps) {
                     <ActivityFeed
                         workspaceId={workspaceId}
                         initialActivity={activity.map(toNotificationPayload)}
-                        initialUnreadCount={inbox.unreadCount}
                     />
                 </div>
 
