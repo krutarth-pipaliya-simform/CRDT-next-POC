@@ -31,6 +31,7 @@ model User {
   workspaces    WorkspaceMember[]
   invitationsCreated WorkspaceInvitation[]
   messages      Message[]
+  chatReadCursors    ChatReadCursor[]
   notifications      Notification[] @relation("NotificationRecipient")
   notificationsActed Notification[] @relation("NotificationActor")
 }
@@ -75,9 +76,14 @@ enum WorkspaceVisibility {
   PRIVATE
 }
 
+/// Board columns in order: Backlog, To Do, In Progress, Review, Completed.
+/// `DONE` is labelled "Completed"; the value keeps its name so existing rows
+/// and the completion notification need no rewrite.
 enum TaskStatus {
+  BACKLOG
   TODO
   IN_PROGRESS
+  REVIEW
   DONE
 }
 
@@ -99,6 +105,7 @@ enum TaskPriority {
 enum SubscriptionPlan {
   FREE
   PRO
+  ENTERPRISE
 }
 
 enum SubscriptionStatus {
@@ -121,6 +128,7 @@ model Workspace {
   tasks       Task[]
   invitations WorkspaceInvitation[]
   messages    Message[]
+  chatReadCursors ChatReadCursor[]
   notifications Notification[]
   subscription Subscription?
 }
@@ -146,9 +154,13 @@ model WorkspaceMember {
   workspaceId   String
   userId        String
   role          Role      @default(MEMBER)
+  /// When the person joined; drives the analytics "user growth" series.
+  joinedAt      DateTime  @default(now())
   workspace     Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   assignedTasks Task[]
+
+  @@index([workspaceId, joinedAt])
 }
 
 model Document {
@@ -187,10 +199,32 @@ model Message {
   authorId    String
   createdAt   DateTime  @default(now())
 
+  /// One optional shared file per message (FR-11). The bytes live in upload
+  /// storage under `chat/`; the row keeps what the bubble needs to render it.
+  attachmentUrl  String?
+  attachmentName String?
+  attachmentType String?
+  attachmentSize Int?
+
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   author      User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
   @@index([workspaceId, createdAt])
+}
+
+/// Read receipts (FR-11): how far each member has read the workspace channel.
+/// One row per person per channel rather than per message, so marking a
+/// channel read is a single upsert and "seen by" is a timestamp comparison.
+model ChatReadCursor {
+  workspaceId String
+  userId      String
+  lastReadAt  DateTime
+  updatedAt   DateTime  @updatedAt
+
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([workspaceId, userId])
 }
 
 model Notification {
