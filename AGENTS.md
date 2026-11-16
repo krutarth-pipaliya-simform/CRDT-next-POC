@@ -200,6 +200,15 @@ All TypeScript/React source files MUST strictly follow these ordering and naming
 - **Content Sections Come From One List**: `CONTENT_SECTIONS` (`lib/content-sections.ts`) drives the section tabs, landing header/footer and menu footer links.
 - **E2E Uses a Fixture CMS**: `e2e/fixtures/cms-server.mjs` (port 4103, `E2E_CMS_PORT`) is a second Playwright `webServer`; the config passes `CMS_API_URL` / `CMS_API_TOKEN` / `CMS_REVALIDATE_SECRET` to Next. The app never references the fixture.
 
+### Monitoring & Error Reporting (Binding)
+
+- **Sentry Is Optional.** No DSN means the SDK is never initialised (`src/instrumentation-client.ts`, `src/sentry.server.config.ts`, `src/sentry.edge.config.ts` all guard on it). Never make the app require a DSN or `SENTRY_AUTH_TOKEN`; source-map upload is disabled without the token in `next.config.ts`.
+- **Report Unexpected Errors Through `reportError`.** A `catch` that turns an exception into a readable action/route error calls `reportError(label, error, { workspaceId?, extra? })` from `src/lib/report-error.ts` (it logs and captures). Do not import `@sentry/nextjs` in features or add `console.error` in those catches. Expected outcomes (validation, auth refusal, an unconfigured integration) are NOT reported.
+- **Boundaries Report Once.** `RouteError` and `global-error.tsx` call `reportBoundaryError`, which skips errors with a `digest` (already captured by `onRequestError`).
+- **No PII.** Sentry 11 has no `sendDefaultPii`; use `dataCollection` (`SENTRY_DATA_COLLECTION`). The user is the id only (`SentryScope`); never send an email or name. Do not add request bodies, headers or cookies to events.
+- **Config Is Read Through `src/lib/sentry-config.ts`.** `NEXT_PUBLIC_*` values must be spelled out literally in the client file so they are inlined; the parser never throws. `withSentryConfig` is imported from `@sentry/nextjs/config` in this major version.
+- **The Tunnel Path Is Excluded From `proxy.ts`.** If `tunnelRoute` changes, change the matcher too. `/sentry-test` and `/api/sentry-test` are development-only and 404 in production.
+
 ### Server & Monorepo Build Isolation Convention (Binding)
 
 - **Standalone `server/` Directory**: The Node.js Express collaboration server lives in `server/` with its own `package.json` and `tsconfig.json`.
