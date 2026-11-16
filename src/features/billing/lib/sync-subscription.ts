@@ -7,6 +7,23 @@ import { planForPriceId } from "@/lib/stripe";
 import "server-only";
 
 /**
+ * The slice of a Stripe subscription this module reads. A real
+ * `Stripe.Subscription` satisfies it; naming the slice keeps tests honest
+ * without hand-building the 40-field SDK type.
+ */
+export type SyncableSubscription = Pick<
+    Stripe.Subscription,
+    "id" | "status" | "customer" | "cancel_at_period_end" | "cancel_at"
+> & {
+    items: {
+        data: Array<{
+            price?: { id: string };
+            current_period_end?: number;
+        }>;
+    };
+};
+
+/**
  * Stripe's subscription lifecycle collapsed onto the statuses this app reasons
  * about. Anything terminal reads as `CANCELED` so entitlement checks stay binary.
  */
@@ -37,7 +54,7 @@ function resolveCustomerId(
  * The billing period moved onto subscription items in the 2025+ API versions, so
  * the renewal date is read from the first item rather than the subscription.
  */
-function resolvePeriodEnd(subscription: Stripe.Subscription): Date | null {
+function resolvePeriodEnd(subscription: SyncableSubscription): Date | null {
     const periodEnd = subscription.items.data[0]?.current_period_end;
     return typeof periodEnd === "number" ? new Date(periodEnd * 1000) : null;
 }
@@ -49,7 +66,7 @@ function resolvePeriodEnd(subscription: Stripe.Subscription): Date | null {
  * timestamp with `cancel_at_period_end` still false, so reading the boolean
  * alone would show "renews" on a subscription that is on its way out.
  */
-function resolveCancelAtPeriodEnd(subscription: Stripe.Subscription): boolean {
+function resolveCancelAtPeriodEnd(subscription: SyncableSubscription): boolean {
     return subscription.cancel_at_period_end || subscription.cancel_at !== null;
 }
 
@@ -59,7 +76,7 @@ function resolveCancelAtPeriodEnd(subscription: Stripe.Subscription): boolean {
  */
 export async function syncSubscriptionToWorkspace(
     workspaceId: string,
-    subscription: Stripe.Subscription,
+    subscription: SyncableSubscription,
 ): Promise<void> {
     const status = mapStatus(subscription.status);
     const stripeCustomerId = resolveCustomerId(subscription.customer);
@@ -89,7 +106,7 @@ export async function syncSubscriptionToWorkspace(
  */
 export async function downgradeWorkspaceToFree(
     workspaceId: string,
-    subscription: Stripe.Subscription,
+    subscription: SyncableSubscription,
 ): Promise<void> {
     await db.subscription.updateMany({
         where: { workspaceId },
