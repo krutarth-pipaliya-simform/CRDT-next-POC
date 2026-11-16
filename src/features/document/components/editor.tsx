@@ -17,17 +17,14 @@ import TaskItem from "@tiptap/extension-task-item";
 import TaskList from "@tiptap/extension-task-list";
 import TextAlign from "@tiptap/extension-text-align";
 import Underline from "@tiptap/extension-underline";
-import { EditorContent, useEditor } from "@tiptap/react";
+import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { ArrowLeft } from "lucide-react";
 
 import { PAGE_CONTAINER } from "@/components/layout/layout-styles";
+import { BackLink } from "@/components/paddock/back-link";
 import { ContourBackground } from "@/components/paddock/contour-background";
 import { PaddockAvatar } from "@/components/paddock/paddock-avatar";
-import {
-    PaddockButton,
-    PaddockLinkButton,
-} from "@/components/paddock/paddock-button";
+import { PaddockButton } from "@/components/paddock/paddock-button";
 import { Tag } from "@/components/paddock/tag";
 import { cn } from "@/lib/cn";
 import { getUserColor } from "@/lib/presence";
@@ -40,6 +37,7 @@ import {
     renderCollaborationCursor,
     renderCollaborationSelection,
 } from "./collaboration-cursor-render";
+import { DocumentStats } from "./document-stats";
 import { DocumentTitle } from "./document-title";
 import { EditorToolbar } from "./editor-toolbar";
 import { ImageDialog } from "./image-dialog";
@@ -210,6 +208,11 @@ export function CollaborativeEditor({
         {
             extensions,
             immediatelyRender: false,
+            // Each keystroke, selection change and remote cursor move is a
+            // transaction. Re-rendering this whole tree for each one is what
+            // made typing heavy; the toolbar, bubble menu and counts each
+            // subscribe to the slice they show instead.
+            shouldRerenderOnTransaction: false,
             editable: !isReadOnly,
             editorProps: {
                 attributes: {
@@ -227,9 +230,12 @@ export function CollaborativeEditor({
         }
     }, [editor, isReadOnly]);
 
-    const wordCount = editor?.storage.characterCount?.words() ?? 0;
-    const charCount = editor?.storage.characterCount?.characters() ?? 0;
-    const isInTable = editor?.isActive("table") ?? false;
+    const isInTable =
+        useEditorState({
+            editor,
+            selector: ({ editor: current }) =>
+                current?.isActive("table") ?? false,
+        }) ?? false;
 
     return (
         <div className="w-full min-w-0">
@@ -240,21 +246,11 @@ export function CollaborativeEditor({
                     "flex flex-wrap items-center gap-x-[1.125rem] gap-y-3.5 pt-7 pb-2",
                 )}
             >
-                <PaddockLinkButton
+                <BackLink
                     href={`/${workspaceId}/documents`}
-                    variant="outline"
-                    voice="plain"
-                    size="sm"
+                    label="Documents"
                     aria-label="Back to documents"
-                    className="shrink-0 px-3.5"
-                >
-                    <ArrowLeft
-                        className="size-4"
-                        strokeWidth={2.2}
-                        aria-hidden="true"
-                    />
-                    Documents
-                </PaddockLinkButton>
+                />
 
                 <div className="min-w-0 flex-[1_1_20rem]">
                     <DocumentTitle
@@ -343,9 +339,7 @@ export function CollaborativeEditor({
                                     ? "Read-only mode (spectating live changes)"
                                     : "Markdown shortcuts and slash commands work here"}
                             </span>
-                            <span className="paddock-mono text-xs">
-                                {wordCount} words · {charCount} characters
-                            </span>
+                            <DocumentStats editor={editor} />
                         </div>
                     </article>
 

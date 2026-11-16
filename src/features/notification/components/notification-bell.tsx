@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState, type KeyboardEvent } from "react";
 import { Bell } from "lucide-react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { toast } from "sonner";
 
 import { Tag } from "@/components/paddock/tag";
@@ -34,6 +35,11 @@ export function NotificationBell({
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const close = useCallback(() => setIsOpen(false), []);
+    const params = useParams();
+    // The inbox spans every workspace; inside one, "all activity" means that
+    // workspace's, not whichever sent the newest notification.
+    const currentWorkspaceId =
+        typeof params.workspaceId === "string" ? params.workspaceId : null;
 
     useOutsideClick(dropdownRef, close, isOpen);
 
@@ -145,7 +151,7 @@ export function NotificationBell({
                     {notifications.length > 0 && (
                         <div className="border-t border-paddock-rule px-4 py-3">
                             <Link
-                                href={`/${notifications[0].workspaceId}/activity`}
+                                href={`/${currentWorkspaceId ?? notifications[0].workspaceId}/activity`}
                                 onClick={close}
                                 className="text-[0.8125rem] font-semibold text-paddock-ink underline decoration-[1.5px] underline-offset-[3px] hover:decoration-transparent"
                             >

@@ -41,6 +41,8 @@ export function ActivityFeed({
             initialNotifications: initialActivity,
             initialUnreadCount,
             limit: ACTIVITY_FEED_LIMIT,
+            // The header bell on this page already refreshes on each one.
+            refreshOnNotification: false,
         });
 
     // The shared stream carries every workspace; this feed shows only the current one

@@ -267,7 +267,21 @@ export function useWorkspaceChat({
                 return a.name.localeCompare(b.name);
             });
 
-            setBaseParticipants(next);
+            // Awareness re-sends every state on a heartbeat and on each
+            // peer's typing ping; keep the old array when nobody changed.
+            setBaseParticipants((prev) =>
+                prev.length === next.length &&
+                prev.every(
+                    (p, i) =>
+                        p.id === next[i].id &&
+                        p.name === next[i].name &&
+                        p.color === next[i].color &&
+                        p.avatarUrl === next[i].avatarUrl &&
+                        p.isSelf === next[i].isSelf,
+                )
+                    ? prev
+                    : next,
+            );
             sweepTyping();
         };
 

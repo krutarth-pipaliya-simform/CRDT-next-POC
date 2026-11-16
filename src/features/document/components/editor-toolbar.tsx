@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, type KeyboardEvent, type ReactNode } from "react";
-import type { Editor } from "@tiptap/react";
+import { useEditorState, type Editor } from "@tiptap/react";
 import {
     AlignCenter,
     AlignJustify,
@@ -25,6 +25,8 @@ import {
 
 import { cn } from "@/lib/cn";
 
+import { HEADING_LEVELS, selectFormatState } from "../lib/editor-format-state";
+
 export interface EditorToolbarProps {
     editor: Editor | null;
     onOpenImageDialog: () => void;
@@ -45,8 +47,6 @@ interface ToolbarTool {
 }
 
 const ICON = "size-4";
-
-const HEADING_LEVELS: Array<1 | 2 | 3 | 4> = [1, 2, 3, 4];
 
 interface GlyphProps {
     children: ReactNode;
@@ -80,8 +80,13 @@ export function EditorToolbar({
     const [linkUrl, setLinkUrl] = useState("");
     const [focusIndex, setFocusIndex] = useState(0);
     const buttonRefs = useRef<Array<HTMLButtonElement | null>>([]);
+    const format = useEditorState({
+        editor,
+        selector: ({ editor: current }) =>
+            current ? selectFormatState(current) : null,
+    });
 
-    if (!editor) {
+    if (!editor || !format) {
         return null;
     }
 
@@ -108,7 +113,7 @@ export function EditorToolbar({
                 label: "Undo",
                 hint: "Undo (Mod-Z)",
                 icon: <Undo2 className={ICON} />,
-                unavailable: !editor.can().undo(),
+                unavailable: !format.canUndo,
                 run: () => editor.chain().focus().undo().run(),
             },
             {
@@ -116,7 +121,7 @@ export function EditorToolbar({
                 label: "Redo",
                 hint: "Redo (Mod-Shift-Z)",
                 icon: <Redo2 className={ICON} />,
-                unavailable: !editor.can().redo(),
+                unavailable: !format.canRedo,
                 run: () => editor.chain().focus().redo().run(),
             },
         ],
@@ -126,7 +131,7 @@ export function EditorToolbar({
                 label: "Paragraph",
                 hint: "Paragraph",
                 icon: <Glyph className="text-[0.9375rem]">¶</Glyph>,
-                pressed: editor.isActive("paragraph"),
+                pressed: format.paragraph,
                 run: () => editor.chain().focus().setParagraph().run(),
             },
             ...HEADING_LEVELS.map((level) => ({
@@ -134,7 +139,7 @@ export function EditorToolbar({
                 label: `Heading ${level}`,
                 hint: `Heading ${level} (Mod-Alt-${level})`,
                 icon: <Glyph>H{level}</Glyph>,
-                pressed: editor.isActive("heading", { level }),
+                pressed: format.headingLevel === level,
                 run: () =>
                     editor.chain().focus().toggleHeading({ level }).run(),
             })),
@@ -147,7 +152,7 @@ export function EditorToolbar({
                 icon: (
                     <Glyph className="text-[0.9375rem] font-extrabold">B</Glyph>
                 ),
-                pressed: editor.isActive("bold"),
+                pressed: format.bold,
                 run: () => editor.chain().focus().toggleBold().run(),
             },
             {
@@ -159,7 +164,7 @@ export function EditorToolbar({
                         I
                     </Glyph>
                 ),
-                pressed: editor.isActive("italic"),
+                pressed: format.italic,
                 run: () => editor.chain().focus().toggleItalic().run(),
             },
             {
@@ -167,7 +172,7 @@ export function EditorToolbar({
                 label: "Underline",
                 hint: "Underline (Mod-U)",
                 icon: <Glyph className="text-sm underline">U</Glyph>,
-                pressed: editor.isActive("underline"),
+                pressed: format.underline,
                 run: () => editor.chain().focus().toggleUnderline().run(),
             },
             {
@@ -175,7 +180,7 @@ export function EditorToolbar({
                 label: "Strikethrough",
                 hint: "Strikethrough (Mod-Shift-S)",
                 icon: <Glyph className="text-sm line-through">S</Glyph>,
-                pressed: editor.isActive("strike"),
+                pressed: format.strike,
                 run: () => editor.chain().focus().toggleStrike().run(),
             },
             {
@@ -183,7 +188,7 @@ export function EditorToolbar({
                 label: "Inline code",
                 hint: "Inline code (Mod-E)",
                 icon: <Code className={ICON} />,
-                pressed: editor.isActive("code"),
+                pressed: format.code,
                 run: () => editor.chain().focus().toggleCode().run(),
             },
             {
@@ -191,7 +196,7 @@ export function EditorToolbar({
                 label: "Highlight",
                 hint: "Highlight (Mod-Shift-H)",
                 icon: <Highlighter className={ICON} />,
-                pressed: editor.isActive("highlight"),
+                pressed: format.highlight,
                 run: () => editor.chain().focus().toggleHighlight().run(),
             },
             {
@@ -199,7 +204,7 @@ export function EditorToolbar({
                 label: "Link",
                 hint: "Link (Mod-K)",
                 icon: <LinkIcon className={ICON} />,
-                pressed: editor.isActive("link"),
+                pressed: format.link,
                 run: () => {
                     const previousUrl = editor.getAttributes("link").href;
                     setLinkUrl(previousUrl || "");
@@ -213,7 +218,7 @@ export function EditorToolbar({
                 label: "Align left",
                 hint: "Align left",
                 icon: <AlignLeft className={ICON} />,
-                pressed: editor.isActive({ textAlign: "left" }),
+                pressed: format.textAlign === "left",
                 run: () => editor.chain().focus().setTextAlign("left").run(),
             },
             {
@@ -221,7 +226,7 @@ export function EditorToolbar({
                 label: "Align centre",
                 hint: "Align centre",
                 icon: <AlignCenter className={ICON} />,
-                pressed: editor.isActive({ textAlign: "center" }),
+                pressed: format.textAlign === "center",
                 run: () => editor.chain().focus().setTextAlign("center").run(),
             },
             {
@@ -229,7 +234,7 @@ export function EditorToolbar({
                 label: "Align right",
                 hint: "Align right",
                 icon: <AlignRight className={ICON} />,
-                pressed: editor.isActive({ textAlign: "right" }),
+                pressed: format.textAlign === "right",
                 run: () => editor.chain().focus().setTextAlign("right").run(),
             },
             {
@@ -237,7 +242,7 @@ export function EditorToolbar({
                 label: "Justify",
                 hint: "Justify",
                 icon: <AlignJustify className={ICON} />,
-                pressed: editor.isActive({ textAlign: "justify" }),
+                pressed: format.textAlign === "justify",
                 run: () => editor.chain().focus().setTextAlign("justify").run(),
             },
         ],
@@ -247,7 +252,7 @@ export function EditorToolbar({
                 label: "Bullet list",
                 hint: "Bullet list (Mod-Shift-8)",
                 icon: <List className={ICON} />,
-                pressed: editor.isActive("bulletList"),
+                pressed: format.bulletList,
                 run: () => editor.chain().focus().toggleBulletList().run(),
             },
             {
@@ -255,7 +260,7 @@ export function EditorToolbar({
                 label: "Numbered list",
                 hint: "Numbered list (Mod-Shift-7)",
                 icon: <ListOrdered className={ICON} />,
-                pressed: editor.isActive("orderedList"),
+                pressed: format.orderedList,
                 run: () => editor.chain().focus().toggleOrderedList().run(),
             },
             {
@@ -263,7 +268,7 @@ export function EditorToolbar({
                 label: "Checklist",
                 hint: "Checklist (Mod-Shift-9)",
                 icon: <ListTodo className={ICON} />,
-                pressed: editor.isActive("taskList"),
+                pressed: format.taskList,
                 run: () => editor.chain().focus().toggleTaskList().run(),
             },
             {
@@ -271,7 +276,7 @@ export function EditorToolbar({
                 label: "Code block",
                 hint: "Code block (Mod-Alt-C)",
                 icon: <Code2 className={ICON} />,
-                pressed: editor.isActive("codeBlock"),
+                pressed: format.codeBlock,
                 run: () => editor.chain().focus().toggleCodeBlock().run(),
             },
             {
@@ -279,7 +284,7 @@ export function EditorToolbar({
                 label: "Quote",
                 hint: "Quote (Mod-Shift-B)",
                 icon: <Quote className={ICON} />,
-                pressed: editor.isActive("blockquote"),
+                pressed: format.blockquote,
                 run: () => editor.chain().focus().toggleBlockquote().run(),
             },
         ],
@@ -289,7 +294,7 @@ export function EditorToolbar({
                 label: "Insert table",
                 hint: "Insert table",
                 icon: <TableIcon className={ICON} />,
-                pressed: editor.isActive("table"),
+                pressed: format.table,
                 run: () =>
                     editor
                         .chain()

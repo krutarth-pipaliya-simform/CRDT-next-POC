@@ -42,6 +42,23 @@ export interface UseDocumentCollabResult {
     takeOverEditing: () => void;
 }
 
+/**
+ * Same people with the same name, colour and photo. Awareness re-sends every
+ * state on a heartbeat; keeping the old array then spares a re-render.
+ */
+function isSamePresence(a: PresenceUser[], b: PresenceUser[]): boolean {
+    return (
+        a.length === b.length &&
+        a.every(
+            (user, i) =>
+                user.id === b[i].id &&
+                user.name === b[i].name &&
+                user.color === b[i].color &&
+                user.avatarUrl === b[i].avatarUrl,
+        )
+    );
+}
+
 export function useDocumentCollab({
     documentId,
     workspaceId,
@@ -54,6 +71,10 @@ export function useDocumentCollab({
     const takeoverTimestampRef = useRef<number>(0);
     const isReadOnlyRef = useRef<boolean>(false);
     const isDirtyRef = useRef<boolean>(false);
+    // Bumped on every local edit, so a save can tell whether edits arrived
+    // while it was in flight.
+    const changeVersionRef = useRef<number>(0);
+    const saveInFlightRef = useRef<Promise<void> | null>(null);
     const titleRef = useRef<string>(initialTitle);
 
     const [isReadOnly, setIsReadOnly] = useState<boolean>(false);
@@ -305,7 +326,9 @@ export function useDocumentCollab({
                 return a.name.localeCompare(b.name);
             });
 
-            setCollaborators(uniqueUsers);
+            setCollaborators((prev) =>
+                isSamePresence(prev, uniqueUsers) ? prev : uniqueUsers,
+            );
 
             // Multi-session conflict resolution for currentUser
             if (mySessions.length <= 1) {
@@ -424,6 +447,7 @@ export function useDocumentCollab({
                 return;
             }
             isDirtyRef.current = true;
+            changeVersionRef.current += 1;
             setSaveState((prev) =>
                 prev === "offline" ? "offline" : "pending",
             );
@@ -435,48 +459,75 @@ export function useDocumentCollab({
         };
     }, [ydoc]);
 
-    // Save procedure
-    const performSave = useCallback(async () => {
-        if (!isDirtyRef.current || isReadOnlyRef.current) return;
-
-        setSaveState("saving");
-        try {
-            const updateState = Y.encodeStateAsUpdate(ydoc);
-            const binaryString = Array.from(updateState, (byte) =>
-                String.fromCharCode(byte),
-            ).join("");
-            const contentBase64 = btoa(binaryString);
-
-            const result = await saveDocumentAction({
-                id: documentId,
-                workspaceId,
-                title: titleRef.current,
-                contentBase64,
-            });
-
-            if (result.success) {
-                isDirtyRef.current = false;
-                setSaveState("saved");
-                setLastSavedAt(new Date(result.data.updatedAt));
-            } else {
-                setSaveState("failed");
-            }
-        } catch (err) {
-            console.error("[Autosave] Failed to persist document:", err);
-            setSaveState("failed");
+    // Save procedure. One save runs at a time: a request made while one is
+    // in flight joins it, and edits typed meanwhile stay dirty for the next.
+    const performSave = useCallback((): Promise<void> => {
+        if (saveInFlightRef.current) return saveInFlightRef.current;
+        if (!isDirtyRef.current || isReadOnlyRef.current) {
+            return Promise.resolve();
         }
+
+        const version = changeVersionRef.current;
+        setSaveState("saving");
+        const save = (async () => {
+            try {
+                const updateState = Y.encodeStateAsUpdate(ydoc);
+                const binaryString = Array.from(updateState, (byte) =>
+                    String.fromCharCode(byte),
+                ).join("");
+                const contentBase64 = btoa(binaryString);
+
+                const result = await saveDocumentAction({
+                    id: documentId,
+                    workspaceId,
+                    title: titleRef.current,
+                    contentBase64,
+                });
+
+                if (result.success) {
+                    // Only what existed when the snapshot was taken is saved.
+                    const caughtUp = changeVersionRef.current === version;
+                    if (caughtUp) isDirtyRef.current = false;
+                    setSaveState(caughtUp ? "saved" : "pending");
+                    setLastSavedAt(new Date(result.data.updatedAt));
+                } else {
+                    setSaveState("failed");
+                }
+            } catch (err) {
+                console.error("[Autosave] Failed to persist document:", err);
+                setSaveState("failed");
+            } finally {
+                saveInFlightRef.current = null;
+            }
+        })();
+        saveInFlightRef.current = save;
+        return save;
     }, [documentId, workspaceId, ydoc]);
 
-    // FR-10: 5-second dirty-checked autosave interval
+    // FR-10: 5-second dirty-checked autosave interval, plus a flush whenever
+    // the editor is about to stop being seen: leaving it in-app (unmount),
+    // switching tabs, or the page being hidden or closed. A closing tab may
+    // still cut that last request short; the interval keeps the gap small.
     useEffect(() => {
-        const intervalId = setInterval(() => {
-            if (isDirtyRef.current && !isReadOnlyRef.current) {
-                performSave();
-            }
-        }, 5000);
+        const flush = () => {
+            void performSave();
+        };
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === "hidden") flush();
+        };
+
+        const intervalId = setInterval(flush, 5000);
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        window.addEventListener("pagehide", flush);
 
         return () => {
             clearInterval(intervalId);
+            document.removeEventListener(
+                "visibilitychange",
+                handleVisibilityChange,
+            );
+            window.removeEventListener("pagehide", flush);
+            flush();
         };
     }, [performSave]);
 
@@ -485,6 +536,7 @@ export function useDocumentCollab({
         setTitle(newTitle);
         titleRef.current = newTitle;
         isDirtyRef.current = true;
+        changeVersionRef.current += 1;
         setSaveState("pending");
     }, []);
 

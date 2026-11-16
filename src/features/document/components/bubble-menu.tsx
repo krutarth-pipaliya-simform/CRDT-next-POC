@@ -1,7 +1,11 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { BubbleMenu as TipTapBubbleMenu, type Editor } from "@tiptap/react";
+import {
+    BubbleMenu as TipTapBubbleMenu,
+    useEditorState,
+    type Editor,
+} from "@tiptap/react";
 import {
     AlignCenter,
     AlignLeft,
@@ -17,6 +21,8 @@ import {
 } from "lucide-react";
 
 import { cn } from "@/lib/cn";
+
+import { selectFormatState } from "../lib/editor-format-state";
 
 export interface EditorBubbleMenuProps {
     editor: Editor | null;
@@ -44,8 +50,13 @@ export function EditorBubbleMenu({
 }: EditorBubbleMenuProps) {
     const [isLinkPromptOpen, setIsLinkPromptOpen] = useState(false);
     const [linkUrl, setLinkUrl] = useState("");
+    const format = useEditorState({
+        editor,
+        selector: ({ editor: current }) =>
+            current ? selectFormatState(current) : null,
+    });
 
-    if (!editor) {
+    if (!editor || !format) {
         return null;
     }
 
@@ -71,7 +82,7 @@ export function EditorBubbleMenu({
                 label: "Bold",
                 hint: "Bold (Mod-B)",
                 icon: <Bold className={ICON} />,
-                pressed: editor.isActive("bold"),
+                pressed: format.bold,
                 run: () => editor.chain().focus().toggleBold().run(),
             },
             {
@@ -79,7 +90,7 @@ export function EditorBubbleMenu({
                 label: "Italic",
                 hint: "Italic (Mod-I)",
                 icon: <Italic className={ICON} />,
-                pressed: editor.isActive("italic"),
+                pressed: format.italic,
                 run: () => editor.chain().focus().toggleItalic().run(),
             },
             {
@@ -87,7 +98,7 @@ export function EditorBubbleMenu({
                 label: "Underline",
                 hint: "Underline (Mod-U)",
                 icon: <Underline className={ICON} />,
-                pressed: editor.isActive("underline"),
+                pressed: format.underline,
                 run: () => editor.chain().focus().toggleUnderline().run(),
             },
             {
@@ -95,7 +106,7 @@ export function EditorBubbleMenu({
                 label: "Strikethrough",
                 hint: "Strikethrough",
                 icon: <Strikethrough className={ICON} />,
-                pressed: editor.isActive("strike"),
+                pressed: format.strike,
                 run: () => editor.chain().focus().toggleStrike().run(),
             },
             {
@@ -103,7 +114,7 @@ export function EditorBubbleMenu({
                 label: "Inline code",
                 hint: "Inline code",
                 icon: <Code className={ICON} />,
-                pressed: editor.isActive("code"),
+                pressed: format.code,
                 run: () => editor.chain().focus().toggleCode().run(),
             },
             {
@@ -111,7 +122,7 @@ export function EditorBubbleMenu({
                 label: "Highlight",
                 hint: "Highlight",
                 icon: <Highlighter className={ICON} />,
-                pressed: editor.isActive("highlight"),
+                pressed: format.highlight,
                 run: () => editor.chain().focus().toggleHighlight().run(),
             },
             {
@@ -119,7 +130,7 @@ export function EditorBubbleMenu({
                 label: "Link",
                 hint: "Link",
                 icon: <LinkIcon className={ICON} />,
-                pressed: editor.isActive("link"),
+                pressed: format.link,
                 run: () => {
                     const previousUrl = editor.getAttributes("link").href;
                     setLinkUrl(previousUrl || "");
@@ -133,7 +144,7 @@ export function EditorBubbleMenu({
                 label: "Align left",
                 hint: "Align left",
                 icon: <AlignLeft className={ICON} />,
-                pressed: editor.isActive({ textAlign: "left" }),
+                pressed: format.textAlign === "left",
                 run: () => editor.chain().focus().setTextAlign("left").run(),
             },
             {
@@ -141,7 +152,7 @@ export function EditorBubbleMenu({
                 label: "Align centre",
                 hint: "Align centre",
                 icon: <AlignCenter className={ICON} />,
-                pressed: editor.isActive({ textAlign: "center" }),
+                pressed: format.textAlign === "center",
                 run: () => editor.chain().focus().setTextAlign("center").run(),
             },
             {
@@ -149,7 +160,7 @@ export function EditorBubbleMenu({
                 label: "Align right",
                 hint: "Align right",
                 icon: <AlignRight className={ICON} />,
-                pressed: editor.isActive({ textAlign: "right" }),
+                pressed: format.textAlign === "right",
                 run: () => editor.chain().focus().setTextAlign("right").run(),
             },
         ],

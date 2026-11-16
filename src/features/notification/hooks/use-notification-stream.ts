@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
+
 import { markAllNotificationsReadAction } from "../actions/mark-all-notifications-read";
 import { markNotificationReadAction } from "../actions/mark-notification-read";
 import type { NotificationPayload } from "../types";
@@ -16,6 +18,12 @@ export interface UseNotificationStreamOptions {
     onNotification?: (notification: NotificationPayload) => void;
     /** Maximum notifications retained client-side. */
     limit?: number;
+    /**
+     * Refresh the page's server data when notifications arrive. Only one
+     * consumer per page needs to: the header bell always does, so a second
+     * stream on the same page (the activity feed) turns it off.
+     */
+    refreshOnNotification?: boolean;
 }
 
 export interface UseNotificationStreamResult {
@@ -27,6 +35,9 @@ export interface UseNotificationStreamResult {
 }
 
 const RECONNECT_DELAY_MS = 5_000;
+const MAX_RECONNECT_DELAY_MS = 60_000;
+/** A burst of notifications (a bulk move, a busy chat) becomes one refresh. */
+const REFRESH_DEBOUNCE_MS = 750;
 
 /**
  * Subscribes to `/api/notifications/stream` and keeps a live notification list.
@@ -39,8 +50,13 @@ export function useNotificationStream({
     initialUnreadCount,
     onNotification,
     limit = 30,
+    refreshOnNotification = true,
 }: UseNotificationStreamOptions): UseNotificationStreamResult {
     const router = useRouter();
+    const refresh = useDebouncedCallback(
+        () => router.refresh(),
+        REFRESH_DEBOUNCE_MS,
+    );
     const onNotificationRef = useRef(onNotification);
     const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
         null,
@@ -73,6 +89,9 @@ export function useNotificationStream({
     useEffect(() => {
         let source: EventSource | null = null;
         let disposed = false;
+        // Doubles after each failure, so a stream that keeps failing (an
+        // expired session) stops retrying every few seconds.
+        let reconnectDelay = RECONNECT_DELAY_MS;
 
         const handleNotification = (event: MessageEvent<string>) => {
             let payload: NotificationPayload;
@@ -100,7 +119,7 @@ export function useNotificationStream({
             onNotificationRef.current?.(payload);
 
             // Pull fresh server data for whatever the notification refers to
-            router.refresh();
+            if (refreshOnNotification) refresh.schedule();
         };
 
         const connect = () => {
@@ -115,10 +134,14 @@ export function useNotificationStream({
 
             source = new EventSource("/api/notifications/stream");
 
-            source.addEventListener("ready", () => setStatus("live"));
+            const markLive = () => {
+                reconnectDelay = RECONNECT_DELAY_MS;
+                setStatus("live");
+            };
+            source.addEventListener("ready", markLive);
             source.addEventListener("notification", handleNotification);
 
-            source.onopen = () => setStatus("live");
+            source.onopen = markLive;
 
             source.onerror = () => {
                 setStatus("offline");
@@ -126,9 +149,10 @@ export function useNotificationStream({
                 source = null;
 
                 if (disposed) return;
-                reconnectTimerRef.current = setTimeout(
-                    connect,
-                    RECONNECT_DELAY_MS,
+                reconnectTimerRef.current = setTimeout(connect, reconnectDelay);
+                reconnectDelay = Math.min(
+                    reconnectDelay * 2,
+                    MAX_RECONNECT_DELAY_MS,
                 );
             };
         };
@@ -143,7 +167,7 @@ export function useNotificationStream({
             }
             source?.close();
         };
-    }, [limit, router]);
+    }, [limit, refresh, refreshOnNotification]);
 
     const markRead = useCallback(async (notificationId: string) => {
         let alreadyRead = false;
