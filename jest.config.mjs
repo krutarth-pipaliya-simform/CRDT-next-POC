@@ -87,5 +87,20 @@ const config = {
     },
 };
 
-// createJestConfig is async so next/jest can load next.config.ts.
-export default createJestConfig(config);
+// createJestConfig is async so next/jest can load next.config.ts. It builds a
+// `transformIgnorePatterns` that skips all of node_modules; the packages below
+// ship ES modules only, so they must go through the transformer.
+const ESM_ONLY_PACKAGES = ["lowlight", "devlop", "fault", "format"];
+
+export default async function jestConfig() {
+    const resolved = await createJestConfig(config)();
+    return {
+        ...resolved,
+        transformIgnorePatterns: [
+            `/node_modules/(?!(${ESM_ONLY_PACKAGES.join("|")})/)`,
+            ...(resolved.transformIgnorePatterns ?? []).filter(
+                (pattern) => !pattern.includes("node_modules"),
+            ),
+        ],
+    };
+}
