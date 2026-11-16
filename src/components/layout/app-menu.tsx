@@ -105,7 +105,7 @@ export function AppMenu({ workspaces, recentDocuments }: AppMenuProps) {
                                 <Link
                                     key={section.href}
                                     href={section.href}
-                                    onClick={() => setOpen(false)}
+                                    onClick={close}
                                     className={footerLink}
                                 >
                                     {section.label}
