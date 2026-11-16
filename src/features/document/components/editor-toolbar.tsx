@@ -1,22 +1,16 @@
 "use client";
 
-import { useState } from "react";
-import type { Editor } from "@tiptap/react";
+import { useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { useEditorState, type Editor } from "@tiptap/react";
 import {
     AlignCenter,
     AlignJustify,
     AlignLeft,
     AlignRight,
-    Bold,
     Code,
     Code2,
-    Heading1,
-    Heading2,
-    Heading3,
-    Heading4,
     Highlighter,
     Image as ImageIcon,
-    Italic,
     Link as LinkIcon,
     List,
     ListOrdered,
@@ -24,12 +18,14 @@ import {
     Minus,
     Quote,
     Redo2,
-    Strikethrough,
     Table as TableIcon,
-    Type,
-    Underline,
     Undo2,
+    X,
 } from "lucide-react";
+
+import { cn } from "@/lib/cn";
+
+import { HEADING_LEVELS, selectFormatState } from "../lib/editor-format-state";
 
 export interface EditorToolbarProps {
     editor: Editor | null;
@@ -37,6 +33,44 @@ export interface EditorToolbarProps {
     disabled?: boolean;
 }
 
+interface ToolbarTool {
+    id: string;
+    /** Accessible name; every tool is icon-only. */
+    label: string;
+    /** Hover hint, with the keyboard shortcut where there is one. */
+    hint: string;
+    icon: ReactNode;
+    /** Formats and block types report a pressed state; one-shot actions do not. */
+    pressed?: boolean;
+    unavailable?: boolean;
+    run: () => void;
+}
+
+const ICON = "size-4";
+
+interface GlyphProps {
+    children: ReactNode;
+    className?: string;
+}
+
+/** A letterform drawn as the icon, the way the design sets B, I, U and H1. */
+function Glyph({ children, className }: GlyphProps) {
+    return (
+        <span
+            className={cn("text-[0.8125rem] leading-none font-bold", className)}
+        >
+            {children}
+        </span>
+    );
+}
+
+/**
+ * The night pill above the canvas. Active formats are lime fills.
+ *
+ * WAI-ARIA toolbar pattern: the whole toolbar is one tab stop; arrow keys move
+ * between tools, Home and End jump to the ends. In read-only mode every tool
+ * stays reachable but announces itself unavailable and does nothing.
+ */
 export function EditorToolbar({
     editor,
     onOpenImageDialog,
@@ -44,8 +78,15 @@ export function EditorToolbar({
 }: EditorToolbarProps) {
     const [isLinkPromptOpen, setIsLinkPromptOpen] = useState(false);
     const [linkUrl, setLinkUrl] = useState("");
+    const [focusIndex, setFocusIndex] = useState(0);
+    const buttonRefs = useRef<Array<HTMLButtonElement | null>>([]);
+    const format = useEditorState({
+        editor,
+        selector: ({ editor: current }) =>
+            current ? selectFormatState(current) : null,
+    });
 
-    if (!editor) {
+    if (!editor || !format) {
         return null;
     }
 
@@ -65,429 +106,322 @@ export function EditorToolbar({
         setLinkUrl("");
     };
 
+    const groups: ToolbarTool[][] = [
+        [
+            {
+                id: "undo",
+                label: "Undo",
+                hint: "Undo (Mod-Z)",
+                icon: <Undo2 className={ICON} />,
+                unavailable: !format.canUndo,
+                run: () => editor.chain().focus().undo().run(),
+            },
+            {
+                id: "redo",
+                label: "Redo",
+                hint: "Redo (Mod-Shift-Z)",
+                icon: <Redo2 className={ICON} />,
+                unavailable: !format.canRedo,
+                run: () => editor.chain().focus().redo().run(),
+            },
+        ],
+        [
+            {
+                id: "paragraph",
+                label: "Paragraph",
+                hint: "Paragraph",
+                icon: <Glyph className="text-[0.9375rem]">¶</Glyph>,
+                pressed: format.paragraph,
+                run: () => editor.chain().focus().setParagraph().run(),
+            },
+            ...HEADING_LEVELS.map((level) => ({
+                id: `heading-${level}`,
+                label: `Heading ${level}`,
+                hint: `Heading ${level} (Mod-Alt-${level})`,
+                icon: <Glyph>H{level}</Glyph>,
+                pressed: format.headingLevel === level,
+                run: () =>
+                    editor.chain().focus().toggleHeading({ level }).run(),
+            })),
+        ],
+        [
+            {
+                id: "bold",
+                label: "Bold",
+                hint: "Bold (Mod-B)",
+                icon: (
+                    <Glyph className="text-[0.9375rem] font-extrabold">B</Glyph>
+                ),
+                pressed: format.bold,
+                run: () => editor.chain().focus().toggleBold().run(),
+            },
+            {
+                id: "italic",
+                label: "Italic",
+                hint: "Italic (Mod-I)",
+                icon: (
+                    <Glyph className="paddock-serif text-[1.0625rem] font-normal italic">
+                        I
+                    </Glyph>
+                ),
+                pressed: format.italic,
+                run: () => editor.chain().focus().toggleItalic().run(),
+            },
+            {
+                id: "underline",
+                label: "Underline",
+                hint: "Underline (Mod-U)",
+                icon: <Glyph className="text-sm underline">U</Glyph>,
+                pressed: format.underline,
+                run: () => editor.chain().focus().toggleUnderline().run(),
+            },
+            {
+                id: "strike",
+                label: "Strikethrough",
+                hint: "Strikethrough (Mod-Shift-S)",
+                icon: <Glyph className="text-sm line-through">S</Glyph>,
+                pressed: format.strike,
+                run: () => editor.chain().focus().toggleStrike().run(),
+            },
+            {
+                id: "code",
+                label: "Inline code",
+                hint: "Inline code (Mod-E)",
+                icon: <Code className={ICON} />,
+                pressed: format.code,
+                run: () => editor.chain().focus().toggleCode().run(),
+            },
+            {
+                id: "highlight",
+                label: "Highlight",
+                hint: "Highlight (Mod-Shift-H)",
+                icon: <Highlighter className={ICON} />,
+                pressed: format.highlight,
+                run: () => editor.chain().focus().toggleHighlight().run(),
+            },
+            {
+                id: "link",
+                label: "Link",
+                hint: "Link (Mod-K)",
+                icon: <LinkIcon className={ICON} />,
+                pressed: format.link,
+                run: () => {
+                    const previousUrl = editor.getAttributes("link").href;
+                    setLinkUrl(previousUrl || "");
+                    setIsLinkPromptOpen(true);
+                },
+            },
+        ],
+        [
+            {
+                id: "align-left",
+                label: "Align left",
+                hint: "Align left",
+                icon: <AlignLeft className={ICON} />,
+                pressed: format.textAlign === "left",
+                run: () => editor.chain().focus().setTextAlign("left").run(),
+            },
+            {
+                id: "align-center",
+                label: "Align centre",
+                hint: "Align centre",
+                icon: <AlignCenter className={ICON} />,
+                pressed: format.textAlign === "center",
+                run: () => editor.chain().focus().setTextAlign("center").run(),
+            },
+            {
+                id: "align-right",
+                label: "Align right",
+                hint: "Align right",
+                icon: <AlignRight className={ICON} />,
+                pressed: format.textAlign === "right",
+                run: () => editor.chain().focus().setTextAlign("right").run(),
+            },
+            {
+                id: "align-justify",
+                label: "Justify",
+                hint: "Justify",
+                icon: <AlignJustify className={ICON} />,
+                pressed: format.textAlign === "justify",
+                run: () => editor.chain().focus().setTextAlign("justify").run(),
+            },
+        ],
+        [
+            {
+                id: "bullet-list",
+                label: "Bullet list",
+                hint: "Bullet list (Mod-Shift-8)",
+                icon: <List className={ICON} />,
+                pressed: format.bulletList,
+                run: () => editor.chain().focus().toggleBulletList().run(),
+            },
+            {
+                id: "ordered-list",
+                label: "Numbered list",
+                hint: "Numbered list (Mod-Shift-7)",
+                icon: <ListOrdered className={ICON} />,
+                pressed: format.orderedList,
+                run: () => editor.chain().focus().toggleOrderedList().run(),
+            },
+            {
+                id: "task-list",
+                label: "Checklist",
+                hint: "Checklist (Mod-Shift-9)",
+                icon: <ListTodo className={ICON} />,
+                pressed: format.taskList,
+                run: () => editor.chain().focus().toggleTaskList().run(),
+            },
+            {
+                id: "code-block",
+                label: "Code block",
+                hint: "Code block (Mod-Alt-C)",
+                icon: <Code2 className={ICON} />,
+                pressed: format.codeBlock,
+                run: () => editor.chain().focus().toggleCodeBlock().run(),
+            },
+            {
+                id: "blockquote",
+                label: "Quote",
+                hint: "Quote (Mod-Shift-B)",
+                icon: <Quote className={ICON} />,
+                pressed: format.blockquote,
+                run: () => editor.chain().focus().toggleBlockquote().run(),
+            },
+        ],
+        [
+            {
+                id: "table",
+                label: "Insert table",
+                hint: "Insert table",
+                icon: <TableIcon className={ICON} />,
+                pressed: format.table,
+                run: () =>
+                    editor
+                        .chain()
+                        .focus()
+                        .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+                        .run(),
+            },
+            {
+                id: "image",
+                label: "Insert image",
+                hint: "Insert image",
+                icon: <ImageIcon className={ICON} />,
+                run: onOpenImageDialog,
+            },
+            {
+                id: "divider",
+                label: "Divider line",
+                hint: "Divider line",
+                icon: <Minus className={ICON} />,
+                run: () => editor.chain().focus().setHorizontalRule().run(),
+            },
+        ],
+    ];
+
+    const tools = groups.flat();
+    const rovingIndex = Math.min(focusIndex, tools.length - 1);
+
+    const moveTo = (index: number) => {
+        const wrapped = (index + tools.length) % tools.length;
+        setFocusIndex(wrapped);
+        buttonRefs.current[wrapped]?.focus();
+    };
+
+    const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+        // Only the tools rove; the link field keeps its own arrow keys.
+        const from = buttonRefs.current.findIndex(
+            (node) => node !== null && node === event.target,
+        );
+        if (from === -1) return;
+
+        const targets: Record<string, number> = {
+            ArrowRight: from + 1,
+            ArrowLeft: from - 1,
+            Home: 0,
+            End: tools.length - 1,
+        };
+        const target = targets[event.key];
+        if (target === undefined) return;
+        event.preventDefault();
+        moveTo(target);
+    };
+
+    // Where each group starts in the flat order, so every tool knows its index.
+    const groupStarts = groups.map((_, groupIndex) =>
+        groups
+            .slice(0, groupIndex)
+            .reduce((total, group) => total + group.length, 0),
+    );
+
     return (
         <div
             role="toolbar"
             aria-label="Editor formatting toolbar"
             aria-disabled={disabled}
-            className={`flex flex-wrap items-center gap-1 p-2 bg-brand-surface border-2 border-brand-ink rounded-brand shadow-brand-subtle max-w-full overflow-x-auto no-scrollbar transition-opacity duration-150 ${
-                disabled
-                    ? "opacity-50 pointer-events-none cursor-not-allowed"
-                    : ""
-            }`}
+            onKeyDown={handleKeyDown}
+            className={cn(
+                "paddock-night mx-auto flex w-fit max-w-full flex-wrap items-center justify-center gap-y-0.5 rounded-[1.75rem] p-1.5 transition-opacity duration-150",
+                disabled && "pointer-events-none opacity-45",
+            )}
         >
-            {/* Undo / Redo */}
-            <button
-                type="button"
-                onClick={() => editor.chain().focus().undo().run()}
-                disabled={!editor.can().undo()}
-                title="Undo (Mod-Z)"
-                aria-label="Undo"
-                className="p-1.5 rounded-brand hover:bg-brand-muted disabled:opacity-30 disabled:hover:bg-transparent text-brand-ink transition-colors"
-            >
-                <Undo2 className="w-4 h-4" aria-hidden="true" />
-            </button>
+            {groups.map((group, groupIndex) => (
+                <div
+                    key={group.map((tool) => tool.id).join("-")}
+                    className="flex flex-wrap items-center justify-center"
+                >
+                    {groupIndex > 0 ? (
+                        <span
+                            aria-hidden="true"
+                            className="mx-0.5 h-5 w-px bg-paddock-night-rule"
+                        />
+                    ) : null}
+                    {group.map((tool, toolIndex) => {
+                        const index =
+                            (groupStarts[groupIndex] ?? 0) + toolIndex;
+                        const isUnavailable = disabled || tool.unavailable;
+                        return (
+                            <button
+                                key={tool.id}
+                                ref={(node) => {
+                                    buttonRefs.current[index] = node;
+                                }}
+                                type="button"
+                                title={tool.hint}
+                                aria-label={tool.label}
+                                aria-pressed={tool.pressed}
+                                aria-disabled={isUnavailable || undefined}
+                                tabIndex={index === rovingIndex ? 0 : -1}
+                                onFocus={() => setFocusIndex(index)}
+                                onClick={() => {
+                                    if (!isUnavailable) tool.run();
+                                }}
+                                className={cn(
+                                    "flex size-11 cursor-pointer items-center justify-center rounded-full transition-colors",
+                                    tool.pressed
+                                        ? "bg-paddock-lime text-paddock-on-fill"
+                                        : "bg-transparent text-paddock-night-fg hover:bg-paddock-night-fg/14",
+                                    tool.unavailable &&
+                                        "cursor-not-allowed opacity-35 hover:bg-transparent",
+                                )}
+                            >
+                                <span
+                                    aria-hidden="true"
+                                    className="inline-flex"
+                                >
+                                    {tool.icon}
+                                </span>
+                            </button>
+                        );
+                    })}
+                </div>
+            ))}
 
-            <button
-                type="button"
-                onClick={() => editor.chain().focus().redo().run()}
-                disabled={!editor.can().redo()}
-                title="Redo (Mod-Shift-Z)"
-                aria-label="Redo"
-                className="p-1.5 rounded-brand hover:bg-brand-muted disabled:opacity-30 disabled:hover:bg-transparent text-brand-ink transition-colors"
-            >
-                <Redo2 className="w-4 h-4" aria-hidden="true" />
-            </button>
-
-            <div
-                className="w-[1px] h-5 bg-brand-border mx-1"
-                aria-hidden="true"
-            />
-
-            {/* Block Type Selectors */}
-            <button
-                type="button"
-                onClick={() => editor.chain().focus().setParagraph().run()}
-                className={`p-1.5 rounded-brand hover:bg-brand-muted transition-colors ${
-                    editor.isActive("paragraph")
-                        ? "bg-brand-ink text-brand-surface"
-                        : "text-brand-ink"
-                }`}
-                title="Paragraph"
-                aria-label="Paragraph"
-            >
-                <Type className="w-4 h-4" aria-hidden="true" />
-            </button>
-
-            <button
-                type="button"
-                onClick={() =>
-                    editor.chain().focus().toggleHeading({ level: 1 }).run()
-                }
-                className={`p-1.5 rounded-brand hover:bg-brand-muted transition-colors ${
-                    editor.isActive("heading", { level: 1 })
-                        ? "bg-brand-ink text-brand-surface"
-                        : "text-brand-ink"
-                }`}
-                title="Heading 1 (Mod-Alt-1)"
-                aria-label="Heading 1"
-            >
-                <Heading1 className="w-4 h-4" aria-hidden="true" />
-            </button>
-
-            <button
-                type="button"
-                onClick={() =>
-                    editor.chain().focus().toggleHeading({ level: 2 }).run()
-                }
-                className={`p-1.5 rounded-brand hover:bg-brand-muted transition-colors ${
-                    editor.isActive("heading", { level: 2 })
-                        ? "bg-brand-ink text-brand-surface"
-                        : "text-brand-ink"
-                }`}
-                title="Heading 2 (Mod-Alt-2)"
-                aria-label="Heading 2"
-            >
-                <Heading2 className="w-4 h-4" aria-hidden="true" />
-            </button>
-
-            <button
-                type="button"
-                onClick={() =>
-                    editor.chain().focus().toggleHeading({ level: 3 }).run()
-                }
-                className={`p-1.5 rounded-brand hover:bg-brand-muted transition-colors ${
-                    editor.isActive("heading", { level: 3 })
-                        ? "bg-brand-ink text-brand-surface"
-                        : "text-brand-ink"
-                }`}
-                title="Heading 3 (Mod-Alt-3)"
-                aria-label="Heading 3"
-            >
-                <Heading3 className="w-4 h-4" aria-hidden="true" />
-            </button>
-
-            <button
-                type="button"
-                onClick={() =>
-                    editor.chain().focus().toggleHeading({ level: 4 }).run()
-                }
-                className={`p-1.5 rounded-brand hover:bg-brand-muted transition-colors ${
-                    editor.isActive("heading", { level: 4 })
-                        ? "bg-brand-ink text-brand-surface"
-                        : "text-brand-ink"
-                }`}
-                title="Heading 4 (Mod-Alt-4)"
-                aria-label="Heading 4"
-            >
-                <Heading4 className="w-4 h-4" aria-hidden="true" />
-            </button>
-
-            <div
-                className="w-[1px] h-5 bg-brand-border mx-1"
-                aria-hidden="true"
-            />
-
-            {/* Inline Formatting */}
-            <button
-                type="button"
-                onClick={() => editor.chain().focus().toggleBold().run()}
-                className={`p-1.5 rounded-brand hover:bg-brand-muted transition-colors ${
-                    editor.isActive("bold")
-                        ? "bg-brand-ink text-brand-surface"
-                        : "text-brand-ink"
-                }`}
-                title="Bold (Mod-B)"
-                aria-label="Bold"
-            >
-                <Bold className="w-4 h-4" aria-hidden="true" />
-            </button>
-
-            <button
-                type="button"
-                onClick={() => editor.chain().focus().toggleItalic().run()}
-                className={`p-1.5 rounded-brand hover:bg-brand-muted transition-colors ${
-                    editor.isActive("italic")
-                        ? "bg-brand-ink text-brand-surface"
-                        : "text-brand-ink"
-                }`}
-                title="Italic (Mod-I)"
-                aria-label="Italic"
-            >
-                <Italic className="w-4 h-4" aria-hidden="true" />
-            </button>
-
-            <button
-                type="button"
-                onClick={() => editor.chain().focus().toggleUnderline().run()}
-                className={`p-1.5 rounded-brand hover:bg-brand-muted transition-colors ${
-                    editor.isActive("underline")
-                        ? "bg-brand-ink text-brand-surface"
-                        : "text-brand-ink"
-                }`}
-                title="Underline (Mod-U)"
-                aria-label="Underline"
-            >
-                <Underline className="w-4 h-4" aria-hidden="true" />
-            </button>
-
-            <button
-                type="button"
-                onClick={() => editor.chain().focus().toggleStrike().run()}
-                className={`p-1.5 rounded-brand hover:bg-brand-muted transition-colors ${
-                    editor.isActive("strike")
-                        ? "bg-brand-ink text-brand-surface"
-                        : "text-brand-ink"
-                }`}
-                title="Strikethrough (Mod-Shift-S)"
-                aria-label="Strikethrough"
-            >
-                <Strikethrough className="w-4 h-4" aria-hidden="true" />
-            </button>
-
-            <button
-                type="button"
-                onClick={() => editor.chain().focus().toggleCode().run()}
-                className={`p-1.5 rounded-brand hover:bg-brand-muted transition-colors ${
-                    editor.isActive("code")
-                        ? "bg-brand-ink text-brand-surface"
-                        : "text-brand-ink"
-                }`}
-                title="Inline Code (Mod-E)"
-                aria-label="Inline Code"
-            >
-                <Code className="w-4 h-4" aria-hidden="true" />
-            </button>
-
-            <button
-                type="button"
-                onClick={() => editor.chain().focus().toggleHighlight().run()}
-                className={`p-1.5 rounded-brand hover:bg-brand-muted transition-colors ${
-                    editor.isActive("highlight")
-                        ? "bg-brand-accent text-white"
-                        : "text-brand-ink"
-                }`}
-                title="Highlight (Mod-Shift-H)"
-                aria-label="Highlight"
-            >
-                <Highlighter className="w-4 h-4" aria-hidden="true" />
-            </button>
-
-            <button
-                type="button"
-                onClick={() => {
-                    const previousUrl = editor.getAttributes("link").href;
-                    setLinkUrl(previousUrl || "");
-                    setIsLinkPromptOpen(true);
-                }}
-                className={`p-1.5 rounded-brand hover:bg-brand-muted transition-colors ${
-                    editor.isActive("link")
-                        ? "bg-brand-accent text-white"
-                        : "text-brand-ink"
-                }`}
-                title="Link (Mod-K)"
-                aria-label="Link"
-            >
-                <LinkIcon className="w-4 h-4" aria-hidden="true" />
-            </button>
-
-            <div
-                className="w-[1px] h-5 bg-brand-border mx-1"
-                aria-hidden="true"
-            />
-
-            {/* Alignment */}
-            <button
-                type="button"
-                onClick={() =>
-                    editor.chain().focus().setTextAlign("left").run()
-                }
-                className={`p-1.5 rounded-brand hover:bg-brand-muted transition-colors ${
-                    editor.isActive({ textAlign: "left" })
-                        ? "bg-brand-ink text-brand-surface"
-                        : "text-brand-ink"
-                }`}
-                title="Align Left"
-                aria-label="Align Left"
-            >
-                <AlignLeft className="w-4 h-4" aria-hidden="true" />
-            </button>
-
-            <button
-                type="button"
-                onClick={() =>
-                    editor.chain().focus().setTextAlign("center").run()
-                }
-                className={`p-1.5 rounded-brand hover:bg-brand-muted transition-colors ${
-                    editor.isActive({ textAlign: "center" })
-                        ? "bg-brand-ink text-brand-surface"
-                        : "text-brand-ink"
-                }`}
-                title="Align Center"
-                aria-label="Align Center"
-            >
-                <AlignCenter className="w-4 h-4" aria-hidden="true" />
-            </button>
-
-            <button
-                type="button"
-                onClick={() =>
-                    editor.chain().focus().setTextAlign("right").run()
-                }
-                className={`p-1.5 rounded-brand hover:bg-brand-muted transition-colors ${
-                    editor.isActive({ textAlign: "right" })
-                        ? "bg-brand-ink text-brand-surface"
-                        : "text-brand-ink"
-                }`}
-                title="Align Right"
-                aria-label="Align Right"
-            >
-                <AlignRight className="w-4 h-4" aria-hidden="true" />
-            </button>
-
-            <button
-                type="button"
-                onClick={() =>
-                    editor.chain().focus().setTextAlign("justify").run()
-                }
-                className={`p-1.5 rounded-brand hover:bg-brand-muted transition-colors ${
-                    editor.isActive({ textAlign: "justify" })
-                        ? "bg-brand-ink text-brand-surface"
-                        : "text-brand-ink"
-                }`}
-                title="Align Justify"
-                aria-label="Align Justify"
-            >
-                <AlignJustify className="w-4 h-4" aria-hidden="true" />
-            </button>
-
-            <div
-                className="w-[1px] h-5 bg-brand-border mx-1"
-                aria-hidden="true"
-            />
-
-            {/* Lists & Blocks */}
-            <button
-                type="button"
-                onClick={() => editor.chain().focus().toggleBulletList().run()}
-                className={`p-1.5 rounded-brand hover:bg-brand-muted transition-colors ${
-                    editor.isActive("bulletList")
-                        ? "bg-brand-ink text-brand-surface"
-                        : "text-brand-ink"
-                }`}
-                title="Bullet List (Mod-Shift-8)"
-                aria-label="Bullet List"
-            >
-                <List className="w-4 h-4" aria-hidden="true" />
-            </button>
-
-            <button
-                type="button"
-                onClick={() => editor.chain().focus().toggleOrderedList().run()}
-                className={`p-1.5 rounded-brand hover:bg-brand-muted transition-colors ${
-                    editor.isActive("orderedList")
-                        ? "bg-brand-ink text-brand-surface"
-                        : "text-brand-ink"
-                }`}
-                title="Numbered List (Mod-Shift-7)"
-                aria-label="Numbered List"
-            >
-                <ListOrdered className="w-4 h-4" aria-hidden="true" />
-            </button>
-
-            <button
-                type="button"
-                onClick={() => editor.chain().focus().toggleTaskList().run()}
-                className={`p-1.5 rounded-brand hover:bg-brand-muted transition-colors ${
-                    editor.isActive("taskList")
-                        ? "bg-brand-ink text-brand-surface"
-                        : "text-brand-ink"
-                }`}
-                title="Checklist / Task List (Mod-Shift-9)"
-                aria-label="Checklist"
-            >
-                <ListTodo className="w-4 h-4" aria-hidden="true" />
-            </button>
-
-            <button
-                type="button"
-                onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-                className={`p-1.5 rounded-brand hover:bg-brand-muted transition-colors ${
-                    editor.isActive("codeBlock")
-                        ? "bg-brand-ink text-brand-surface"
-                        : "text-brand-ink"
-                }`}
-                title="Code Block (Mod-Alt-C)"
-                aria-label="Code Block"
-            >
-                <Code2 className="w-4 h-4" aria-hidden="true" />
-            </button>
-
-            <button
-                type="button"
-                onClick={() => editor.chain().focus().toggleBlockquote().run()}
-                className={`p-1.5 rounded-brand hover:bg-brand-muted transition-colors ${
-                    editor.isActive("blockquote")
-                        ? "bg-brand-ink text-brand-surface"
-                        : "text-brand-ink"
-                }`}
-                title="Blockquote (Mod-Shift-B)"
-                aria-label="Blockquote"
-            >
-                <Quote className="w-4 h-4" aria-hidden="true" />
-            </button>
-
-            <div
-                className="w-[1px] h-5 bg-brand-border mx-1"
-                aria-hidden="true"
-            />
-
-            {/* Table & Image & Rule */}
-            <button
-                type="button"
-                onClick={() =>
-                    editor
-                        .chain()
-                        .focus()
-                        .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
-                        .run()
-                }
-                className={`p-1.5 rounded-brand hover:bg-brand-muted transition-colors ${
-                    editor.isActive("table")
-                        ? "bg-brand-ink text-brand-surface"
-                        : "text-brand-ink"
-                }`}
-                title="Insert Table"
-                aria-label="Insert Table"
-            >
-                <TableIcon className="w-4 h-4" aria-hidden="true" />
-            </button>
-
-            <button
-                type="button"
-                onClick={onOpenImageDialog}
-                className="p-1.5 rounded-brand hover:bg-brand-muted text-brand-ink transition-colors"
-                title="Insert Image"
-                aria-label="Insert Image"
-            >
-                <ImageIcon className="w-4 h-4" aria-hidden="true" />
-            </button>
-
-            <button
-                type="button"
-                onClick={() => editor.chain().focus().setHorizontalRule().run()}
-                className="p-1.5 rounded-brand hover:bg-brand-muted text-brand-ink transition-colors"
-                title="Divider Line"
-                aria-label="Divider Line"
-            >
-                <Minus className="w-4 h-4" aria-hidden="true" />
-            </button>
-
-            {/* Quick Link Dialog Popover */}
-            {isLinkPromptOpen && (
-                <div className="flex items-center gap-1.5 ml-2 p-1 bg-brand-muted border border-brand-ink rounded-brand">
+            {isLinkPromptOpen ? (
+                <div className="ml-1 flex items-center gap-1">
                     <input
                         type="url"
+                        aria-label="Link address"
                         placeholder="https://example.com"
                         value={linkUrl}
                         onChange={(e) => setLinkUrl(e.target.value)}
@@ -499,25 +433,26 @@ export function EditorToolbar({
                                 setIsLinkPromptOpen(false);
                             }
                         }}
-                        className="px-2 py-1 text-xs bg-brand-surface text-brand-ink rounded-brand font-brand-mono outline-none w-44"
+                        className="h-11 w-48 rounded-full bg-paddock-night-fg/10 px-4 text-sm text-paddock-night-fg placeholder:text-paddock-night-subtle"
                         autoFocus
                     />
                     <button
                         type="button"
                         onClick={setLink}
-                        className="px-2 py-1 text-xs font-bold font-brand-mono bg-brand-accent text-white rounded-brand hover:opacity-90"
+                        className="paddock-press h-11 cursor-pointer rounded-full bg-paddock-lime px-4 text-sm font-semibold text-paddock-on-fill"
                     >
-                        Save
+                        Set link
                     </button>
                     <button
                         type="button"
+                        aria-label="Cancel link"
                         onClick={() => setIsLinkPromptOpen(false)}
-                        className="px-1.5 py-1 text-xs text-brand-subtle hover:text-brand-ink"
+                        className="flex size-11 cursor-pointer items-center justify-center rounded-full text-paddock-night-fg hover:bg-paddock-night-fg/14"
                     >
-                        ✕
+                        <X className={ICON} aria-hidden="true" />
                     </button>
                 </div>
-            )}
+            ) : null}
         </div>
     );
 }

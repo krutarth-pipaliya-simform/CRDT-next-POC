@@ -18,6 +18,8 @@ import {
     Type,
 } from "lucide-react";
 
+import { paddockFontVariables } from "@/components/paddock/paddock-fonts";
+
 import {
     SlashMenuList,
     type CommandItem,
@@ -260,6 +262,10 @@ export const createSlashCommandExtension = (onOpenImageDialog?: () => void) => {
                                 });
 
                                 popupElement = document.createElement("div");
+                                // Mounted on <body>, outside <PaddockRoot>, so it
+                                // carries the Paddock scope and fonts itself.
+                                popupElement.className = `paddock-root ${paddockFontVariables}`;
+                                popupElement.style.background = "transparent";
                                 popupElement.style.position = "absolute";
                                 popupElement.style.zIndex = "9999";
                                 popupElement.appendChild(component.element);

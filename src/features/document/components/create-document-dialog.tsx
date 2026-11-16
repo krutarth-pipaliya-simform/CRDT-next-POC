@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useTransition, type FormEvent } from "react";
-import { Plus } from "lucide-react";
+import { useId, useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 
-import { Button } from "@/components/ui/button";
-import { Dialog } from "@/components/ui/dialog";
-import { FormField } from "@/components/ui/form-field";
-import { Input } from "@/components/ui/input";
+import { PaddockButton } from "@/components/paddock/paddock-button";
+import { PaddockDialog } from "@/components/paddock/paddock-dialog";
+import { PaddockInput } from "@/components/paddock/paddock-field";
+
 import { createDocumentAction } from "../actions/create-document";
 
 export interface CreateDocumentDialogProps {
@@ -25,6 +24,9 @@ export function CreateDocumentDialog({
     const [error, setError] = useState<string | null>(null);
     const [isPending, startTransition] = useTransition();
     const router = useRouter();
+    // The actions sit in the dialog footer, outside the <form>, so the submit
+    // button points back at it with the `form` attribute.
+    const formId = useId();
 
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
@@ -47,40 +49,46 @@ export function CreateDocumentDialog({
     };
 
     return (
-        <Dialog open={open} onClose={onClose} title="Create New Document">
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                <FormField
-                    label="Document Title"
-                    htmlFor="create-doc-title"
-                    error={error ?? undefined}
-                >
-                    <Input
-                        id="create-doc-title"
-                        type="text"
-                        placeholder="e.g. Sprint Architecture Spec"
-                        value={title}
-                        onChange={(e) => {
-                            setTitle(e.target.value);
-                            setError(null);
-                        }}
-                        autoFocus
-                    />
-                </FormField>
-
-                <div className="flex justify-end gap-3 mt-2">
-                    <Button type="button" variant="secondary" onClick={onClose}>
+        <PaddockDialog
+            open={open}
+            onClose={onClose}
+            titleSerif="New"
+            titleHeavy="document"
+            className="w-[30rem]"
+            footer={
+                <>
+                    <PaddockButton
+                        variant="outline"
+                        voice="plain"
+                        onClick={onClose}
+                    >
                         Cancel
-                    </Button>
-                    <Button
+                    </PaddockButton>
+                    <PaddockButton
                         type="submit"
-                        variant="primary"
+                        form={formId}
                         disabled={isPending}
                     >
-                        <Plus className="w-4 h-4 mr-1.5" aria-hidden="true" />
-                        {isPending ? "Creating..." : "Create Document"}
-                    </Button>
-                </div>
+                        {isPending ? "Creating…" : "Create document"}
+                    </PaddockButton>
+                </>
+            }
+        >
+            <form id={formId} onSubmit={handleSubmit}>
+                <PaddockInput
+                    id="create-doc-title"
+                    label="Document title"
+                    hint="Leave it empty to start an untitled document."
+                    error={error ?? undefined}
+                    placeholder="Launch plan"
+                    value={title}
+                    onChange={(e) => {
+                        setTitle(e.target.value);
+                        setError(null);
+                    }}
+                    data-autofocus
+                />
             </form>
-        </Dialog>
+        </PaddockDialog>
     );
 }

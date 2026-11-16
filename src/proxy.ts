@@ -26,7 +26,14 @@ export const proxy = auth((req) => {
         return;
     }
 
-    if (!isLoggedIn && !isPublicRoute) {
+    // A Server Action is a POST the page's client code reads as an action
+    // result, not as a document; answering it with a redirect to /login makes
+    // the page fall into its error boundary with no explanation. Every action
+    // checks auth() itself, so let it through to report the expired session.
+    const isServerAction =
+        req.method === "POST" && req.headers.has("next-action");
+
+    if (!isLoggedIn && !isPublicRoute && !isServerAction) {
         const callbackUrl = nextUrl.pathname + nextUrl.search;
         const loginUrl = new URL(DEFAULT_UNAUTHENTICATED_REDIRECT, nextUrl);
         if (callbackUrl && callbackUrl !== "/") {
@@ -38,6 +45,6 @@ export const proxy = auth((req) => {
 
 export const config = {
     matcher: [
-        "/((?!api/auth|api/uploads|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+        "/((?!api/auth|api/uploads|api/webhooks|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
     ],
 };

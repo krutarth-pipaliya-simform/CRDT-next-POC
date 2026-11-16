@@ -1,36 +1,43 @@
-import Link from "next/link";
+import type { Metadata } from "next";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
+import { PaddockLinkButton } from "@/components/paddock/paddock-button";
+import {
+    AccessDenied,
+    ForbiddenNumeral,
+} from "@/features/auth/components/access-denied";
+import { PublicScreen } from "@/features/auth/components/public-screen";
+
+export const metadata: Metadata = {
+    title: "Access denied",
+};
 
 export default function UnauthorizedPage() {
     return (
-        <main className="min-h-[80vh] flex items-center justify-center p-6 bg-brand-surface">
-            <Card elevated className="max-w-md w-full text-center">
-                <CardHeader className="flex flex-col items-center gap-2 pb-4 mb-4 border-b-2 border-brand-muted">
-                    <span className="font-brand-mono text-xs uppercase tracking-widest text-brand-danger">
-                        403 · Access Denied
-                    </span>
-                    <CardTitle className="text-2xl font-bold text-brand-ink">
-                        Unauthorized Access
-                    </CardTitle>
-                </CardHeader>
-                <CardBody className="flex flex-col gap-6 text-brand-subtle">
-                    <p className="text-sm leading-relaxed">
-                        You do not have permission to access this private
-                        workspace or resource. If you were previously a member,
-                        your access may have been revoked or the workspace
-                        visibility updated.
-                    </p>
-                    <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
-                        <Link href="/dashboard">
-                            <Button variant="primary">
-                                Return to Dashboard
-                            </Button>
-                        </Link>
-                    </div>
-                </CardBody>
-            </Card>
-        </main>
+        <PublicScreen
+            surface="night"
+            align="start"
+            decoration={
+                <ForbiddenNumeral className="-right-8 hidden text-[28.75rem] lg:block" />
+            }
+        >
+            <AccessDenied
+                code="403 · Access Denied"
+                serif="Unauthorized"
+                heavy="Access"
+                actions={
+                    <PaddockLinkButton
+                        href="/dashboard"
+                        size="lg"
+                        surface="night"
+                    >
+                        Return to dashboard
+                    </PaddockLinkButton>
+                }
+            >
+                You do not have permission to open this private workspace or
+                resource. If you were a member before, your access may have been
+                removed or the workspace made private.
+            </AccessDenied>
+        </PublicScreen>
     );
 }

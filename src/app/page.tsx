@@ -1,122 +1,197 @@
-import { SiteHeader } from "@/components/layout/site-header";
-import { LinkButton } from "@/components/ui/link-button";
+import Link from "next/link";
+
+import { ContourBackground } from "@/components/paddock/contour-background";
+import { DisplayHeading } from "@/components/paddock/display-heading";
+import { NotchedCard } from "@/components/paddock/notched-card";
+import { PaddockLinkButton } from "@/components/paddock/paddock-button";
+import { Scribble } from "@/components/paddock/scribble";
+import { Tag } from "@/components/paddock/tag";
+import { Wordmark } from "@/components/paddock/wordmark";
 import { auth } from "@/features/auth/lib/auth";
+import { PLANS } from "@/features/billing/lib/plans";
+import { ConvergenceCases } from "@/features/marketing/components/convergence-cases";
+import { LandingHeader } from "@/features/marketing/components/landing-header";
+import { MergeBand } from "@/features/marketing/components/merge-band";
+import { MergeDemo } from "@/features/marketing/components/merge-demo";
+import { MergeGlyph } from "@/features/marketing/components/merge-glyph";
+
+const FOOTER_LINK =
+    "paddock-tag inline-flex min-h-11 items-center text-[0.6875rem] text-paddock-ink no-underline hover:underline";
 
 export default async function LandingPage() {
     const session = await auth();
+    const signedIn = Boolean(session?.user);
+    const freePlan = PLANS.FREE;
 
     return (
-        <div className="flex flex-col min-h-screen relative overflow-hidden bg-brand-surface font-brand-sans">
-            {/* Background architectural grid */}
-            <div
-                className="absolute inset-0 pointer-events-none opacity-[0.03] z-0"
-                style={{
-                    backgroundImage: `linear-gradient(var(--color-brand-ink) 1px, transparent 1px), linear-gradient(90deg, var(--color-brand-ink) 1px, transparent 1px)`,
-                    backgroundSize: "60px 60px",
-                }}
-            />
+        <div className="flex min-h-screen flex-col bg-paddock-paper">
+            <LandingHeader signedIn={signedIn} />
 
-            <SiteHeader />
+            <main className="w-full flex-1">
+                {/* Hero: the claim, then the demo proving it underneath. */}
+                <section
+                    aria-label="Introduction"
+                    className="relative overflow-hidden px-4 pt-16 pb-20 sm:px-6 lg:pt-[6.5rem] lg:pb-[6.875rem]"
+                >
+                    <ContourBackground pattern="hero" />
 
-            <main className="flex-1 flex flex-col items-center justify-center relative z-10 px-6 pt-20 pb-32">
-                <div className="max-w-5xl w-full mx-auto flex flex-col items-center text-center">
-                    {/* Eyebrow */}
-                    <div className="animate-fade-in-up flex items-center gap-4 mb-8">
-                        <div className="w-12 h-[2px] bg-brand-accent animate-draw-line" />
-                        <span className="font-brand-mono text-sm tracking-[0.2em] uppercase font-bold text-brand-accent whitespace-nowrap">
-                            CRDT Engine POC
-                        </span>
-                        <div className="w-12 h-[2px] bg-brand-accent animate-draw-line" />
+                    <div className="relative text-center">
+                        <Tag as="p" className="mb-4.5">
+                            Documents, boards and chat
+                        </Tag>
+                        <div className="relative inline-block max-w-full">
+                            <DisplayHeading
+                                as="h1"
+                                size="xl"
+                                serif="Everyone types"
+                                heavy="at once."
+                                outline="Nothing gets lost."
+                                align="center"
+                            />
+                            <Scribble
+                                shape="loop"
+                                delayMs={500}
+                                className="absolute top-[4.875rem] -right-10 hidden h-[6.875rem] w-[20.625rem] xl:block"
+                            />
+                        </div>
+                        <p className="mx-auto mt-6.5 mb-0 max-w-[35rem] text-lg leading-[1.6]">
+                            Documents, boards and chat that merge every
+                            keystroke as it happens. No locks, no &ldquo;someone
+                            else is editing&rdquo;, and nothing for you to
+                            resolve by hand.
+                        </p>
+                        <div className="mt-7 flex flex-wrap justify-center gap-2.5">
+                            {signedIn ? (
+                                <PaddockLinkButton href="/dashboard" size="lg">
+                                    Open your workspace
+                                </PaddockLinkButton>
+                            ) : (
+                                <>
+                                    <PaddockLinkButton
+                                        href="/register"
+                                        size="lg"
+                                    >
+                                        Start writing
+                                    </PaddockLinkButton>
+                                    <PaddockLinkButton
+                                        href="/login"
+                                        variant="outline"
+                                        size="lg"
+                                    >
+                                        Log in
+                                    </PaddockLinkButton>
+                                </>
+                            )}
+                        </div>
                     </div>
 
-                    {/* Headline */}
-                    <h1 className="animate-fade-in-up delay-100 text-6xl sm:text-7xl md:text-8xl font-bold tracking-tighter text-brand-ink leading-[0.9] mb-8">
-                        Collaborate with <br className="hidden sm:block" />
-                        <span className="relative inline-block mt-2">
-                            <span className="relative z-10">
-                                Machined Precision
-                            </span>
-                            <span className="absolute bottom-2 left-0 w-full h-6 bg-brand-accent/20 -z-10" />
-                        </span>
-                    </h1>
-
-                    {/* Subheadline */}
-                    <p className="animate-fade-in-up delay-200 text-xl md:text-2xl text-brand-subtle mb-12 max-w-2xl font-brand-sans leading-relaxed">
-                        A real-time workspace powered by Conflict-Free
-                        Replicated Data Types. No locks. No merge conflicts.
-                        Just pure synchronization.
-                    </p>
-
-                    {/* CTAs */}
-                    <div className="animate-fade-in-up delay-300 flex flex-col sm:flex-row items-center gap-6">
-                        {session?.user ? (
-                            <LinkButton
-                                href="/dashboard"
-                                variant="primary"
-                                size="lg"
-                                withArrow
+                    {/* Demo in the middle, the two quiet facts either side.
+                        Below the wide breakpoint the demo goes first and the
+                        facts share a row under it. */}
+                    <div className="relative mx-auto mt-16 flex max-w-[77rem] flex-wrap items-end justify-between gap-x-4 gap-y-8 lg:gap-8">
+                        <div className="order-2 w-[8.5rem] shrink-0 sm:w-[9.375rem] lg:order-1">
+                            <Tag as="p" tone="ink" className="mb-1">
+                                Free for small teams
+                            </Tag>
+                            <NotchedCard
+                                notch="top"
+                                tone="paper"
+                                bodyClassName="flex flex-col items-center gap-2.5 px-3.5 pt-[1.875rem] pb-3.5 text-center"
                             >
-                                Enter Workspace
-                            </LinkButton>
-                        ) : (
-                            <>
-                                <LinkButton
-                                    href="/login"
-                                    variant="primary"
-                                    size="lg"
-                                    withArrow
+                                <MergeGlyph
+                                    strokeWidth={2}
+                                    className="size-8 text-paddock-ink"
+                                />
+                                <Tag
+                                    tone="ink"
+                                    className="block w-full border-b-[1.5px] border-paddock-ink pb-2"
                                 >
-                                    Initialize Session
-                                </LinkButton>
-                                <LinkButton
-                                    href="/design-system"
-                                    variant="secondary"
-                                    size="lg"
-                                >
-                                    View Design System
-                                </LinkButton>
-                            </>
-                        )}
-                    </div>
-                </div>
+                                    {freePlan.name} plan
+                                </Tag>
+                                <span className="paddock-mono text-[1.375rem] font-medium">
+                                    {freePlan.price}
+                                </span>
+                                <Tag>{freePlan.cadence}</Tag>
+                            </NotchedCard>
+                        </div>
 
-                {/* Technical specs readout */}
-                <div className="w-full max-w-4xl mt-32 grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <div className="animate-fade-in-up delay-400 p-6 border-l-4 border-brand-ink bg-brand-muted/40">
-                        <div className="font-brand-mono text-xs uppercase tracking-widest text-brand-subtle mb-4 font-bold">
-                            Protocol 01
+                        <div className="order-1 min-w-0 basis-full lg:order-2 lg:max-w-[45rem] lg:flex-1 lg:basis-auto">
+                            <MergeDemo />
                         </div>
-                        <h3 className="text-2xl font-bold mb-2">Yjs Engine</h3>
-                        <p className="text-brand-subtle text-sm">
-                            Peer-to-peer data synchronization resolving state
-                            automatically via mathematical precision.
-                        </p>
-                    </div>
-                    <div className="animate-fade-in-up delay-500 p-6 border-l-4 border-brand-ink bg-brand-muted/40">
-                        <div className="font-brand-mono text-xs uppercase tracking-widest text-brand-subtle mb-4 font-bold">
-                            Protocol 02
+
+                        <div className="order-3 flex w-[8.5rem] shrink-0 sm:w-[9.375rem] flex-col items-end gap-1.5 text-right">
+                            <Tag as="p" tone="ink">
+                                Works offline
+                            </Tag>
+                            <p className="m-0 text-[0.84375rem] font-medium">
+                                Everything syncs offline and catches up when you
+                                reconnect.
+                            </p>
                         </div>
-                        <h3 className="text-2xl font-bold mb-2">
-                            &lt; 50ms Latency
-                        </h3>
-                        <p className="text-brand-subtle text-sm">
-                            Real-time WebSockets integration ensuring keystrokes
-                            propagate instantaneously.
-                        </p>
                     </div>
-                    <div className="animate-fade-in-up delay-600 p-6 border-l-4 border-brand-ink bg-brand-muted/40">
-                        <div className="font-brand-mono text-xs uppercase tracking-widest text-brand-subtle mb-4 font-bold">
-                            Protocol 03
-                        </div>
-                        <h3 className="text-2xl font-bold mb-2">
-                            Offline First
-                        </h3>
-                        <p className="text-brand-subtle text-sm">
-                            Local state persistence guarantees operations
-                            survive network partitioning.
+                </section>
+
+                <MergeBand />
+
+                <ConvergenceCases />
+
+                {/* Closing */}
+                <section
+                    aria-labelledby="landing-closing-heading"
+                    className="relative overflow-hidden px-4 pt-24 pb-10 text-center sm:px-6 lg:pt-[8.75rem] lg:pb-20"
+                >
+                    <ContourBackground pattern="panel" />
+                    <div className="relative">
+                        <DisplayHeading
+                            id="landing-closing-heading"
+                            serif="Bring the whole team"
+                            heavy="into one page."
+                            align="center"
+                        />
+                        <p className="mx-auto mt-6.5 mb-0 max-w-[32.5rem] text-lg">
+                            Free for small teams. Everything syncs offline and
+                            catches up when you reconnect.
                         </p>
+                        <PaddockLinkButton
+                            href={signedIn ? "/dashboard" : "/register"}
+                            size="lg"
+                            className="mt-7.5"
+                        >
+                            {signedIn
+                                ? "Open your workspace"
+                                : "Create a workspace"}
+                        </PaddockLinkButton>
                     </div>
-                </div>
+
+                    <footer className="relative mx-auto mt-24 flex max-w-[77rem] flex-wrap items-center justify-between gap-4 border-t border-paddock-rule pt-4 text-left lg:mt-[8.75rem]">
+                        <Link
+                            href="/"
+                            aria-label="Converge home"
+                            className="no-underline"
+                        >
+                            <Wordmark size="sm" />
+                        </Link>
+                        <nav aria-label="Account" className="flex gap-5.5">
+                            {signedIn ? (
+                                <Link href="/dashboard" className={FOOTER_LINK}>
+                                    Your workspaces
+                                </Link>
+                            ) : (
+                                <>
+                                    <Link href="/login" className={FOOTER_LINK}>
+                                        Log in
+                                    </Link>
+                                    <Link
+                                        href="/register"
+                                        className={FOOTER_LINK}
+                                    >
+                                        Create account
+                                    </Link>
+                                </>
+                            )}
+                        </nav>
+                    </footer>
+                </section>
             </main>
         </div>
     );

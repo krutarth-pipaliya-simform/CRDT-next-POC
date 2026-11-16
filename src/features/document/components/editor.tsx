@@ -17,18 +17,27 @@ import TaskItem from "@tiptap/extension-task-item";
 import TaskList from "@tiptap/extension-task-list";
 import TextAlign from "@tiptap/extension-text-align";
 import Underline from "@tiptap/extension-underline";
-import { EditorContent, useEditor } from "@tiptap/react";
+import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { ArrowLeft, Save } from "lucide-react";
-import LinkNext from "next/link";
 
-import { Button } from "@/components/ui/button";
+import { PAGE_CONTAINER } from "@/components/layout/layout-styles";
+import { BackLink } from "@/components/paddock/back-link";
+import { ContourBackground } from "@/components/paddock/contour-background";
+import { PaddockAvatar } from "@/components/paddock/paddock-avatar";
+import { PaddockButton } from "@/components/paddock/paddock-button";
+import { Tag } from "@/components/paddock/tag";
+import { cn } from "@/lib/cn";
+import { getUserColor } from "@/lib/presence";
 
 import { useDocumentCollab } from "../hooks/use-document-collab";
 import { lowlight } from "../lib/syntax-highlighter";
-import { getUserColor } from "../lib/user-colors";
 import type { DocumentDetail } from "../types";
 import { EditorBubbleMenu } from "./bubble-menu";
+import {
+    renderCollaborationCursor,
+    renderCollaborationSelection,
+} from "./collaboration-cursor-render";
+import { DocumentStats } from "./document-stats";
 import { DocumentTitle } from "./document-title";
 import { EditorToolbar } from "./editor-toolbar";
 import { ImageDialog } from "./image-dialog";
@@ -179,6 +188,8 @@ export function CollaborativeEditor({
                         color: userColor,
                         avatarUrl: currentUser.image ?? null,
                     },
+                    render: renderCollaborationCursor,
+                    selectionRender: renderCollaborationSelection,
                 }),
             );
         }
@@ -197,10 +208,15 @@ export function CollaborativeEditor({
         {
             extensions,
             immediatelyRender: false,
+            // Each keystroke, selection change and remote cursor move is a
+            // transaction. Re-rendering this whole tree for each one is what
+            // made typing heavy; the toolbar, bubble menu and counts each
+            // subscribe to the slice they show instead.
+            shouldRerenderOnTransaction: false,
             editable: !isReadOnly,
             editorProps: {
                 attributes: {
-                    class: "prose max-w-none focus:outline-none min-h-[500px] px-6 py-6 font-brand-sans text-brand-ink",
+                    class: "min-h-[500px] max-w-none px-5 pt-14 pb-12 text-paddock-ink sm:px-16 sm:pt-16 sm:pb-14",
                 },
             },
         },
@@ -214,33 +230,37 @@ export function CollaborativeEditor({
         }
     }, [editor, isReadOnly]);
 
-    const wordCount = editor?.storage.characterCount?.words() ?? 0;
-    const charCount = editor?.storage.characterCount?.characters() ?? 0;
+    const isInTable =
+        useEditorState({
+            editor,
+            selector: ({ editor: current }) =>
+                current?.isActive("table") ?? false,
+        }) ?? false;
 
     return (
-        <div className="flex flex-col gap-4 max-w-5xl mx-auto px-4 sm:px-6 py-6 w-full min-w-0">
-            {/* Navigation & Status Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-3 border-b-2 border-brand-border w-full min-w-0">
-                <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <LinkNext
-                        href={`/${workspaceId}/documents`}
-                        className="flex items-center justify-center p-2 text-brand-subtle hover:text-brand-ink bg-brand-surface hover:bg-brand-muted border-2 border-brand-ink rounded-brand shadow-brand-subtle transition-all duration-150 shrink-0"
-                        title="Back to Documents"
-                        aria-label="Back to Documents"
-                    >
-                        <ArrowLeft className="w-4 h-4" aria-hidden="true" />
-                    </LinkNext>
+        <div className="w-full min-w-0">
+            {/* Title row: back, the title itself, who is here, save state */}
+            <section
+                className={cn(
+                    PAGE_CONTAINER,
+                    "flex flex-wrap items-center gap-x-[1.125rem] gap-y-3.5 pt-7 pb-2",
+                )}
+            >
+                <BackLink
+                    href={`/${workspaceId}/documents`}
+                    label="Documents"
+                    aria-label="Back to documents"
+                />
 
-                    <div className="min-w-0 flex-1">
-                        <DocumentTitle
-                            initialTitle={title}
-                            onTitleChange={setTitle}
-                            disabled={isReadOnly}
-                        />
-                    </div>
+                <div className="min-w-0 flex-[1_1_20rem]">
+                    <DocumentTitle
+                        initialTitle={title}
+                        onTitleChange={setTitle}
+                        disabled={isReadOnly}
+                    />
                 </div>
 
-                <div className="flex items-center gap-3 shrink-0 flex-wrap sm:flex-nowrap">
+                <div className="flex flex-wrap items-center gap-x-[1.125rem] gap-y-3">
                     <PresenceBar
                         users={collaborators}
                         currentUserId={currentUser.id}
@@ -255,64 +275,110 @@ export function CollaborativeEditor({
                         isReadOnly={isReadOnly}
                     />
 
-                    <Button
-                        type="button"
-                        variant="secondary"
+                    <PaddockButton
+                        variant="outline"
                         size="sm"
                         onClick={saveNow}
                         disabled={isReadOnly || saveState === "saving"}
                         className="hidden sm:inline-flex"
                     >
-                        <Save className="w-3.5 h-3.5 mr-1" aria-hidden="true" />
                         Save
-                    </Button>
+                    </PaddockButton>
                 </div>
-            </div>
+            </section>
 
             {/* Read-Only Multi-Session Notification Banner */}
             {isReadOnly && (
-                <ReadOnlyBanner
-                    reason={readOnlyReason}
-                    onTakeOverEditing={takeOverEditing}
-                />
-            )}
-
-            {/* Editor Toolbar */}
-            <div className="sticky top-2 z-20 max-w-full">
-                <EditorToolbar
-                    editor={editor}
-                    onOpenImageDialog={() => setIsImageDialogOpen(true)}
-                    disabled={isReadOnly}
-                />
-            </div>
-
-            {/* Contextual Table Controls */}
-            {!isReadOnly && (
-                <div className="max-w-full overflow-x-auto">
-                    <TableControls editor={editor} />
+                <div className={cn(PAGE_CONTAINER, "mt-3")}>
+                    <ReadOnlyBanner
+                        reason={readOnlyReason}
+                        onTakeOverEditing={takeOverEditing}
+                    />
                 </div>
             )}
 
-            {/* Editor Surface Container */}
-            <div className="relative min-h-[550px] bg-brand-surface border-2 border-brand-ink rounded-brand shadow-brand-card focus-within:border-brand-accent transition-colors duration-150 max-w-full overflow-hidden">
-                {editor && (
-                    <EditorBubbleMenu editor={editor} isReadOnly={isReadOnly} />
-                )}
-                <div className="overflow-x-auto w-full">
-                    <EditorContent editor={editor} />
-                </div>
-            </div>
+            <div className={cn(PAGE_CONTAINER, "relative pt-7 pb-24")}>
+                <ContourBackground pattern="band" />
 
-            {/* Editor Footer Status */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs font-brand-mono uppercase tracking-wider text-brand-subtle px-2 py-1">
-                <span>
-                    {isReadOnly
-                        ? "Read-only mode (spectating live changes)"
-                        : "Markdown shortcuts & slash commands enabled"}
-                </span>
-                <div className="flex items-center gap-4">
-                    <span>{wordCount} words</span>
-                    <span>{charCount} characters</span>
+                {/* The toolbar floats over the top edge of the canvas and
+                    sticks below the site header (81px) while you scroll. */}
+                <div className="sticky top-[5.5625rem] z-20 -mb-6 flex flex-col items-center gap-2">
+                    <EditorToolbar
+                        editor={editor}
+                        onOpenImageDialog={() => setIsImageDialogOpen(true)}
+                        disabled={isReadOnly}
+                    />
+
+                    {/* Contextual Table Controls */}
+                    {!isReadOnly && isInTable && (
+                        <div className="max-w-full overflow-x-auto">
+                            <TableControls editor={editor} />
+                        </div>
+                    )}
+                </div>
+
+                <div className="relative grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,51.25rem)_minmax(0,1fr)]">
+                    <article className="min-w-0 xl:col-start-2">
+                        {/* Editor Surface Container */}
+                        <div className="relative max-w-full overflow-hidden rounded-paddock-card border border-paddock-rule bg-paddock-sheet transition-colors duration-150 focus-within:border-paddock-ink">
+                            {editor && (
+                                <EditorBubbleMenu
+                                    editor={editor}
+                                    isReadOnly={isReadOnly}
+                                />
+                            )}
+                            <div className="w-full overflow-x-auto">
+                                <EditorContent editor={editor} />
+                            </div>
+                        </div>
+
+                        {/* Editor Footer Status */}
+                        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-1.5 pt-3.5 text-[0.8125rem] text-paddock-subtle">
+                            <span>
+                                {isReadOnly
+                                    ? "Read-only mode (spectating live changes)"
+                                    : "Markdown shortcuts and slash commands work here"}
+                            </span>
+                            <DocumentStats editor={editor} />
+                        </div>
+                    </article>
+
+                    {/* Who is in the document, named, beside the page */}
+                    {collaborators.length > 0 && (
+                        <aside
+                            aria-labelledby="editor-people-heading"
+                            className="hidden xl:col-start-3 xl:mt-[4.375rem] xl:flex xl:flex-col xl:items-end xl:gap-2"
+                        >
+                            <Tag as="h2" tone="ink" className="m-0">
+                                <span id="editor-people-heading">
+                                    In this doc
+                                </span>
+                            </Tag>
+                            <ul className="m-0 flex list-none flex-col items-end gap-2 p-0">
+                                {collaborators.map((user) => (
+                                    <li
+                                        key={user.id}
+                                        className="flex items-center gap-2.5"
+                                    >
+                                        <span className="text-[0.8125rem] font-semibold">
+                                            {user.id === currentUser.id
+                                                ? "You"
+                                                : user.name}
+                                        </span>
+                                        <PaddockAvatar
+                                            person={{
+                                                id: user.id,
+                                                name: user.name,
+                                                image: user.avatarUrl,
+                                            }}
+                                            size="lg"
+                                            decorative
+                                        />
+                                    </li>
+                                ))}
+                            </ul>
+                        </aside>
+                    )}
                 </div>
             </div>
 

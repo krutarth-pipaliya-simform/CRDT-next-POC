@@ -37,10 +37,10 @@ test.describe("Workspace Management", () => {
         await page.getByLabel("Email").fill(testUserEmail);
         await page.getByLabel("Password").fill(testPassword);
         await page
-            .getByRole("button", { name: "Sign In", exact: true })
+            .getByRole("button", { name: "Sign in", exact: true })
             .click();
         await expect(
-            page.getByRole("heading", { name: "Your Workspaces" }),
+            page.getByRole("heading", { name: "Your workspaces" }),
         ).toBeVisible({ timeout: 15000 });
     }
 
@@ -70,7 +70,7 @@ test.describe("Workspace Management", () => {
         // Return to dashboard and verify the card and ADMIN badge are present
         await page.goto("/dashboard");
         await expect(page.getByText(wsName)).toBeVisible();
-        await expect(page.getByText("ADMIN")).toBeVisible();
+        await expect(page.getByText("Admin", { exact: true })).toBeVisible();
     });
 
     test("FR-5: should update workspace name from settings", async ({
@@ -93,7 +93,7 @@ test.describe("Workspace Management", () => {
         await page.goto(`/${ws.id}/settings`);
 
         await expect(
-            page.getByRole("heading", { name: "General Settings" }),
+            page.getByRole("heading", { name: "The basics" }),
         ).toBeVisible();
 
         const updatedName = `Updated Name ${Date.now()}`;
@@ -168,7 +168,7 @@ test.describe("Workspace Management", () => {
         await page.goto(`/${ws.id}/settings/members`);
 
         await expect(
-            page.getByRole("heading", { name: /Workspace Members/ }),
+            page.getByRole("heading", { name: /Workspace members/i }),
         ).toBeVisible();
 
         await page
@@ -204,10 +204,10 @@ test.describe("Workspace Management", () => {
         await inviteePage.getByLabel("Email").fill(inviteeEmail);
         await inviteePage.getByLabel("Password").fill(inviteePassword);
         await inviteePage
-            .getByRole("button", { name: "Sign In", exact: true })
+            .getByRole("button", { name: "Sign in", exact: true })
             .click();
         await expect(
-            inviteePage.getByRole("heading", { name: "Your Workspaces" }),
+            inviteePage.getByRole("heading", { name: "Your workspaces" }),
         ).toBeVisible();
 
         await inviteePage.goto(inviteUrl);
@@ -228,7 +228,7 @@ test.describe("Workspace Management", () => {
         await inviteePage.goto("/dashboard");
         await expect(inviteePage.getByText(ws.name)).toBeVisible();
         await expect(
-            inviteePage.getByText("MEMBER", { exact: true }),
+            inviteePage.getByText("Member", { exact: true }),
         ).toBeVisible();
 
         // 5. FR-8: Single-use check - re-visiting the invite URL should display "already used"
@@ -317,11 +317,14 @@ test.describe("Workspace Management", () => {
             .getByRole("button", { name: "Remove Invitee To Remove" })
             .click();
 
-        // Dialog should be open with Confirm Remove button
+        // Dialog should be open with its Remove member button
         await expect(
             page.getByRole("heading", { name: "Remove Member" }),
         ).toBeVisible();
-        await page.getByRole("button", { name: "Confirm Remove" }).click();
+        await page
+            .locator("dialog[open]")
+            .getByRole("button", { name: "Remove member" })
+            .click();
 
         // Member should be removed from the list
         await expect(
@@ -372,9 +375,12 @@ test.describe("Workspace Management", () => {
         await expect(memberItem).toBeVisible();
         await expect(adminItem).toBeVisible();
 
-        const badge = memberItem.getByText("MEMBER", { exact: true });
-        const adminBadge = adminItem.getByText("ADMIN", { exact: true });
-        const nameSpan = memberItem.locator("span.text-sm.truncate");
+        const badge = memberItem.getByText("Member", { exact: true });
+        const adminBadge = adminItem.getByText("Admin", { exact: true });
+        // The row's own name, not the copy inside the open remove dialog.
+        const nameSpan = memberItem
+            .locator("span")
+            .filter({ hasText: /^Layout Stability Member$/ });
 
         const initialBadgeBox = await badge.boundingBox();
         const adminBadgeBox = await adminBadge.boundingBox();
@@ -402,7 +408,9 @@ test.describe("Workspace Management", () => {
             page.getByRole("heading", { name: "Remove Member" }),
         ).toBeVisible();
         await expect(
-            page.getByRole("button", { name: "Confirm Remove" }),
+            page
+                .locator("dialog[open]")
+                .getByRole("button", { name: "Remove member" }),
         ).toBeVisible();
         await expect(
             page.getByRole("button", { name: "Cancel" }),
@@ -464,7 +472,10 @@ test.describe("Workspace Management", () => {
         await page.goto(`/${ws.id}/settings`);
 
         // Select Public visibility option
-        await page.getByRole("button", { name: /Public/ }).click();
+        // The radio is visually hidden inside its card; choose it by clicking
+        // the card, as a person would.
+        await page.locator("label").filter({ hasText: "Public" }).click();
+        await expect(page.getByRole("radio", { name: /Public/ })).toBeChecked();
         await page.getByRole("button", { name: "Save Changes" }).click();
 
         await expect(
@@ -529,7 +540,7 @@ test.describe("Workspace Management", () => {
         ).toBeVisible();
 
         // Pagination: Should show Next button since there are 7 workspaces (pageSize=6)
-        await page.getByRole("link", { name: "Next →" }).click();
+        await page.getByRole("link", { name: "Next" }).click();
         await expect(page).toHaveURL(/page=2/);
 
         // Clean up created public workspaces
@@ -582,9 +593,9 @@ test.describe("Workspace Management", () => {
         // Click "Join Workspace" button
         await page.getByRole("button", { name: "Join Workspace" }).click();
 
-        // Button should transition to "Open Workspace" link
+        // Button should transition to "Open workspace" link
         await expect(
-            page.getByRole("link", { name: /Open Workspace/ }),
+            page.getByRole("link", { name: /Open workspace/i }),
         ).toBeVisible({ timeout: 10000 });
 
         // Navigate to My Workspaces tab -> public workspace must now be listed!
@@ -638,19 +649,19 @@ test.describe("Workspace Management", () => {
         await expect(page.getByText(publicWsName)).toBeVisible();
 
         // 2. Click "View as Guest →" link directly from the list without joining
-        await page.getByRole("link", { name: /View as Guest/ }).click();
+        await page.getByRole("link", { name: /View as guest/i }).click();
 
         // 3. Should open the public workspace as a guest with the guest banner
         await expect(page).toHaveURL(`/${publicWs.id}`);
         await expect(
             page.getByText("You are viewing this public workspace as a guest."),
         ).toBeVisible();
-        await expect(page.getByText("GUEST", { exact: true })).toBeVisible();
+        await expect(page.getByTestId("workspace-role")).toHaveText("Guest");
 
         // 4. Click "Join Workspace" from the banner inside the workspace
         await page.getByRole("button", { name: "Join Workspace" }).click();
         await expect(
-            page.getByRole("link", { name: "Open Workspace →" }),
+            page.getByRole("link", { name: "Open workspace" }),
         ).toBeVisible({ timeout: 10000 });
 
         // 5. Navigate to dashboard - user is now a MEMBER
@@ -702,7 +713,7 @@ test.describe("Workspace Management", () => {
         await page.goto(`/${ws.id}`);
         await page.getByRole("button", { name: "Join Workspace" }).click();
         await expect(
-            page.getByRole("link", { name: "Open Workspace →" }),
+            page.getByRole("link", { name: "Open workspace" }),
         ).toBeVisible({ timeout: 10000 });
 
         // Verify test user can view workspace overview as full MEMBER
@@ -791,10 +802,10 @@ test.describe("Workspace Management", () => {
         await page.getByLabel("Email").fill(memberEmail);
         await page.getByLabel("Password").fill("password123");
         await page
-            .getByRole("button", { name: "Sign In", exact: true })
+            .getByRole("button", { name: "Sign in", exact: true })
             .click();
         await expect(
-            page.getByRole("heading", { name: "Your Workspaces" }),
+            page.getByRole("heading", { name: "Your workspaces" }),
         ).toBeVisible({
             timeout: 15000,
         });
@@ -988,10 +999,10 @@ test.describe("Workspace Management", () => {
         await successorPage.getByLabel("Email").fill(successorEmail);
         await successorPage.getByLabel("Password").fill("password123");
         await successorPage
-            .getByRole("button", { name: "Sign In", exact: true })
+            .getByRole("button", { name: "Sign in", exact: true })
             .click();
         await expect(
-            successorPage.getByRole("heading", { name: "Your Workspaces" }),
+            successorPage.getByRole("heading", { name: "Your workspaces" }),
         ).toBeVisible({
             timeout: 15000,
         });
@@ -999,13 +1010,13 @@ test.describe("Workspace Management", () => {
         // Successor sees workspace on dashboard with ADMIN badge
         await expect(successorPage.getByText(wsName)).toBeVisible();
         await expect(
-            successorPage.getByText("ADMIN", { exact: true }),
+            successorPage.getByText("Admin", { exact: true }),
         ).toBeVisible();
 
         // Successor can access workspace settings
         await successorPage.goto(`/${ws.id}/settings`);
         await expect(
-            successorPage.getByRole("heading", { name: "General Settings" }),
+            successorPage.getByRole("heading", { name: "The basics" }),
         ).toBeVisible();
 
         await successorContext.close();

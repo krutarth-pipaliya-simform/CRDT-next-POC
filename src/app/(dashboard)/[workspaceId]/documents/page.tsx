@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 
-import { PageHeader } from "@/components/layout/page-header";
 import { DocumentList } from "@/features/document/components/document-list";
 import { getWorkspaceDocuments } from "@/features/document/queries/get-workspace-documents";
 import { verifyWorkspaceRole } from "@/features/workspace/lib/rbac";
@@ -28,22 +27,16 @@ export default async function DocumentsPage({
 
     const documents = await getWorkspaceDocuments(workspaceId);
 
+    // The hero lives in <DocumentList>, because its "New document" action
+    // opens a dialog that list owns.
     return (
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 w-full min-w-0">
-            <PageHeader
-                eyebrow={workspace.name}
-                title="Documents"
-                description="Collaborative rich text documents with real-time multiplayer CRDT sync and autosave."
+        <main className="w-full min-w-0 pb-24">
+            <DocumentList
+                documents={documents}
+                workspaceId={workspaceId}
+                workspaceName={workspace.name}
+                userRole={role}
             />
-
-            <div className="mt-8">
-                <DocumentList
-                    documents={documents}
-                    workspaceId={workspaceId}
-                    workspaceName={workspace.name}
-                    userRole={role}
-                />
-            </div>
         </main>
     );
 }

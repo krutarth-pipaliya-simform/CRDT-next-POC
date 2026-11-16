@@ -2,8 +2,7 @@
 
 import { useState, useTransition } from "react";
 
-import { Alert } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
+import { PaddockButton } from "@/components/paddock/paddock-button";
 import { joinWorkspaceAction } from "@/features/workspace/actions/join-workspace";
 
 export interface JoinWorkspaceButtonProps {
@@ -25,17 +24,22 @@ export function JoinWorkspaceButton({ token }: JoinWorkspaceButtonProps) {
     };
 
     return (
-        <div className="flex flex-col gap-3 w-full">
-            {error && <Alert intent="danger">{error}</Alert>}
-            <Button
-                type="button"
+        <div className="flex w-full flex-col gap-3">
+            {error && (
+                <p
+                    role="alert"
+                    className="m-0 rounded-paddock bg-paddock-danger px-3.5 py-3 text-sm font-semibold text-paddock-on-danger"
+                >
+                    {error}
+                </p>
+            )}
+            <PaddockButton
                 onClick={handleJoin}
                 disabled={isPending}
-                withArrow
-                className="w-full justify-between"
+                className="w-full"
             >
                 {isPending ? "Joining Workspace..." : "Accept Invitation"}
-            </Button>
+            </PaddockButton>
         </div>
     );
 }

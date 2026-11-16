@@ -25,7 +25,7 @@ export function Alert({
         <div
             role={role}
             className={cn(
-                "p-3 border-2 font-brand-mono text-xs uppercase tracking-wider rounded-brand",
+                "p-3 border-2  text-xs  rounded-brand",
                 intentClasses[intent],
                 className,
             )}

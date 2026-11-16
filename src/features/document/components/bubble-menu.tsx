@@ -1,7 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { BubbleMenu as TipTapBubbleMenu, type Editor } from "@tiptap/react";
+import { useState, type ReactNode } from "react";
+import {
+    BubbleMenu as TipTapBubbleMenu,
+    useEditorState,
+    type Editor,
+} from "@tiptap/react";
 import {
     AlignCenter,
     AlignLeft,
@@ -13,21 +17,46 @@ import {
     Link as LinkIcon,
     Strikethrough,
     Underline,
+    X,
 } from "lucide-react";
+
+import { cn } from "@/lib/cn";
+
+import { selectFormatState } from "../lib/editor-format-state";
 
 export interface EditorBubbleMenuProps {
     editor: Editor | null;
     isReadOnly?: boolean;
 }
 
+interface BubbleTool {
+    id: string;
+    label: string;
+    hint: string;
+    icon: ReactNode;
+    pressed: boolean;
+    run: () => void;
+}
+
+const ICON = "size-3.5";
+
+const TOOL_CLASSES =
+    "flex size-11 cursor-pointer items-center justify-center rounded-full transition-colors";
+
+/** The selection menu: the same night pill as the toolbar, in miniature. */
 export function EditorBubbleMenu({
     editor,
     isReadOnly = false,
 }: EditorBubbleMenuProps) {
     const [isLinkPromptOpen, setIsLinkPromptOpen] = useState(false);
     const [linkUrl, setLinkUrl] = useState("");
+    const format = useEditorState({
+        editor,
+        selector: ({ editor: current }) =>
+            current ? selectFormatState(current) : null,
+    });
 
-    if (!editor) {
+    if (!editor || !format) {
         return null;
     }
 
@@ -46,6 +75,97 @@ export function EditorBubbleMenu({
         setLinkUrl("");
     };
 
+    const groups: BubbleTool[][] = [
+        [
+            {
+                id: "bold",
+                label: "Bold",
+                hint: "Bold (Mod-B)",
+                icon: <Bold className={ICON} />,
+                pressed: format.bold,
+                run: () => editor.chain().focus().toggleBold().run(),
+            },
+            {
+                id: "italic",
+                label: "Italic",
+                hint: "Italic (Mod-I)",
+                icon: <Italic className={ICON} />,
+                pressed: format.italic,
+                run: () => editor.chain().focus().toggleItalic().run(),
+            },
+            {
+                id: "underline",
+                label: "Underline",
+                hint: "Underline (Mod-U)",
+                icon: <Underline className={ICON} />,
+                pressed: format.underline,
+                run: () => editor.chain().focus().toggleUnderline().run(),
+            },
+            {
+                id: "strike",
+                label: "Strikethrough",
+                hint: "Strikethrough",
+                icon: <Strikethrough className={ICON} />,
+                pressed: format.strike,
+                run: () => editor.chain().focus().toggleStrike().run(),
+            },
+            {
+                id: "code",
+                label: "Inline code",
+                hint: "Inline code",
+                icon: <Code className={ICON} />,
+                pressed: format.code,
+                run: () => editor.chain().focus().toggleCode().run(),
+            },
+            {
+                id: "highlight",
+                label: "Highlight",
+                hint: "Highlight",
+                icon: <Highlighter className={ICON} />,
+                pressed: format.highlight,
+                run: () => editor.chain().focus().toggleHighlight().run(),
+            },
+            {
+                id: "link",
+                label: "Link",
+                hint: "Link",
+                icon: <LinkIcon className={ICON} />,
+                pressed: format.link,
+                run: () => {
+                    const previousUrl = editor.getAttributes("link").href;
+                    setLinkUrl(previousUrl || "");
+                    setIsLinkPromptOpen(true);
+                },
+            },
+        ],
+        [
+            {
+                id: "align-left",
+                label: "Align left",
+                hint: "Align left",
+                icon: <AlignLeft className={ICON} />,
+                pressed: format.textAlign === "left",
+                run: () => editor.chain().focus().setTextAlign("left").run(),
+            },
+            {
+                id: "align-center",
+                label: "Align centre",
+                hint: "Align centre",
+                icon: <AlignCenter className={ICON} />,
+                pressed: format.textAlign === "center",
+                run: () => editor.chain().focus().setTextAlign("center").run(),
+            },
+            {
+                id: "align-right",
+                label: "Align right",
+                hint: "Align right",
+                icon: <AlignRight className={ICON} />,
+                pressed: format.textAlign === "right",
+                run: () => editor.chain().focus().setTextAlign("right").run(),
+            },
+        ],
+    ];
+
     return (
         <TipTapBubbleMenu
             editor={editor}
@@ -54,12 +174,13 @@ export function EditorBubbleMenu({
                 if (isReadOnly) return false;
                 return !editor.view.state.selection.empty && editor.isEditable;
             }}
-            className="flex items-center gap-0.5 p-1 bg-brand-ink text-brand-surface border-2 border-brand-ink rounded-brand shadow-brand-card z-40"
+            className="paddock-night z-40 flex max-w-[calc(100vw-2rem)] flex-wrap items-center rounded-[1.75rem] p-1 shadow-paddock-float"
         >
             {isLinkPromptOpen ? (
-                <div className="flex items-center gap-1 p-1">
+                <div className="flex items-center gap-1">
                     <input
                         type="url"
+                        aria-label="Link address"
                         placeholder="https://example.com"
                         value={linkUrl}
                         onChange={(e) => setLinkUrl(e.target.value)}
@@ -71,206 +192,65 @@ export function EditorBubbleMenu({
                                 setIsLinkPromptOpen(false);
                             }
                         }}
-                        className="px-2 py-1 text-xs bg-brand-surface text-brand-ink rounded-brand font-brand-mono outline-none w-44"
+                        className="h-11 w-48 rounded-full bg-paddock-night-fg/10 px-4 text-sm text-paddock-night-fg placeholder:text-paddock-night-subtle"
                         autoFocus
                     />
                     <button
                         type="button"
                         onClick={setLink}
-                        className="px-2 py-1 text-xs font-bold font-brand-mono bg-brand-accent text-white rounded-brand hover:opacity-90"
+                        className="paddock-press h-11 cursor-pointer rounded-full bg-paddock-lime px-4 text-sm font-semibold text-paddock-on-fill"
                     >
                         Set
                     </button>
                     <button
                         type="button"
+                        aria-label="Cancel link"
                         onClick={() => setIsLinkPromptOpen(false)}
-                        className="px-1.5 py-1 text-xs text-brand-surface/70 hover:text-brand-surface"
+                        className={cn(
+                            TOOL_CLASSES,
+                            "text-paddock-night-fg hover:bg-paddock-night-fg/14",
+                        )}
                     >
-                        ✕
+                        <X className={ICON} aria-hidden="true" />
                     </button>
                 </div>
             ) : (
-                <>
-                    <button
-                        type="button"
-                        onClick={() =>
-                            editor.chain().focus().toggleBold().run()
-                        }
-                        className={`p-1.5 rounded-brand hover:bg-brand-surface/20 transition-colors ${
-                            editor.isActive("bold")
-                                ? "bg-brand-surface/30 text-white"
-                                : "text-brand-surface/80"
-                        }`}
-                        title="Bold (Mod-B)"
-                        aria-label="Bold"
-                    >
-                        <Bold className="w-3.5 h-3.5" aria-hidden="true" />
-                    </button>
-
-                    <button
-                        type="button"
-                        onClick={() =>
-                            editor.chain().focus().toggleItalic().run()
-                        }
-                        className={`p-1.5 rounded-brand hover:bg-brand-surface/20 transition-colors ${
-                            editor.isActive("italic")
-                                ? "bg-brand-surface/30 text-white"
-                                : "text-brand-surface/80"
-                        }`}
-                        title="Italic (Mod-I)"
-                        aria-label="Italic"
-                    >
-                        <Italic className="w-3.5 h-3.5" aria-hidden="true" />
-                    </button>
-
-                    <button
-                        type="button"
-                        onClick={() =>
-                            editor.chain().focus().toggleUnderline().run()
-                        }
-                        className={`p-1.5 rounded-brand hover:bg-brand-surface/20 transition-colors ${
-                            editor.isActive("underline")
-                                ? "bg-brand-surface/30 text-white"
-                                : "text-brand-surface/80"
-                        }`}
-                        title="Underline (Mod-U)"
-                        aria-label="Underline"
-                    >
-                        <Underline className="w-3.5 h-3.5" aria-hidden="true" />
-                    </button>
-
-                    <button
-                        type="button"
-                        onClick={() =>
-                            editor.chain().focus().toggleStrike().run()
-                        }
-                        className={`p-1.5 rounded-brand hover:bg-brand-surface/20 transition-colors ${
-                            editor.isActive("strike")
-                                ? "bg-brand-surface/30 text-white"
-                                : "text-brand-surface/80"
-                        }`}
-                        title="Strikethrough"
-                        aria-label="Strikethrough"
-                    >
-                        <Strikethrough
-                            className="w-3.5 h-3.5"
-                            aria-hidden="true"
-                        />
-                    </button>
-
-                    <button
-                        type="button"
-                        onClick={() =>
-                            editor.chain().focus().toggleCode().run()
-                        }
-                        className={`p-1.5 rounded-brand hover:bg-brand-surface/20 transition-colors ${
-                            editor.isActive("code")
-                                ? "bg-brand-surface/30 text-white"
-                                : "text-brand-surface/80"
-                        }`}
-                        title="Inline Code"
-                        aria-label="Inline Code"
-                    >
-                        <Code className="w-3.5 h-3.5" aria-hidden="true" />
-                    </button>
-
-                    <button
-                        type="button"
-                        onClick={() =>
-                            editor.chain().focus().toggleHighlight().run()
-                        }
-                        className={`p-1.5 rounded-brand hover:bg-brand-surface/20 transition-colors ${
-                            editor.isActive("highlight")
-                                ? "bg-brand-accent text-white"
-                                : "text-brand-surface/80"
-                        }`}
-                        title="Highlight"
-                        aria-label="Highlight"
-                    >
-                        <Highlighter
-                            className="w-3.5 h-3.5"
-                            aria-hidden="true"
-                        />
-                    </button>
-
-                    <button
-                        type="button"
-                        onClick={() => {
-                            const previousUrl =
-                                editor.getAttributes("link").href;
-                            setLinkUrl(previousUrl || "");
-                            setIsLinkPromptOpen(true);
-                        }}
-                        className={`p-1.5 rounded-brand hover:bg-brand-surface/20 transition-colors ${
-                            editor.isActive("link")
-                                ? "bg-brand-accent text-white"
-                                : "text-brand-surface/80"
-                        }`}
-                        title="Link"
-                        aria-label="Link"
-                    >
-                        <LinkIcon className="w-3.5 h-3.5" aria-hidden="true" />
-                    </button>
-
+                groups.map((group, groupIndex) => (
                     <div
-                        className="w-[1px] h-4 bg-brand-surface/20 mx-1"
-                        aria-hidden="true"
-                    />
-
-                    <button
-                        type="button"
-                        onClick={() =>
-                            editor.chain().focus().setTextAlign("left").run()
-                        }
-                        className={`p-1.5 rounded-brand hover:bg-brand-surface/20 transition-colors ${
-                            editor.isActive({ textAlign: "left" })
-                                ? "bg-brand-surface/30 text-white"
-                                : "text-brand-surface/80"
-                        }`}
-                        title="Align Left"
-                        aria-label="Align Left"
+                        key={group.map((tool) => tool.id).join("-")}
+                        className="flex items-center"
                     >
-                        <AlignLeft className="w-3.5 h-3.5" aria-hidden="true" />
-                    </button>
-
-                    <button
-                        type="button"
-                        onClick={() =>
-                            editor.chain().focus().setTextAlign("center").run()
-                        }
-                        className={`p-1.5 rounded-brand hover:bg-brand-surface/20 transition-colors ${
-                            editor.isActive({ textAlign: "center" })
-                                ? "bg-brand-surface/30 text-white"
-                                : "text-brand-surface/80"
-                        }`}
-                        title="Align Center"
-                        aria-label="Align Center"
-                    >
-                        <AlignCenter
-                            className="w-3.5 h-3.5"
-                            aria-hidden="true"
-                        />
-                    </button>
-
-                    <button
-                        type="button"
-                        onClick={() =>
-                            editor.chain().focus().setTextAlign("right").run()
-                        }
-                        className={`p-1.5 rounded-brand hover:bg-brand-surface/20 transition-colors ${
-                            editor.isActive({ textAlign: "right" })
-                                ? "bg-brand-surface/30 text-white"
-                                : "text-brand-surface/80"
-                        }`}
-                        title="Align Right"
-                        aria-label="Align Right"
-                    >
-                        <AlignRight
-                            className="w-3.5 h-3.5"
-                            aria-hidden="true"
-                        />
-                    </button>
-                </>
+                        {groupIndex > 0 ? (
+                            <span
+                                aria-hidden="true"
+                                className="mx-0.5 h-4 w-px bg-paddock-night-rule"
+                            />
+                        ) : null}
+                        {group.map((tool) => (
+                            <button
+                                key={tool.id}
+                                type="button"
+                                title={tool.hint}
+                                aria-label={tool.label}
+                                aria-pressed={tool.pressed}
+                                onClick={tool.run}
+                                className={cn(
+                                    TOOL_CLASSES,
+                                    tool.pressed
+                                        ? "bg-paddock-lime text-paddock-on-fill"
+                                        : "text-paddock-night-fg hover:bg-paddock-night-fg/14",
+                                )}
+                            >
+                                <span
+                                    aria-hidden="true"
+                                    className="inline-flex"
+                                >
+                                    {tool.icon}
+                                </span>
+                            </button>
+                        ))}
+                    </div>
+                ))
             )}
         </TipTapBubbleMenu>
     );

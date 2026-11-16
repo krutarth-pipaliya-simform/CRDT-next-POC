@@ -1,144 +1,71 @@
 "use client";
 
-import { useRef, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
-import { Badge } from "@/components/ui/badge";
-import { NavTabs, type NavTabItem } from "@/components/ui/nav-tabs";
-import { useOutsideClick } from "@/hooks/use-outside-click";
-import { cn } from "@/lib/cn";
-import type { WorkspaceRole } from "@/schemas/workspace";
+import { AvatarStack } from "@/components/paddock/paddock-avatar";
+import { Tag } from "@/components/paddock/tag";
+import { WorkspaceTabs } from "@/components/paddock/workspace-tabs";
+import { WORKSPACE_ROLE_LABELS, type WorkspaceRole } from "@/schemas/workspace";
+
+import { PAGE_CONTAINER } from "./layout-styles";
+import { isSectionCurrent, workspaceSections } from "./workspace-sections";
+
+export interface WorkspaceNavMember {
+    id: string;
+    name: string;
+    image: string | null;
+}
 
 export interface WorkspaceNavProps {
     workspaceId: string;
-    workspaceName: string;
     userRole: WorkspaceRole;
-    workspaces?: { id: string; name: string }[];
+    /** Everyone with access, so their colours are learnable from any screen. */
+    members?: WorkspaceNavMember[];
 }
 
+/**
+ * The workspace's section tabs, with the team on the right. The workspace's
+ * own name and the switcher live in the header above, so this bar is only
+ * "where am I in this workspace" and "who is in it".
+ */
 export function WorkspaceNav({
     workspaceId,
-    workspaceName,
     userRole,
-    workspaces = [],
+    members = [],
 }: WorkspaceNavProps) {
-    const [switcherOpen, setSwitcherOpen] = useState(false);
-    const switcherRef = useRef<HTMLDivElement>(null);
+    const pathname = usePathname();
 
-    useOutsideClick(switcherRef, () => setSwitcherOpen(false), switcherOpen);
+    const items = workspaceSections(workspaceId, userRole).map((section) => ({
+        label: section.label,
+        href: section.href,
+        current: isSectionCurrent(pathname, section),
+    }));
 
-    const navItems: NavTabItem[] = [
-        { label: "Overview", href: `/${workspaceId}`, exact: true },
-        { label: "Documents", href: `/${workspaceId}/documents` },
-        { label: "Tasks", href: `/${workspaceId}/tasks` },
-        { label: "Chat", href: `/${workspaceId}/chat` },
-        { label: "Analytics", href: `/${workspaceId}/analytics` },
-        ...(userRole === "ADMIN"
-            ? [{ label: "Settings", href: `/${workspaceId}/settings` }]
-            : []),
-    ];
+    const roleTag = (
+        <span data-testid="workspace-role">
+            <Tag>{WORKSPACE_ROLE_LABELS[userRole]}</Tag>
+        </span>
+    );
 
     return (
-        <div className="border-b-2 border-brand-muted bg-brand-surface mb-6 w-full max-w-full overflow-x-hidden">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 w-full min-w-0">
-                {/* Workspace Header & Switcher */}
-                <div className="flex items-center justify-between py-4 border-b border-brand-border">
-                    <div className="relative" ref={switcherRef}>
-                        <button
-                            type="button"
-                            onClick={() => setSwitcherOpen(!switcherOpen)}
-                            className="flex items-center gap-3 group focus:outline-none cursor-pointer"
-                            aria-expanded={switcherOpen}
-                            aria-haspopup="true"
-                        >
-                            <div className="w-8 h-8 rounded-brand bg-brand-ink text-brand-surface font-brand-mono text-sm font-bold flex items-center justify-center uppercase shadow-brand-subtle">
-                                {(workspaceName || "W").charAt(0)}
-                            </div>
-                            <div className="text-left">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-base font-semibold text-brand-ink group-hover:text-brand-accent transition-colors">
-                                        {workspaceName || "Workspace"}
-                                    </span>
-                                    <svg
-                                        className={cn(
-                                            "w-4 h-4 text-brand-subtle transition-transform",
-                                            switcherOpen && "rotate-180",
-                                        )}
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth="2"
-                                            d="M19 9l-7 7-7-7"
-                                        />
-                                    </svg>
-                                </div>
-                            </div>
-                        </button>
-
-                        {switcherOpen && (
-                            <div className="absolute left-0 mt-2 w-64 bg-brand-surface border-2 border-brand-ink shadow-brand-card rounded-brand py-2 z-50 animate-fade-in-up">
-                                <div className="px-3 py-1.5 font-brand-mono text-[10px] uppercase tracking-widest text-brand-subtle border-b border-brand-border">
-                                    Switch Workspace
-                                </div>
-                                <div className="max-h-56 overflow-y-auto py-1">
-                                    {workspaces.map((ws) => (
-                                        <Link
-                                            key={ws.id}
-                                            href={`/${ws.id}`}
-                                            onClick={() =>
-                                                setSwitcherOpen(false)
-                                            }
-                                            className={cn(
-                                                "flex items-center justify-between px-3 py-2 text-xs font-medium transition-colors",
-                                                ws.id === workspaceId
-                                                    ? "bg-brand-muted text-brand-ink font-semibold"
-                                                    : "text-brand-ink hover:bg-brand-muted/50",
-                                            )}
-                                        >
-                                            <span className="truncate">
-                                                {ws.name}
-                                            </span>
-                                            {ws.id === workspaceId && (
-                                                <span className="text-brand-accent text-xs">
-                                                    ✓
-                                                </span>
-                                            )}
-                                        </Link>
-                                    ))}
-                                </div>
-                                <div className="border-t border-brand-border pt-1 mt-1">
-                                    <Link
-                                        href="/dashboard"
-                                        onClick={() => setSwitcherOpen(false)}
-                                        className="block px-3 py-2 text-xs font-brand-mono text-brand-accent hover:bg-brand-muted/50 transition-colors uppercase tracking-wider"
-                                    >
-                                        ← All Workspaces
-                                    </Link>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    <div>
-                        <Badge
-                            intent={userRole === "ADMIN" ? "default" : "muted"}
-                        >
-                            {userRole}
-                        </Badge>
-                    </div>
-                </div>
-
-                {/* Workspace Navigation Tabs */}
-                <NavTabs
-                    ariaLabel="Workspace sections"
-                    scrollable
-                    items={navItems}
-                    className="border-b-0 pt-1"
-                />
+        <div className="border-b border-paddock-rule">
+            <div
+                className={`${PAGE_CONTAINER} flex flex-wrap items-center justify-between gap-x-6 gap-y-2`}
+            >
+                <WorkspaceTabs items={items} label="Workspace sections" />
+                {members.length > 0 ? (
+                    <Link
+                        href={`/${workspaceId}/settings/members`}
+                        className="flex items-center gap-2.5 py-2 no-underline"
+                        title={`${members.length} ${members.length === 1 ? "person has" : "people have"} access`}
+                    >
+                        <AvatarStack people={members} max={6} />
+                        {roleTag}
+                    </Link>
+                ) : (
+                    <span className="py-2">{roleTag}</span>
+                )}
             </div>
         </div>
     );

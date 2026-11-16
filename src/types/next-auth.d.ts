@@ -15,11 +15,14 @@ declare module "next-auth" {
 declare module "next-auth/jwt" {
     interface JWT {
         id?: string;
+        /** When the session last confirmed its user still exists (ms epoch). */
+        userCheckedAt?: number;
     }
 }
 
 declare module "@auth/core/jwt" {
     interface JWT {
         id?: string;
+        userCheckedAt?: number;
     }
 }

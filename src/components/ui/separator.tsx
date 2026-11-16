@@ -17,7 +17,7 @@ export function Separator({ className, label, ...props }: SeparatorProps) {
                 )}
                 {...props}
             >
-                <span className="absolute left-1/2 -translate-x-1/2 -top-2.5 bg-brand-surface px-4 font-brand-mono text-[10px] text-brand-subtle uppercase tracking-widest">
+                <span className="absolute left-1/2 -translate-x-1/2 -top-2.5 bg-brand-surface px-4 text-[12px] text-brand-subtle">
                     {label}
                 </span>
             </div>

@@ -1,9 +1,17 @@
 import { headers } from "next/headers";
 
 /**
- * Resolves the application base URL dynamically from incoming request headers.
+ * Resolves the application base URL: the configured `APP_URL` when there is
+ * one, otherwise the incoming request's headers. Set `APP_URL` in production,
+ * because the Host header is client-controlled and a password reset link
+ * built from it can be pointed at another site.
  */
 export async function getAppUrl(): Promise<string> {
+    const configured = process.env.APP_URL;
+    if (configured) {
+        return configured.replace(/\/+$/, "");
+    }
+
     const headersList = await headers();
     const host = headersList.get("host") || "localhost:3000";
     const isLocalNetwork =

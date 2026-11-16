@@ -113,24 +113,27 @@ export function NavTabs({
         return false;
     };
 
+    // Sentence case in the product grotesque. Tabs are navigation, not data,
+    // so they are set like the rest of the interface rather than in mono caps.
     const baseItemClasses = cn(
-        "font-brand-mono uppercase tracking-wider transition-colors border-b-2 flex items-center gap-2 -mb-[2px]",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2",
-        size === "sm" ? "px-3 py-2 text-[11px]" : "px-4 py-3 text-xs",
+        "transition-colors border-b-2 flex items-center gap-2 -mb-px rounded-none",
+        size === "sm" ? "px-2.5 py-2 text-[13px]" : "px-3 py-2.5 text-sm",
         scrollable ? "whitespace-nowrap shrink-0" : "",
     );
 
-    const activeClasses = "border-brand-accent text-brand-ink font-semibold";
+    // Ink marks the current tab. Blue is reserved for focus, so a tab you have
+    // navigated to and a tab your keyboard is on stay tellable apart.
+    const activeClasses = "border-brand-ink text-brand-ink font-semibold";
     const inactiveClasses =
-        "border-transparent text-brand-subtle hover:text-brand-ink hover:border-brand-border";
+        "border-transparent text-brand-subtle hover:text-brand-ink hover:border-brand-line";
     const disabledClasses =
-        "opacity-50 cursor-not-allowed pointer-events-none text-brand-subtle border-transparent";
+        "opacity-40 cursor-not-allowed pointer-events-none text-brand-subtle border-transparent";
 
     return (
         <nav
             aria-label={ariaLabel}
             className={cn(
-                "flex items-center border-b-2 border-brand-muted",
+                "flex items-center border-b border-brand-border",
                 scrollable
                     ? "overflow-x-auto overflow-y-hidden no-scrollbar gap-1"
                     : "gap-2",

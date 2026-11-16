@@ -10,6 +10,10 @@ export interface EmptyStateProps {
     className?: string;
 }
 
+/**
+ * An empty screen is an invitation to act, so the title is written as the
+ * thing that is missing and the action names exactly what happens next.
+ */
 export function EmptyState({
     title,
     description,
@@ -20,14 +24,17 @@ export function EmptyState({
     return (
         <div
             className={cn(
-                "flex flex-col items-center justify-center py-20 px-4 text-center border-2 border-dashed border-brand-border rounded-brand bg-brand-surface",
+                "flex flex-col items-center justify-center py-16 px-6 text-center",
+                "border border-dashed border-brand-border rounded-brand bg-brand-surface/50",
                 className,
             )}
         >
-            {icon && <div className="mb-3 text-brand-subtle">{icon}</div>}
-            <h3 className="text-lg font-medium text-brand-ink mb-2">{title}</h3>
+            {icon && <div className="mb-4 text-brand-subtle">{icon}</div>}
+            <h3 className="text-[17px] font-semibold tracking-[-0.011em] text-brand-ink">
+                {title}
+            </h3>
             {description && (
-                <p className="text-xs font-brand-mono text-brand-subtle max-w-sm mb-6">
+                <p className="text-sm text-brand-subtle max-w-[46ch] mt-1.5 mb-6 leading-relaxed">
                     {description}
                 </p>
             )}

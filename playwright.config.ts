@@ -5,6 +5,10 @@ import path from "path";
 // Read from default ".env" file.
 dotenv.config({ path: path.resolve(__dirname, ".env") });
 
+// Override when port 3000 is taken by something else: `E2E_PORT=3100 npm run test:e2e`.
+const PORT = process.env.E2E_PORT ?? "3000";
+const BASE_URL = `http://localhost:${PORT}`;
+
 export default defineConfig({
     testDir: "./e2e",
     /* Run tests in files in parallel */
@@ -16,11 +20,11 @@ export default defineConfig({
     /* Opt out of parallel tests on CI. */
     workers: process.env.CI ? 1 : undefined,
     /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-    reporter: "html",
+    reporter: [["list"], ["html", { open: "never" }]],
     /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
     use: {
         /* Base URL to use in actions like `await page.goto('/')`. */
-        baseURL: "http://localhost:3000",
+        baseURL: BASE_URL,
 
         /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
         trace: "on-first-retry",
@@ -36,8 +40,13 @@ export default defineConfig({
 
     /* Run your local dev server before starting the tests */
     webServer: {
-        command: "npm run dev",
-        url: "http://localhost:3000",
+        // The collab server also reads PORT, so a custom port goes to Next
+        // alone instead of through the environment.
+        command:
+            PORT === "3000"
+                ? "npm run dev"
+                : `npx concurrently -k "next dev --port ${PORT}" "tsx server/src/index.ts"`,
+        url: BASE_URL,
         reuseExistingServer: !process.env.CI,
     },
 });

@@ -2,7 +2,16 @@
  * An array of routes that are accessible to the public.
  * These routes do not require authentication.
  */
-export const publicRoutes: string[] = ["/", "/verify-email", "/favicon.ico"];
+export const publicRoutes: string[] = [
+    "/",
+    "/verify-email",
+    // Public rather than an auth route, so a signed-in user who follows a
+    // reset link from their email is not bounced to the dashboard.
+    "/forgot-password",
+    "/reset-password",
+    "/favicon.ico",
+    "/design-system/v2",
+];
 
 /**
  * An array of routes that are used for authentication.

@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import Link from "next/link";
 
-import { Button } from "@/components/ui/button";
+import {
+    PaddockButton,
+    PaddockLinkButton,
+} from "@/components/paddock/paddock-button";
 import { joinPublicWorkspaceAction } from "@/features/workspace/actions/join-public-workspace";
 
 export interface JoinPublicButtonProps {
@@ -21,12 +23,13 @@ export function JoinPublicButton({
 
     if (isMember) {
         return (
-            <Link
+            <PaddockLinkButton
                 href={`/${workspaceId}`}
-                className="font-brand-mono text-xs text-brand-accent uppercase tracking-widest hover:underline"
+                size="sm"
+                className="bg-paddock-inverse text-paddock-on-inverse"
             >
-                Open Workspace →
-            </Link>
+                Open workspace
+            </PaddockLinkButton>
         );
     }
 
@@ -44,16 +47,14 @@ export function JoinPublicButton({
 
     return (
         <div className="flex flex-col items-end gap-1">
-            <Button
-                variant="primary"
-                size="sm"
-                onClick={handleJoin}
-                disabled={isPending}
-            >
+            <PaddockButton size="sm" onClick={handleJoin} disabled={isPending}>
                 {isPending ? "Joining..." : "Join Workspace"}
-            </Button>
+            </PaddockButton>
             {error && (
-                <span className="text-[10px] font-brand-mono text-brand-danger">
+                <span
+                    role="alert"
+                    className="text-[0.8125rem] font-semibold text-paddock-danger"
+                >
                     {error}
                 </span>
             )}

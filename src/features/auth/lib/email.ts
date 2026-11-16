@@ -74,3 +74,37 @@ export async function sendVerificationEmail(
         );
     }
 }
+
+export async function sendPasswordResetEmail(email: string, resetUrl: string) {
+    const transporter = await getTransporter();
+
+    const info = await transporter.sendMail({
+        from: '"CRDT Next POC" <noreply@crdtnext.com>',
+        to: email,
+        subject: "Reset your password",
+        html: `
+            <div style="font-family: sans-serif; padding: 20px;">
+                <h2>Reset your password</h2>
+                <p>Someone asked to reset the password for this account. If it was you, choose a new one below:</p>
+                <div style="margin: 20px 0;">
+                    <a href="${resetUrl}" style="background-color: #000; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
+                        Choose a new password
+                    </a>
+                </div>
+                <p>Or copy and paste this link into your browser:</p>
+                <p><a href="${resetUrl}">${resetUrl}</a></p>
+                <p style="color: #666; font-size: 14px;">This link expires in 1 hour and works once. If you did not ask for it, ignore this email: your password stays the same.</p>
+            </div>
+        `,
+    });
+
+    if (
+        process.env.NODE_ENV !== "production" &&
+        !process.env.EMAIL_SERVER_HOST
+    ) {
+        console.log(
+            "📨 Test email sent! Preview URL: %s",
+            nodemailer.getTestMessageUrl(info),
+        );
+    }
+}

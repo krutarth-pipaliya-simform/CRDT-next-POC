@@ -1,7 +1,11 @@
 import type { ReactNode } from "react";
+import { notFound } from "next/navigation";
 
+import { PAGE_CONTAINER } from "@/components/layout/layout-styles";
+import { PageHeader } from "@/components/layout/page-header";
 import { SettingsNav } from "@/features/workspace/components/settings-nav";
 import { verifyWorkspaceRole } from "@/features/workspace/lib/rbac";
+import { getWorkspace } from "@/features/workspace/queries/get-workspace";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -19,20 +23,21 @@ export default async function SettingsLayout({
     // Only Admin can access settings (FR-6)
     await verifyWorkspaceRole(workspaceId, ["ADMIN"]);
 
+    const workspace = await getWorkspace(workspaceId);
+    if (!workspace) {
+        notFound();
+    }
+
     return (
-        <main className="max-w-4xl mx-auto px-6 py-10">
-            <div className="mb-8">
-                <h2 className="font-brand-mono text-xs uppercase tracking-widest text-brand-subtle mb-2">
-                    Workspace Management
-                </h2>
-                <h1 className="text-3xl font-medium tracking-tight text-brand-ink">
-                    Settings
-                </h1>
-            </div>
+        <main className="pb-24">
+            <PageHeader
+                eyebrow={`${workspace.name} — Settings`}
+                serif="Workspace"
+                heavy="settings"
+                action={<SettingsNav workspaceId={workspaceId} />}
+            />
 
-            <SettingsNav workspaceId={workspaceId} />
-
-            <div>{children}</div>
+            <div className={PAGE_CONTAINER}>{children}</div>
         </main>
     );
 }

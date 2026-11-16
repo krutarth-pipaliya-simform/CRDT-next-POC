@@ -3,6 +3,7 @@ import { Role } from "@prisma/client";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/features/auth/lib/auth";
+import { requireUserId } from "@/features/auth/lib/session";
 import { db } from "@/lib/db";
 
 export const getWorkspaceRole = cache(async (workspaceId: string) => {
@@ -40,6 +41,10 @@ export async function verifyWorkspaceRole(
     workspaceId: string,
     allowedRoles: Role[],
 ) {
+    // Signed out is not "no access": send the visitor to log in, not to the
+    // access-denied page.
+    await requireUserId(`/${workspaceId}`);
+
     const role = await getWorkspaceRole(workspaceId);
 
     if (!role) {

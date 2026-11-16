@@ -1,13 +1,18 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { FileText, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Dialog } from "@/components/ui/dialog";
+import { NotchedCard } from "@/components/paddock/notched-card";
+import {
+    PaddockButton,
+    PaddockIconButton,
+} from "@/components/paddock/paddock-button";
+import { PaddockDialog } from "@/components/paddock/paddock-dialog";
+import { formatRelativeTime } from "@/lib/format-time";
+
 import { deleteDocumentAction } from "../actions/delete-document";
 import type { DocumentItem } from "../types";
 
@@ -16,6 +21,9 @@ export interface DocumentCardProps {
     workspaceId: string;
     canManage: boolean;
 }
+
+/** Widths of the faint text lines in the page preview, top to bottom. */
+const PREVIEW_LINES = ["w-full", "w-[88%]", "w-[94%]", "w-[70%]", "w-[80%]"];
 
 export function DocumentCard({
     document,
@@ -27,13 +35,11 @@ export function DocumentCard({
     const [isPending, startTransition] = useTransition();
     const router = useRouter();
 
-    const formattedDate = new Intl.DateTimeFormat("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-        hour: "numeric",
-        minute: "numeric",
-    }).format(new Date(document.updatedAt));
+    const updatedAt = new Date(document.updatedAt);
+    const exactDate = new Intl.DateTimeFormat(undefined, {
+        dateStyle: "medium",
+        timeStyle: "short",
+    }).format(updatedAt);
 
     const handleDelete = () => {
         setDeleteError(null);
@@ -53,95 +59,109 @@ export function DocumentCard({
     };
 
     return (
-        <>
-            <Card className="flex flex-col justify-between p-5 hover:border-brand-accent transition-all duration-150 group min-w-0 w-full overflow-hidden">
-                <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-start gap-3 min-w-0">
-                        <div className="p-2.5 bg-brand-muted border-2 border-brand-ink rounded-brand text-brand-ink group-hover:bg-brand-accent group-hover:text-white transition-colors">
-                            <FileText className="w-5 h-5" aria-hidden="true" />
-                        </div>
-                        <div className="flex flex-col min-w-0">
-                            <Link
-                                href={`/${workspaceId}/documents/${document.id}`}
-                                className="font-bold text-base text-brand-ink hover:text-brand-accent transition-colors truncate focus-visible:outline-2 focus-visible:outline-brand-ink"
-                            >
-                                {document.title}
-                            </Link>
-                            <span className="text-xs font-brand-mono text-brand-subtle mt-0.5">
-                                Updated {formattedDate}
-                            </span>
-                        </div>
-                    </div>
-
-                    {canManage && (
-                        <button
-                            type="button"
-                            onClick={() => setIsDeleteDialogOpen(true)}
-                            className="p-1.5 text-brand-subtle hover:text-brand-danger hover:bg-brand-danger/10 border border-transparent hover:border-brand-danger rounded-brand transition-colors"
-                            title="Delete Document"
-                            aria-label={`Delete ${document.title}`}
+        <li className="paddock-lift min-w-0 list-none lg:nth-[3n]:mt-5 lg:nth-[3n+2]:mt-12">
+            <NotchedCard
+                bodyClassName="p-0 pb-7"
+                tab={
+                    <span className="flex items-center gap-2">
+                        Edited
+                        <time
+                            dateTime={updatedAt.toISOString()}
+                            title={exactDate}
+                            suppressHydrationWarning
+                            className="paddock-mono text-[0.71875rem] font-medium normal-case"
                         >
-                            <Trash2 className="w-4 h-4" aria-hidden="true" />
-                        </button>
-                    )}
-                </div>
-
-                <div className="flex items-center justify-between mt-5 pt-3 border-t border-brand-border">
-                    <span className="text-[10px] font-brand-mono uppercase tracking-wider text-brand-subtle">
-                        CRDT Real-Time Sync
+                            {formatRelativeTime(updatedAt)}
+                        </time>
                     </span>
-                    <Link
-                        href={`/${workspaceId}/documents/${document.id}`}
-                        className="px-3 py-1 text-xs font-bold font-brand-mono uppercase tracking-wider text-brand-ink bg-brand-muted hover:bg-brand-ink hover:text-brand-surface border border-brand-ink rounded-brand transition-all duration-150 shadow-brand-subtle hover:shadow-none"
-                    >
-                        Open Editor →
-                    </Link>
+                }
+            >
+                {/* A sketch of a page, so the grid reads as documents at a glance. */}
+                <div
+                    aria-hidden="true"
+                    className="relative h-[8.625rem] overflow-hidden border-b border-paddock-rule bg-paddock-paper"
+                >
+                    <span className="absolute top-[1.625rem] right-[3.75rem] left-[1.625rem] flex flex-col gap-[0.5625rem]">
+                        <span className="h-2.5 w-[62%] rounded-[2px] bg-paddock-ink" />
+                        {PREVIEW_LINES.map((width) => (
+                            <span
+                                key={width}
+                                className={`h-1.5 rounded-[2px] bg-paddock-rule ${width}`}
+                            />
+                        ))}
+                    </span>
                 </div>
-            </Card>
 
-            {/* Delete Confirmation Dialog */}
-            <Dialog
+                <div className="flex items-start justify-between gap-3 px-5 pt-[1.125rem] pb-3.5">
+                    {/* The whole card is the target; the heading carries the
+                        link so the accessible name is the document's title. */}
+                    <h3 className="m-0 min-w-0">
+                        <Link
+                            href={`/${workspaceId}/documents/${document.id}`}
+                            className="paddock-heavy block text-[1.375rem] leading-[0.98] break-words text-paddock-ink no-underline after:absolute after:inset-0 after:content-['']"
+                        >
+                            {document.title}
+                        </Link>
+                    </h3>
+
+                    {canManage ? (
+                        <PaddockIconButton
+                            label={`Delete ${document.title}`}
+                            icon={
+                                <Trash2 className="size-4" strokeWidth={1.8} />
+                            }
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setIsDeleteDialogOpen(true)}
+                            className="relative z-10 border-[1.5px] border-paddock-rule text-paddock-subtle hover:text-paddock-danger"
+                        />
+                    ) : null}
+                </div>
+            </NotchedCard>
+
+            <PaddockDialog
                 open={isDeleteDialogOpen}
                 onClose={() => setIsDeleteDialogOpen(false)}
-                title="Delete Document"
-            >
-                <div className="flex flex-col gap-4">
-                    <p className="text-sm text-brand-subtle">
-                        Are you sure you want to permanently delete{" "}
-                        <strong className="text-brand-ink">
-                            {document.title}
-                        </strong>
-                        ? This action cannot be undone.
-                    </p>
-
-                    {deleteError && (
-                        <div
-                            role="alert"
-                            className="p-3 bg-brand-danger/10 border border-brand-danger text-brand-danger text-xs font-brand-mono rounded-brand"
-                        >
-                            {deleteError}
-                        </div>
-                    )}
-
-                    <div className="flex justify-end gap-3 mt-2">
-                        <Button
-                            type="button"
-                            variant="secondary"
+                titleSerif="Delete this"
+                titleHeavy="document?"
+                className="w-[30rem]"
+                footer={
+                    <>
+                        <PaddockButton
+                            variant="outline"
+                            voice="plain"
                             onClick={() => setIsDeleteDialogOpen(false)}
                         >
                             Cancel
-                        </Button>
-                        <Button
-                            type="button"
+                        </PaddockButton>
+                        <PaddockButton
                             variant="danger"
+                            voice="display"
                             onClick={handleDelete}
                             disabled={isPending}
                         >
-                            {isPending ? "Deleting..." : "Delete Document"}
-                        </Button>
-                    </div>
+                            {isPending ? "Deleting…" : "Delete document"}
+                        </PaddockButton>
+                    </>
+                }
+            >
+                <div className="flex flex-col gap-4">
+                    <p className="m-0 leading-relaxed">
+                        <strong className="font-bold">{document.title}</strong>{" "}
+                        and everything in it will be deleted for everyone in
+                        this workspace. This cannot be undone.
+                    </p>
+
+                    {deleteError ? (
+                        <p
+                            role="alert"
+                            className="m-0 rounded-paddock border-[1.5px] border-paddock-danger px-3.5 py-3 text-[0.8125rem] font-semibold text-paddock-danger"
+                        >
+                            {deleteError}
+                        </p>
+                    ) : null}
                 </div>
-            </Dialog>
-        </>
+            </PaddockDialog>
+        </li>
     );
 }

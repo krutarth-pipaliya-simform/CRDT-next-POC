@@ -1,4 +1,4 @@
-import { Role } from "@prisma/client";
+import { Role, TaskPriority, TaskStatus } from "@prisma/client";
 
 import { db as prisma } from "@/lib/db";
 
@@ -63,6 +63,61 @@ async function main() {
             console.log(
                 `${user.name} is already a member with role ${existingMember.role}`,
             );
+        }
+    }
+
+    // 4. Create sample tasks for testing
+    const sampleTasks = [
+        {
+            title: "Set up CI/CD pipeline",
+            description:
+                "Configure GitHub Actions workflows for lint, type-check, and automated E2E tests.",
+            status: TaskStatus.TODO,
+            priority: TaskPriority.HIGH,
+            position: 1024,
+        },
+        {
+            title: "Design landing page mockup",
+            description:
+                "Create high-fidelity designs conforming to Machined Precision design guidelines.",
+            status: TaskStatus.IN_PROGRESS,
+            priority: TaskPriority.MEDIUM,
+            position: 1024,
+        },
+        {
+            title: "Implement user authentication",
+            description:
+                "NextAuth v5 session management, verification emails, and credentials flow.",
+            status: TaskStatus.DONE,
+            priority: TaskPriority.URGENT,
+            position: 1024,
+        },
+        {
+            title: "Write API documentation",
+            description:
+                "Document all endpoints, Server Actions, and CRDT data structures.",
+            status: TaskStatus.TODO,
+            priority: TaskPriority.LOW,
+            position: 2048,
+        },
+    ];
+
+    for (const taskData of sampleTasks) {
+        const existingTask = await prisma.task.findFirst({
+            where: {
+                workspaceId: workspace.id,
+                title: taskData.title,
+            },
+        });
+
+        if (!existingTask) {
+            await prisma.task.create({
+                data: {
+                    ...taskData,
+                    workspaceId: workspace.id,
+                },
+            });
+            console.log(`Created sample task: ${taskData.title}`);
         }
     }
 

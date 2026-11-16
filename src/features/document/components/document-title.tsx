@@ -33,9 +33,9 @@ export function DocumentTitle({
             value={title}
             onChange={handleChange}
             disabled={disabled}
-            placeholder="Untitled Document"
-            aria-label="Document Title"
-            className="w-full text-xl sm:text-2xl font-bold bg-transparent text-brand-ink placeholder:text-brand-subtle/50 border-b-2 border-transparent hover:border-brand-border focus:border-brand-accent focus:outline-none transition-colors duration-150 py-1 min-w-0"
+            placeholder="Untitled document"
+            aria-label="Document title"
+            className="paddock-heavy w-full min-w-0 border-0 border-b-2 border-transparent bg-transparent py-1 text-[clamp(1.5rem,4vw,2rem)] text-paddock-ink transition-colors duration-150 placeholder:text-paddock-subtle hover:border-paddock-rule focus:border-paddock-ink disabled:cursor-not-allowed disabled:hover:border-transparent"
         />
     );
 }

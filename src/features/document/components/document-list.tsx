@@ -3,9 +3,14 @@
 import { useMemo, useState } from "react";
 import { Plus, Search } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import { EmptyState } from "@/components/ui/empty-state";
-import { Input } from "@/components/ui/input";
+import { PAGE_CONTAINER } from "@/components/layout/layout-styles";
+import { PageHeader } from "@/components/layout/page-header";
+import { DisplayHeading } from "@/components/paddock/display-heading";
+import { NotchedCard } from "@/components/paddock/notched-card";
+import { PaddockButton } from "@/components/paddock/paddock-button";
+import { paddockFieldClasses } from "@/components/paddock/paddock-styles";
+import { cn } from "@/lib/cn";
+
 import type { DocumentItem } from "../types";
 import { CreateDocumentDialog } from "./create-document-dialog";
 import { DocumentCard } from "./document-card";
@@ -17,6 +22,14 @@ export interface DocumentListProps {
     userRole: "ADMIN" | "MEMBER" | "GUEST";
 }
 
+function countLabel(count: number): string {
+    return `${count} ${count === 1 ? "document" : "documents"}`;
+}
+
+/**
+ * The documents page below the shell: the hero (which owns the "New document"
+ * action, so it lives here beside the dialog it opens), search, and the grid.
+ */
 export function DocumentList({
     documents,
     workspaceId,
@@ -38,83 +51,116 @@ export function DocumentList({
         );
     }, [documents, searchQuery]);
 
+    const isFiltering = searchQuery.trim().length > 0;
+
     return (
-        <div className="flex flex-col gap-6">
-            {/* Header Controls: Search & New Document */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="relative flex-1 max-w-md">
-                    <Search
-                        className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-brand-subtle pointer-events-none"
-                        aria-hidden="true"
-                    />
-                    <Input
-                        type="search"
-                        placeholder="Search workspace documents..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-9"
-                        aria-label="Search documents"
-                    />
-                </div>
-
-                {canCreate && (
-                    <Button
-                        type="button"
-                        variant="primary"
-                        onClick={() => setIsCreateOpen(true)}
-                    >
-                        <Plus className="w-4 h-4 mr-1.5" aria-hidden="true" />
-                        New Document
-                    </Button>
-                )}
-            </div>
-
-            {/* Document Grid / Empty State */}
-            {documents.length === 0 ? (
-                <div className="flex flex-col items-center gap-4 py-8">
-                    <EmptyState
-                        title="No documents yet"
-                        description={`Create collaborative CRDT documents in ${workspaceName} with real-time multiplayer synchronization, rich text blocks, and autosave.`}
-                    />
-                    {canCreate && (
-                        <Button
-                            type="button"
-                            variant="primary"
+        <>
+            <PageHeader
+                eyebrow={`${workspaceName} — Documents`}
+                serif="The"
+                heavy="Documents"
+                description="Anyone here can open the same document and type at the same time. Edits save themselves."
+                action={
+                    canCreate ? (
+                        <PaddockButton
+                            size="lg"
                             onClick={() => setIsCreateOpen(true)}
                         >
                             <Plus
-                                className="w-4 h-4 mr-1.5"
+                                className="size-4"
+                                strokeWidth={2.6}
                                 aria-hidden="true"
                             />
-                            Create First Document
-                        </Button>
-                    )}
-                </div>
-            ) : filteredDocuments.length === 0 ? (
-                <div className="py-8 text-center">
-                    <p className="text-brand-subtle text-sm font-brand-mono">
+                            New document
+                        </PaddockButton>
+                    ) : undefined
+                }
+            />
+
+            <div className={cn(PAGE_CONTAINER, "flex flex-col gap-8")}>
+                {documents.length > 0 ? (
+                    <div className="flex flex-wrap items-center justify-between gap-3.5">
+                        <label className="relative w-full min-w-0 sm:w-[26.25rem]">
+                            <span className="sr-only">Search documents</span>
+                            <Search
+                                className="pointer-events-none absolute top-1/2 left-4 size-[1.125rem] -translate-y-1/2 text-paddock-subtle"
+                                aria-hidden="true"
+                            />
+                            <input
+                                type="search"
+                                placeholder="Search documents"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className={cn(
+                                    paddockFieldClasses,
+                                    "h-13 pl-12",
+                                )}
+                            />
+                        </label>
+                        <p
+                            className="paddock-mono m-0 text-[0.78125rem] text-paddock-subtle"
+                            aria-live="polite"
+                        >
+                            {isFiltering
+                                ? `${filteredDocuments.length} of ${countLabel(documents.length)}`
+                                : countLabel(documents.length)}{" "}
+                            · sorted by last edited
+                        </p>
+                    </div>
+                ) : null}
+
+                {documents.length === 0 ? (
+                    <NotchedCard
+                        as="section"
+                        className="max-w-[40rem]"
+                        bodyClassName="flex flex-col items-start gap-5 px-6 pt-8 pb-14 sm:px-8"
+                    >
+                        <DisplayHeading
+                            as="h2"
+                            size="md"
+                            serif="No documents"
+                            heavy="yet"
+                        />
+                        <p className="m-0 max-w-[52ch] text-paddock-subtle">
+                            Start one and share it with {workspaceName}.
+                            Everyone can write in it at the same time.
+                        </p>
+                        {canCreate ? (
+                            <PaddockButton
+                                onClick={() => setIsCreateOpen(true)}
+                            >
+                                <Plus
+                                    className="size-4"
+                                    strokeWidth={2.6}
+                                    aria-hidden="true"
+                                />
+                                Create first document
+                            </PaddockButton>
+                        ) : null}
+                    </NotchedCard>
+                ) : filteredDocuments.length === 0 ? (
+                    <p className="m-0 py-8 text-center text-paddock-subtle">
                         No documents found matching &quot;{searchQuery}&quot;
                     </p>
-                </div>
-            ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                    {filteredDocuments.map((doc) => (
-                        <DocumentCard
-                            key={doc.id}
-                            document={doc}
-                            workspaceId={workspaceId}
-                            canManage={canCreate}
-                        />
-                    ))}
-                </div>
-            )}
+                ) : (
+                    <ul className="m-0 grid list-none grid-cols-1 items-start gap-x-[1.125rem] gap-y-6 p-0 md:grid-cols-2 lg:grid-cols-3">
+                        {filteredDocuments.map((doc) => (
+                            <DocumentCard
+                                key={doc.id}
+                                document={doc}
+                                workspaceId={workspaceId}
+                                canManage={canCreate}
+                            />
+                        ))}
+                    </ul>
+                )}
+            </div>
 
-            {/* Create Document Dialog */}
             <CreateDocumentDialog
                 workspaceId={workspaceId}
                 open={isCreateOpen}
                 onClose={() => setIsCreateOpen(false)}
             />
-        </div>
+        </>
     );
 }

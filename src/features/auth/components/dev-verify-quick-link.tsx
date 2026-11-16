@@ -1,18 +1,27 @@
+import { Tag } from "@/components/paddock/tag";
+
 export interface DevVerifyQuickLinkProps {
     verifyUrl: string;
+    /** The link's text; the password reset form reuses this for its link. */
+    label?: string;
 }
 
-export function DevVerifyQuickLink({ verifyUrl }: DevVerifyQuickLinkProps) {
+/**
+ * Development only: the server hands back the verification URL when no mail
+ * transport is configured. Dashed, because it is scaffolding, not product.
+ */
+export function DevVerifyQuickLink({
+    verifyUrl,
+    label = "Verify email now",
+}: DevVerifyQuickLinkProps) {
     return (
-        <div className="flex flex-col gap-2 p-3 bg-brand-muted border-2 border-brand-border rounded-brand">
-            <span className="font-brand-mono text-[10px] uppercase tracking-widest text-brand-subtle">
-                Development Quick Link
-            </span>
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-paddock border-[1.5px] border-dashed border-paddock-ink px-4 py-3.5">
+            <Tag>Development quick link</Tag>
             <a
                 href={verifyUrl}
-                className="inline-flex items-center justify-center font-brand-mono font-semibold text-xs uppercase tracking-widest bg-brand-ink text-brand-surface py-2 px-3 rounded-brand hover:bg-brand-accent transition-colors"
+                className="paddock-tag paddock-press inline-flex h-11 items-center rounded-full bg-paddock-inverse px-4 text-[0.6875rem] text-paddock-on-inverse no-underline"
             >
-                Verify Email Now →
+                {label}
             </a>
         </div>
     );

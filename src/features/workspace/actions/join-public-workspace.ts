@@ -4,6 +4,7 @@ import { Role } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
 import { auth } from "@/features/auth/lib/auth";
+import { notify } from "@/features/notification/lib/notify";
 import { db } from "@/lib/db";
 
 export async function joinPublicWorkspaceAction(workspaceId: string) {
@@ -44,6 +45,17 @@ export async function joinPublicWorkspaceAction(workspaceId: string) {
                     userId,
                     role: Role.MEMBER,
                 },
+            });
+
+            await notify({
+                type: "MEMBER_JOINED",
+                title: `${session.user.name || session.user.email || "Someone"} joined the workspace`,
+                body: null,
+                // Overview, not settings/members — that page is Admin-only
+                href: `/${workspaceId}`,
+                workspaceId,
+                actorId: userId,
+                excludeUserIds: [userId],
             });
         }
 

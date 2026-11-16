@@ -1,3 +1,6 @@
+import Link from "next/link";
+
+import { PRESENCE_SLOT_COUNT } from "@/lib/presence";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,41 +14,88 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ComponentsKitchenSink() {
     return (
-        <main className="min-h-screen bg-brand-surface p-12 lg:p-24 font-brand-sans text-brand-ink">
-            <div className="max-w-4xl mx-auto space-y-16">
-                <header className="space-y-4">
-                    <h1 className="text-4xl font-bold tracking-tighter">
-                        Design System
+        <main className="min-h-screen bg-brand-paper p-8 lg:p-16 text-brand-ink">
+            <div className="max-w-4xl mx-auto space-y-14">
+                <header className="max-w-[62ch]">
+                    <h1 className="text-[36px] font-semibold tracking-[-0.028em] leading-tight">
+                        Design system
                     </h1>
-                    <p className="text-brand-subtle font-brand-mono text-sm uppercase tracking-widest">
-                        Component Library & Primitives
+                    <p className="text-[15px] text-brand-subtle mt-2 leading-relaxed">
+                        One rule holds the rest together: a saturated colour
+                        always means a person. Blue is the single exception and
+                        it belongs to the interface — focus, selection, links.
+                    </p>
+                    <p className="text-sm mt-4">
+                        <Link
+                            href="/design-system/v2"
+                            className="font-medium text-brand-accent underline underline-offset-4 hover:no-underline"
+                        >
+                            Paddock (v2)
+                        </Link>
+                        <span className="text-brand-subtle">
+                            {" "}
+                            — the proposed next direction, side by side with
+                            this one.
+                        </span>
                     </p>
                 </header>
 
-                {/* Typography / Colors */}
-                <section className="space-y-6">
-                    <h2 className="text-2xl font-semibold border-b-2 border-brand-muted pb-2">
-                        Colors & Tokens
+                <section className="space-y-5">
+                    <h2 className="text-[22px] font-semibold tracking-[-0.018em] border-b border-brand-border pb-2">
+                        Presence
                     </h2>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 font-brand-mono text-xs uppercase tracking-wider">
-                        <div className="p-4 bg-brand-ink text-brand-surface rounded-brand border-2 border-brand-ink">
-                            Brand Ink
+                    <p className="text-sm text-brand-subtle max-w-[68ch] leading-relaxed">
+                        {PRESENCE_SLOT_COUNT} hues, none of them blue, assigned
+                        to a person by a hash of their id so the same person is
+                        the same colour on every surface and in every session.
+                        Read them through <code>presenceVar()</code>; they are
+                        deliberately not reachable as Tailwind utilities.
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                        {Array.from({ length: PRESENCE_SLOT_COUNT }).map(
+                            (_, index) => (
+                                <div
+                                    key={index}
+                                    className="flex items-center gap-2 px-3 py-2 border border-brand-border rounded-brand bg-brand-surface"
+                                >
+                                    <span
+                                        className="w-4 h-4 rounded-brand"
+                                        style={{
+                                            backgroundColor: `var(--color-brand-presence-${index + 1})`,
+                                        }}
+                                    />
+                                    <span className="font-brand-mono text-[12px] text-brand-subtle">
+                                        {index + 1}
+                                    </span>
+                                </div>
+                            ),
+                        )}
+                    </div>
+                </section>
+
+                <section className="space-y-5">
+                    <h2 className="text-[22px] font-semibold tracking-[-0.018em] border-b border-brand-border pb-2">
+                        Ink, paper and signal
+                    </h2>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-[13px]">
+                        <div className="p-4 bg-brand-ink text-brand-paper rounded-brand">
+                            Ink
                         </div>
-                        <div className="p-4 bg-brand-accent text-brand-surface rounded-brand border-2 border-brand-accent">
-                            Brand Accent
+                        <div className="p-4 bg-brand-paper text-brand-ink rounded-brand border border-brand-border">
+                            Paper
                         </div>
-                        <div className="p-4 bg-brand-surface text-brand-ink rounded-brand border-2 border-brand-ink">
-                            Brand Surface
+                        <div className="p-4 bg-brand-surface text-brand-ink rounded-brand border border-brand-border">
+                            Surface
                         </div>
-                        <div className="p-4 bg-brand-muted text-brand-ink rounded-brand border-2 border-brand-muted">
-                            Brand Muted
+                        <div className="p-4 bg-brand-accent text-brand-on-fill rounded-brand">
+                            Accent — focus only
                         </div>
                     </div>
                 </section>
 
                 {/* Buttons */}
                 <section className="space-y-6">
-                    <h2 className="text-2xl font-semibold border-b-2 border-brand-muted pb-2">
+                    <h2 className="text-[22px] font-semibold tracking-[-0.018em] border-b border-brand-border pb-2">
                         Buttons
                     </h2>
                     <div className="space-y-8">
@@ -61,7 +111,7 @@ export default function ComponentsKitchenSink() {
                             <Button size="lg">Large</Button>
                         </div>
                         <div className="flex flex-wrap items-center gap-4">
-                            <Button withArrow>With Arrow</Button>
+                            <Button>With Arrow</Button>
                             <Button disabled>Disabled</Button>
                         </div>
                     </div>
@@ -69,7 +119,7 @@ export default function ComponentsKitchenSink() {
 
                 {/* Link Buttons */}
                 <section className="space-y-6">
-                    <h2 className="text-2xl font-semibold border-b-2 border-brand-muted pb-2">
+                    <h2 className="text-[22px] font-semibold tracking-[-0.018em] border-b border-brand-border pb-2">
                         Link Buttons
                     </h2>
                     <p className="text-sm text-brand-subtle mb-4">
@@ -103,7 +153,7 @@ export default function ComponentsKitchenSink() {
 
                 {/* Navigation Tabs */}
                 <section className="space-y-6">
-                    <h2 className="text-2xl font-semibold border-b-2 border-brand-muted pb-2">
+                    <h2 className="text-[22px] font-semibold tracking-[-0.018em] border-b border-brand-border pb-2">
                         Navigation Tabs (NavTabs)
                     </h2>
                     <p className="text-sm text-brand-subtle mb-4">
@@ -164,7 +214,7 @@ export default function ComponentsKitchenSink() {
 
                 {/* Badges & Alerts */}
                 <section className="space-y-6">
-                    <h2 className="text-2xl font-semibold border-b-2 border-brand-muted pb-2">
+                    <h2 className="text-[22px] font-semibold tracking-[-0.018em] border-b border-brand-border pb-2">
                         Badges & Alerts
                     </h2>
                     <div className="flex flex-wrap gap-4">
@@ -191,7 +241,7 @@ export default function ComponentsKitchenSink() {
 
                 {/* Inputs & Forms */}
                 <section className="space-y-6">
-                    <h2 className="text-2xl font-semibold border-b-2 border-brand-muted pb-2">
+                    <h2 className="text-[22px] font-semibold tracking-[-0.018em] border-b border-brand-border pb-2">
                         Forms
                     </h2>
                     <div className="grid md:grid-cols-2 gap-8">
@@ -230,7 +280,7 @@ export default function ComponentsKitchenSink() {
 
                 {/* Cards & Separators */}
                 <section className="space-y-6">
-                    <h2 className="text-2xl font-semibold border-b-2 border-brand-muted pb-2">
+                    <h2 className="text-[22px] font-semibold tracking-[-0.018em] border-b border-brand-border pb-2">
                         Layout (Cards & Separators)
                     </h2>
 
@@ -280,7 +330,7 @@ export default function ComponentsKitchenSink() {
 
                 {/* Skeletons */}
                 <section className="space-y-6">
-                    <h2 className="text-2xl font-semibold border-b-2 border-brand-muted pb-2">
+                    <h2 className="text-[22px] font-semibold tracking-[-0.018em] border-b border-brand-border pb-2">
                         Skeletons (Loading States)
                     </h2>
                     <div className="flex gap-4 items-center max-w-md">

@@ -36,7 +36,7 @@ export function Input({
             {label && (
                 <label
                     htmlFor={inputId}
-                    className="font-brand-mono text-xs uppercase tracking-wider text-brand-ink"
+                    className="text-[13px] font-medium text-brand-ink"
                 >
                     {label}
                 </label>
@@ -47,10 +47,11 @@ export function Input({
                 aria-invalid={error ? "true" : undefined}
                 aria-describedby={describedBy}
                 className={cn(
-                    "w-full bg-brand-muted text-brand-ink placeholder:text-brand-subtle px-4 py-3 text-sm border-2 transition-colors outline-none rounded-brand",
+                    "w-full bg-brand-surface text-brand-ink placeholder:text-brand-subtle/70",
+                    "h-10 px-3 text-sm border rounded-brand transition-colors",
                     error
-                        ? "border-brand-danger focus:border-brand-danger"
-                        : "border-transparent focus:border-brand-accent",
+                        ? "border-brand-danger"
+                        : "border-brand-line hover:border-brand-ink",
                     className,
                 )}
                 {...props}
@@ -59,16 +60,13 @@ export function Input({
                 <span
                     id={errorId}
                     role="alert"
-                    className="text-brand-danger text-xs font-brand-mono uppercase tracking-wider"
+                    className="text-brand-danger text-[13px]"
                 >
                     {error}
                 </span>
             )}
             {hint && !error && (
-                <span
-                    id={hintId}
-                    className="text-brand-subtle text-xs font-brand-mono"
-                >
+                <span id={hintId} className="text-brand-subtle text-[13px]">
                     {hint}
                 </span>
             )}

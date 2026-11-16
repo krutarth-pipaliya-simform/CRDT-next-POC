@@ -55,10 +55,10 @@ test.describe("Collaborative Document Editor (FR-8, FR-9, FR-10)", () => {
         await page.getByLabel("Email").fill(testUserEmail);
         await page.getByLabel("Password").fill(testPassword);
         await page
-            .getByRole("button", { name: "Sign In", exact: true })
+            .getByRole("button", { name: "Sign in", exact: true })
             .click();
         await expect(
-            page.getByRole("heading", { name: "Your Workspaces" }),
+            page.getByRole("heading", { name: "Your workspaces" }),
         ).toBeVisible({ timeout: 15000 });
     }
 
@@ -70,17 +70,17 @@ test.describe("Collaborative Document Editor (FR-8, FR-9, FR-10)", () => {
         // Navigate to Workspace Documents
         await page.goto(`/${testWorkspaceId}/documents`);
         await expect(
-            page.getByRole("heading", { name: "Documents", exact: true }),
+            page.getByRole("heading", { name: "The Documents", exact: true }),
         ).toBeVisible({ timeout: 15000 });
 
         // Click create new document
         await page
-            .getByRole("button", { name: "New Document" })
+            .getByRole("button", { name: "New document" })
             .or(page.getByRole("button", { name: "Create First Document" }))
             .first()
             .click();
         await expect(
-            page.getByRole("heading", { name: "Create New Document" }),
+            page.getByRole("heading", { name: "New document" }),
         ).toBeVisible();
 
         const docTitle = `Sprint Architecture Spec ${Date.now()}`;
@@ -148,7 +148,7 @@ test.describe("Collaborative Document Editor (FR-8, FR-9, FR-10)", () => {
 
         await page1.goto(`/${testWorkspaceId}/documents`);
         await page1
-            .getByRole("button", { name: "New Document" })
+            .getByRole("button", { name: "New document" })
             .or(page1.getByRole("button", { name: "Create First Document" }))
             .first()
             .click();
@@ -168,7 +168,7 @@ test.describe("Collaborative Document Editor (FR-8, FR-9, FR-10)", () => {
         await expect(
             page1.getByRole("textbox", { name: "Document Title" }),
         ).toBeEnabled();
-        await expect(page1.getByRole("alert")).not.toBeVisible();
+        await expect(page1.getByTestId("read-only-banner")).not.toBeVisible();
 
         // Session 2 for the SAME user opens the same document
         const context2 = await browser.newContext();
@@ -177,7 +177,7 @@ test.describe("Collaborative Document Editor (FR-8, FR-9, FR-10)", () => {
         await page2.goto(docUrl);
 
         // Session 2 must be switched to read-only mode
-        await expect(page2.getByRole("alert")).toBeVisible({
+        await expect(page2.getByTestId("read-only-banner")).toBeVisible({
             timeout: 15000,
         });
         await expect(page2.getByText("Read-Only Mode Active")).toBeVisible();
@@ -188,7 +188,7 @@ test.describe("Collaborative Document Editor (FR-8, FR-9, FR-10)", () => {
         await expect(
             page2.getByRole("textbox", { name: "Document Title" }),
         ).toBeDisabled();
-        await expect(page2.getByText("Read-Only")).toBeVisible();
+        await expect(page2.getByText("Read only")).toBeVisible();
 
         // Session 2 takes over editing
         await page2.getByRole("button", { name: "Take Over Editing" }).click();
@@ -201,10 +201,10 @@ test.describe("Collaborative Document Editor (FR-8, FR-9, FR-10)", () => {
         await expect(
             page2.getByRole("textbox", { name: "Document Title" }),
         ).toBeEnabled();
-        await expect(page2.getByRole("alert")).not.toBeVisible();
+        await expect(page2.getByTestId("read-only-banner")).not.toBeVisible();
 
         // Session 1 is now switched to read-only mode
-        await expect(page1.getByRole("alert")).toBeVisible({
+        await expect(page1.getByTestId("read-only-banner")).toBeVisible({
             timeout: 15000,
         });
         await expect(
@@ -227,7 +227,7 @@ test.describe("Collaborative Document Editor (FR-8, FR-9, FR-10)", () => {
         await expect(
             page1.getByRole("textbox", { name: "Document Title" }),
         ).toBeEnabled();
-        await expect(page1.getByRole("alert")).not.toBeVisible();
+        await expect(page1.getByTestId("read-only-banner")).not.toBeVisible();
 
         await page1.close();
         await context1.close();
