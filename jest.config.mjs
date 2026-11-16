@@ -65,6 +65,39 @@ const config = {
         // Type declarations and test files hold no runtime code.
         "!**/*.d.ts",
         "!**/*.test.{ts,tsx}",
+        // Interface-only modules: they compile to nothing, so a coverage tool
+        // can only report their source lines as "uncovered".
+        "!src/features/billing/types.ts",
+        "!src/features/dashboard/types.ts",
+        "!src/features/document/types.ts",
+        "!src/components/layout/types.ts",
+        // Shell composites: they need the App Router (usePathname, session,
+        // the notification store, the menu overlay) and are exercised by the
+        // Playwright navigation specs. Their logic lives in
+        // workspace-sections.ts and use-modal-dialog.ts, which are covered.
+        "!src/components/layout/account-menu.tsx",
+        "!src/components/layout/app-menu.tsx",
+        "!src/components/layout/page-header.tsx",
+        "!src/components/layout/route-error.tsx",
+        "!src/components/layout/sentry-scope.tsx",
+        "!src/components/layout/shell-notice.tsx",
+        "!src/components/layout/site-header.tsx",
+        "!src/components/layout/workspace-nav.tsx",
+        "!src/components/layout/workspace-switcher.tsx",
+        // Decorative / motion-only Paddock pieces (SVG drawing, marquee, word
+        // reveal, contour art, loader) and interaction composites built from
+        // the primitives that ARE tested; verified visually at /design-system/v2.
+        "!src/components/paddock/chat-composer.tsx",
+        "!src/components/paddock/contour-background.tsx",
+        "!src/components/paddock/cursor-flag.tsx",
+        "!src/components/paddock/floating-toolbar.tsx",
+        "!src/components/paddock/loader-screen.tsx",
+        "!src/components/paddock/marquee.tsx",
+        "!src/components/paddock/menu-overlay.tsx",
+        "!src/components/paddock/paddock-root.tsx",
+        "!src/components/paddock/scribble.tsx",
+        "!src/components/paddock/word-reveal.tsx",
+        "!src/components/paddock/wordmark.tsx",
         // Yjs / WebSocket collab hooks: need a live provider; e2e covers them.
         "!src/features/chat/hooks/use-workspace-chat.ts",
         "!src/features/chat/hooks/use-chat-read-receipts.ts",
