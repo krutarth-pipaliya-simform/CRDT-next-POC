@@ -3,6 +3,12 @@
  * These routes do not require authentication.
  */
 export const publicRoutes: string[] = [
+    // Monitoring check (see `src/app/sentry-test`). The routes themselves
+    // answer 404 in production; listing them only in development keeps the
+    // proxy from redirecting a signed-out developer away from them.
+    ...(process.env.NODE_ENV !== "production"
+        ? ["/sentry-test", "/api/sentry-test"]
+        : []),
     "/",
     "/verify-email",
     // Public rather than an auth route, so a signed-in user who follows a
