@@ -1,33 +1,14 @@
 "use server";
 
-import fs from "fs/promises";
 import { revalidatePath } from "next/cache";
-import path from "path";
 
 import { auth } from "@/features/auth/lib/auth";
 import { db } from "@/lib/db";
 import { reportError } from "@/lib/report-error";
+import { deleteUpload, saveUpload } from "@/lib/upload-storage";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
-
-async function deleteOldImageFile(oldImageUrl: string | null) {
-    if (!oldImageUrl || !oldImageUrl.startsWith("/api/uploads/")) {
-        return; // Don't attempt to delete external OAuth avatars
-    }
-    try {
-        const relativePath = oldImageUrl.replace("/api/uploads/", "");
-        const filePath = path.join(
-            process.cwd(),
-            "storage",
-            "uploads",
-            ...relativePath.split("/"),
-        );
-        await fs.unlink(filePath);
-    } catch (e) {
-        console.error("Failed to delete old profile picture:", e);
-    }
-}
 
 export type UploadProfilePictureResult =
     | {
@@ -99,18 +80,8 @@ export async function uploadProfilePicture(
         const extension = file.type.split("/")[1];
         const filename = `${session.user.id}-${Date.now()}.${extension}`;
 
-        const uploadsDir = path.join(
-            process.cwd(),
-            "storage",
-            "uploads",
-            "profiles",
-        );
-        await fs.mkdir(uploadsDir, { recursive: true });
-        const filepath = path.join(uploadsDir, filename);
-
         // Upload the new profile picture
-        await fs.writeFile(filepath, buffer);
-        const imageUrl = `/api/uploads/profiles/${filename}`;
+        const imageUrl = await saveUpload(["profiles", filename], buffer);
 
         // Update the user's profile to reference the new image
         await db.user.update({
@@ -120,7 +91,7 @@ export async function uploadProfilePicture(
 
         // Verify that the upload completed successfully (implied if we reach here without throwing)
         // Delete the old image from storage
-        await deleteOldImageFile(oldImageUrl);
+        await deleteUpload(oldImageUrl);
 
         revalidatePath("/profile");
         return {
@@ -156,7 +127,7 @@ export async function removeProfilePicture(): Promise<RemoveProfilePictureResult
         });
 
         // Delete the old image from storage
-        await deleteOldImageFile(oldImageUrl);
+        await deleteUpload(oldImageUrl);
 
         revalidatePath("/profile");
         return {

@@ -1,11 +1,9 @@
 "use server";
 
-import fs from "fs/promises";
-import path from "path";
-
 import { auth } from "@/features/auth/lib/auth";
 import { getWorkspaceRole } from "@/features/workspace/lib/rbac";
 import { reportError } from "@/lib/report-error";
+import { saveUpload } from "@/lib/upload-storage";
 
 const ALLOWED_TYPES = [
     "image/jpeg",
@@ -66,17 +64,7 @@ export async function uploadDocumentImageAction(
         const sanitizedExt = ext.replace(/[^a-z0-9]/g, "");
         const filename = `doc-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${sanitizedExt}`;
 
-        const uploadsDir = path.join(
-            process.cwd(),
-            "storage",
-            "uploads",
-            "documents",
-        );
-        await fs.mkdir(uploadsDir, { recursive: true });
-        const filepath = path.join(uploadsDir, filename);
-
-        await fs.writeFile(filepath, buffer);
-        const url = `/api/uploads/documents/${filename}`;
+        const url = await saveUpload(["documents", filename], buffer);
 
         return {
             success: true,
