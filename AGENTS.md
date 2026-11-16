@@ -190,6 +190,16 @@ All TypeScript/React source files MUST strictly follow these ordering and naming
 - **Time Series Zoom, Every Chart Exports**: a chart with a date axis uses `timeSeriesZoom(palette)` and leaves `SLIDER_SPACE` at the bottom of its grid. Pass `exportable={{ title, csv }}` to `EChart` so the chart gets PNG and CSV buttons; build CSV with `toCsv()` from `chart-export.ts`, which guards against spreadsheet formula injection. A translucent token colour is made with `withAlpha(token, alpha)`, never a literal.
 - **Aggregation Queries Guard Themselves**: `getWorkspaceAnalytics` re-checks membership via `getWorkspaceRole` and returns `null` for non-members, independently of the page's own guard.
 
+### Headless CMS Content (Binding)
+
+- **Strapi v5 REST Is the Source of Truth for Marketing Content**: blog articles, announcements, docs and release notes come from `src/features/cms/`; never hardcode such content. Config is optional at boot: `getCmsContext()` (server-only, over the pure `resolveCmsContext`) returns a discriminated union and pages render `ContentNotice` instead of throwing.
+- **One Client**: every CMS call goes through `fetchCollection` / `fetchBySlug` in `lib/cms-client.ts` (token server-side only, `next: { revalidate, tags: ["cms", "cms:<collection>"] }`, Zod-validated envelope, `CmsResult` union with `notConfigured`). New content types add a schema in `schemas/content.ts`, a collection id in `CMS_COLLECTIONS` and a query in `queries/get-content.ts`, and a `cms/schemas/<name>/schema.json` definition.
+- **Caching Uses the Pre-Cache-Components Model**: `cacheComponents` is not enabled, so use `fetch` `next.revalidate` / `next.tags` and `revalidateTag(tag, "max")`; do not add `use cache` here without enabling it app-wide.
+- **Rich Text Is Blocks JSON Rendered by React**: `BlocksRenderer` never injects HTML. Every CMS URL passes `safeLinkUrl` / `safeImageUrl`. Do not add `dangerouslySetInnerHTML` for CMS content.
+- **Public Paths Live in `src/lib/routes.ts`**: `publicRoutePrefixes` + `isPublicPath()` cover `/blog`, `/docs`, `/changelog`, `/announcements` and their children. `api/cms` is excluded in the `proxy.ts` matcher so the Strapi webhook is never redirected to `/login`; the route authenticates with `CMS_REVALIDATE_SECRET` (constant-time compare).
+- **Content Sections Come From One List**: `CONTENT_SECTIONS` (`lib/content-sections.ts`) drives the section tabs, landing header/footer and menu footer links.
+- **E2E Uses a Fixture CMS**: `e2e/fixtures/cms-server.mjs` (port 4103, `E2E_CMS_PORT`) is a second Playwright `webServer`; the config passes `CMS_API_URL` / `CMS_API_TOKEN` / `CMS_REVALIDATE_SECRET` to Next. The app never references the fixture.
+
 ### Server & Monorepo Build Isolation Convention (Binding)
 
 - **Standalone `server/` Directory**: The Node.js Express collaboration server lives in `server/` with its own `package.json` and `tsconfig.json`.
