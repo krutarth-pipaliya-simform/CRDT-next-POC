@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 
+import { SentryScope } from "@/components/layout/sentry-scope";
 import { WorkspaceNav } from "@/components/layout/workspace-nav";
 import { verifyWorkspaceRole } from "@/features/workspace/lib/rbac";
 import { getWorkspace } from "@/features/workspace/queries/get-workspace";
@@ -32,6 +33,7 @@ export default async function WorkspaceLayout({
 
     return (
         <div className="min-h-[calc(100vh-81px)] flex flex-col">
+            <SentryScope workspaceId={workspaceId} />
             <WorkspaceNav
                 workspaceId={workspaceId}
                 userRole={userRole}

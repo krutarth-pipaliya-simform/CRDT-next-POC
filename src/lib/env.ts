@@ -1,5 +1,11 @@
 import { z } from "zod";
 
+// A blank line in `.env` (`FOO=`) means "unset", not "an invalid empty value".
+const optionalText = z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z.string().min(1).optional(),
+);
+
 const envSchema = z.object({
     DATABASE_URL: z.url(), // Works for both postgres:// and prisma://
     AUTH_SECRET: z.string().min(1),
@@ -27,6 +33,17 @@ const envSchema = z.object({
     CMS_API_TOKEN: z.string().min(1).optional(),
     // Shared secret a Strapi webhook sends to POST /api/cms/revalidate.
     CMS_REVALIDATE_SECRET: z.string().min(1).optional(),
+
+    // Monitoring (Sentry). All optional: without a DSN the SDK is never
+    // initialised. The SDK reads these through `src/lib/sentry-config.ts`
+    // (tolerant of blanks and typos); they are listed here so the full set of
+    // variables the app understands stays in one place.
+    SENTRY_DSN: optionalText,
+    NEXT_PUBLIC_SENTRY_DSN: optionalText,
+    SENTRY_ORG: optionalText,
+    SENTRY_PROJECT: optionalText,
+    // Build-time only (source-map upload); never reaches the browser.
+    SENTRY_AUTH_TOKEN: optionalText,
 });
 
 export const env = envSchema.parse(process.env);

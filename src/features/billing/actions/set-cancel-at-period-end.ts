@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import type Stripe from "stripe";
 
+import { reportError } from "@/lib/report-error";
 import { setCancelAtPeriodEndSchema } from "@/schemas/billing";
 
 import { getManagedSubscription } from "../lib/managed-subscription";
@@ -62,7 +63,7 @@ export async function setCancelAtPeriodEndAction(
         const updated = await stripe.subscriptions.update(current.id, params);
         await syncSubscriptionToWorkspace(workspaceId, updated);
     } catch (error) {
-        console.error("[billing] cancellation change failed", error);
+        reportError("[billing] cancellation change failed", error);
         return {
             success: false,
             error: cancel

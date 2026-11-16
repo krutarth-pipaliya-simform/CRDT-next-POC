@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/features/auth/lib/auth";
 import { notify } from "@/features/notification/lib/notify";
 import { db } from "@/lib/db";
+import { reportError } from "@/lib/report-error";
 
 export async function joinPublicWorkspaceAction(workspaceId: string) {
     try {
@@ -64,7 +65,7 @@ export async function joinPublicWorkspaceAction(workspaceId: string) {
 
         return { success: true };
     } catch (error) {
-        console.error("Join public workspace error:", error);
+        reportError("Join public workspace error:", error);
         return { error: "Failed to join workspace" };
     }
 }

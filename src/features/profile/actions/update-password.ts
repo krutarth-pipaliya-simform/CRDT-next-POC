@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import { auth } from "@/features/auth/lib/auth";
 import { updatePasswordSchema } from "@/features/profile/schemas";
 import { db } from "@/lib/db";
+import { reportError } from "@/lib/report-error";
 
 export type UpdatePasswordResult =
     | {
@@ -75,7 +76,7 @@ export async function updatePassword(
             data: { message: "Password updated successfully" },
         };
     } catch (error) {
-        console.error("Update password error:", error);
+        reportError("Update password error:", error);
         return {
             success: false,
             error: "Failed to update password",

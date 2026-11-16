@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 
 import { auth, signOut } from "@/features/auth/lib/auth";
 import { db } from "@/lib/db";
+import { reportError } from "@/lib/report-error";
 import { createWorkspaceSchema } from "@/schemas/workspace";
 
 /**
@@ -91,7 +92,7 @@ export async function createWorkspaceAction(
             };
         }
 
-        console.error("[workspace] create failed", error);
+        reportError("[workspace] create failed", error);
         return {
             success: false,
             error: "The workspace could not be created because of a server problem. Try again in a moment.",

@@ -3,6 +3,7 @@
 import bcrypt from "bcryptjs";
 
 import { consumePasswordResetToken } from "@/features/auth/lib/password-reset-tokens";
+import { reportError } from "@/lib/report-error";
 import { resetPasswordSchema } from "@/schemas/auth";
 
 export type ResetPasswordResult =
@@ -37,7 +38,7 @@ export async function resetPasswordAction(
             message: "Your password has been changed. Log in with the new one.",
         };
     } catch (error) {
-        console.error("Reset password error:", error);
+        reportError("Reset password error:", error);
         return {
             success: false,
             error: "We could not reset your password. Try again.",

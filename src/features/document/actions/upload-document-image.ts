@@ -5,6 +5,7 @@ import path from "path";
 
 import { auth } from "@/features/auth/lib/auth";
 import { getWorkspaceRole } from "@/features/workspace/lib/rbac";
+import { reportError } from "@/lib/report-error";
 
 const ALLOWED_TYPES = [
     "image/jpeg",
@@ -82,7 +83,7 @@ export async function uploadDocumentImageAction(
             data: { url },
         };
     } catch (error) {
-        console.error("[Upload Document Image] Error:", error);
+        reportError("[Upload Document Image] Error:", error);
         return {
             success: false,
             error: "Failed to upload image to server",

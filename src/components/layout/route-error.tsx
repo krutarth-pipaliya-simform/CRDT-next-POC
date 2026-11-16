@@ -6,6 +6,7 @@ import {
     PaddockButton,
     PaddockLinkButton,
 } from "@/components/paddock/paddock-button";
+import { reportBoundaryError } from "@/lib/report-error";
 
 import { ShellNotice } from "./shell-notice";
 
@@ -24,6 +25,7 @@ export interface RouteErrorProps {
 export function RouteError({ error, retry, workspaceId }: RouteErrorProps) {
     useEffect(() => {
         console.error(error);
+        reportBoundaryError(error, "route-error-boundary");
     }, [error]);
 
     return (
