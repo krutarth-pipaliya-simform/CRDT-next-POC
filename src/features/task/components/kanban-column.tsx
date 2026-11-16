@@ -19,6 +19,12 @@ export interface KanbanColumnProps {
     status: TaskStatus;
     tasks: TaskWithAssignee[];
     canEdit?: boolean;
+    /**
+     * The dragged card would land in this column. The board decides this,
+     * because over a column with cards the drop target is a card, not the
+     * column. Falls back to the column's own droppable state when omitted.
+     */
+    isDropTarget?: boolean;
     onOpenDetail?: (task: TaskWithAssignee) => void;
     onAddTask?: (status: TaskStatus) => void;
 }
@@ -31,12 +37,14 @@ export function KanbanColumn({
     status,
     tasks,
     canEdit = false,
+    isDropTarget,
     onOpenDetail,
     onAddTask,
 }: KanbanColumnProps) {
     const { setNodeRef, isOver } = useDroppable({
         id: status,
     });
+    const highlighted = isDropTarget ?? isOver;
 
     const taskIds = tasks.map((t) => t.id);
 
@@ -47,7 +55,7 @@ export function KanbanColumn({
             data-testid={`kanban-column-${status}`}
             className={cn(
                 "flex min-h-[32.5rem] flex-col gap-2.5 rounded-[14px] bg-paddock-ink/5 p-3.5 transition-shadow",
-                isOver && "ring-[1.5px] ring-paddock-ink ring-inset",
+                highlighted && "ring-[1.5px] ring-paddock-ink ring-inset",
             )}
         >
             <header className="flex items-center justify-between gap-3 px-1 pt-0.5 pb-1.5">
@@ -75,7 +83,9 @@ export function KanbanColumn({
                 )}
             </header>
 
+            {/* The id ties each card to its column for collision detection. */}
             <SortableContext
+                id={status}
                 items={taskIds}
                 strategy={verticalListSortingStrategy}
             >
@@ -93,7 +103,7 @@ export function KanbanColumn({
                 <div
                     className={cn(
                         "rounded-[10px] border-[1.5px] border-dashed border-paddock-rule px-4 py-7 text-center transition-colors",
-                        isOver && "border-paddock-ink",
+                        highlighted && "border-paddock-ink",
                     )}
                 >
                     <p className="m-0 font-bold">Nothing here yet</p>

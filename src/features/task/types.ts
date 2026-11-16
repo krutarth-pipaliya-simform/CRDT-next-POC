@@ -17,9 +17,11 @@ export type TaskWithAssignee = Task & {
 export type TasksByStatus = Record<TaskStatus, TaskWithAssignee[]>;
 
 export const TASK_STATUS_LABELS: Record<TaskStatus, string> = {
+    BACKLOG: "Backlog",
     TODO: "To do",
     IN_PROGRESS: "In progress",
-    DONE: "Done",
+    REVIEW: "Review",
+    DONE: "Completed",
 } as const;
 
 export const TASK_PRIORITY_LABELS: Record<TaskPriority, string> = {
@@ -36,4 +38,10 @@ export const PRIORITY_CYCLE: Record<TaskPriority, TaskPriority> = {
     URGENT: "LOW",
 } as const;
 
-export const COLUMN_ORDER: TaskStatus[] = ["TODO", "IN_PROGRESS", "DONE"];
+export const COLUMN_ORDER: TaskStatus[] = [
+    "BACKLOG",
+    "TODO",
+    "IN_PROGRESS",
+    "REVIEW",
+    "DONE",
+];

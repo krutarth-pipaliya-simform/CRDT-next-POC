@@ -90,7 +90,7 @@ test.describe("Task Management & Kanban Board", () => {
         ).toBeVisible({ timeout: 15000 });
     }
 
-    test("should display Kanban board with three columns and empty state", async ({
+    test("should display Kanban board with five columns and empty state", async ({
         page,
     }) => {
         await loginAs(page, adminEmail);
@@ -99,13 +99,18 @@ test.describe("Task Management & Kanban Board", () => {
         await expect(
             page.getByRole("heading", { name: "The Board", exact: true }),
         ).toBeVisible();
-        await expect(
-            page.getByRole("heading", { name: "To do" }),
-        ).toBeVisible();
-        await expect(
-            page.getByRole("heading", { name: "In progress" }),
-        ).toBeVisible();
-        await expect(page.getByRole("heading", { name: "Done" })).toBeVisible();
+        // FR-15: the five workflow columns, in order.
+        for (const column of [
+            "Backlog",
+            "To do",
+            "In progress",
+            "Review",
+            "Completed",
+        ]) {
+            await expect(
+                page.getByRole("heading", { name: column }),
+            ).toBeVisible();
+        }
         await expect(page.getByText("No tasks on the board yet")).toBeVisible();
     });
 

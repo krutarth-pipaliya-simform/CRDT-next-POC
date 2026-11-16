@@ -95,16 +95,16 @@ export function TaskCard({
             data-testid="task-card"
             tabIndex={0}
             onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                    if (
-                        e.target instanceof Element &&
-                        e.target.tagName !== "BUTTON" &&
-                        e.target.tagName !== "A"
-                    ) {
-                        e.preventDefault();
-                        onOpenDetail?.(task);
-                    }
+                // Keys on the priority button inside belong to it.
+                if (isDragging || e.target !== e.currentTarget) return;
+                // Enter opens the task. Space picks it up through the
+                // keyboard sensor; on a card that cannot move, it opens it.
+                if (e.key === "Enter" || (e.key === " " && !listeners)) {
+                    e.preventDefault();
+                    onOpenDetail?.(task);
+                    return;
                 }
+                listeners?.onKeyDown?.(e);
             }}
             className={cn(
                 // Flat at rest on a rule. Only the card genuinely floating

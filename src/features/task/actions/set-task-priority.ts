@@ -7,28 +7,38 @@ import type { TaskPriority } from "@prisma/client";
 import { auth } from "@/features/auth/lib/auth";
 import { getWorkspaceRole } from "@/features/workspace/lib/rbac";
 import { db } from "@/lib/db";
+import { setTaskPrioritySchema } from "@/schemas/task";
 
-import { PRIORITY_CYCLE } from "../types";
-
-export type CyclePriorityResult =
+export type SetTaskPriorityResult =
     | { success: true; data: { priority: TaskPriority } }
     | { success: false; error: string };
 
-export async function cyclePriorityAction(
-    taskId: string,
-): Promise<CyclePriorityResult> {
+/**
+ * Sets a task's priority to a given value. The badge cycles locally and sends
+ * only where the clicking stopped, so this takes the target rather than
+ * "next", which would also make a retried request move it twice.
+ */
+export async function setTaskPriorityAction(
+    input: unknown,
+): Promise<SetTaskPriorityResult> {
     const session = await auth();
     if (!session?.user?.id) {
         return { success: false, error: "Unauthorized" };
     }
 
-    if (!taskId || typeof taskId !== "string") {
-        return { success: false, error: "Invalid task ID" };
+    const validated = setTaskPrioritySchema.safeParse(input);
+    if (!validated.success) {
+        return {
+            success: false,
+            error: validated.error.issues[0]?.message ?? "Invalid input",
+        };
     }
+
+    const { taskId, priority } = validated.data;
 
     const task = await db.task.findUnique({
         where: { id: taskId },
-        select: { id: true, priority: true, workspaceId: true },
+        select: { id: true, workspaceId: true },
     });
 
     if (!task) {
@@ -43,17 +53,15 @@ export async function cyclePriorityAction(
         };
     }
 
-    const nextPriority = PRIORITY_CYCLE[task.priority];
-
     try {
         await db.task.update({
             where: { id: taskId },
-            data: { priority: nextPriority },
+            data: { priority },
         });
 
         revalidatePath(`/${task.workspaceId}/tasks`);
-        return { success: true, data: { priority: nextPriority } };
+        return { success: true, data: { priority } };
     } catch {
-        return { success: false, error: "Failed to cycle priority" };
+        return { success: false, error: "Failed to change priority" };
     }
 }

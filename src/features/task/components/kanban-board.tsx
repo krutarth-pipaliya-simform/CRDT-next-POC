@@ -1,20 +1,24 @@
 "use client";
 
-import { startTransition, useOptimistic, useState } from "react";
+import { startTransition, useId, useRef, useState } from "react";
 import {
-    closestCorners,
     DndContext,
     DragOverlay,
     KeyboardSensor,
+    MeasuringStrategy,
     PointerSensor,
     useSensor,
     useSensors,
+    type Announcements,
     type DragEndEvent,
+    type DragOverEvent,
     type DragStartEvent,
+    type UniqueIdentifier,
 } from "@dnd-kit/core";
-import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
+import { arrayMove } from "@dnd-kit/sortable";
 import type { TaskStatus } from "@prisma/client";
 import { Plus, Search, X } from "lucide-react";
+import { toast } from "sonner";
 
 import { PAGE_CONTAINER } from "@/components/layout/layout-styles";
 import { PageHeader } from "@/components/layout/page-header";
@@ -23,11 +27,18 @@ import { PaddockButton } from "@/components/paddock/paddock-button";
 import { paddockFieldClasses } from "@/components/paddock/paddock-styles";
 import { Tag } from "@/components/paddock/tag";
 import { cn } from "@/lib/cn";
-import { taskStatusSchema } from "@/schemas/task";
 
 import { moveTaskAction } from "../actions/move-task";
+import {
+    boardKeyboardCoordinates,
+    columnItemsFrom,
+    columnOverlapCollision,
+    findColumn,
+    positionBetween,
+    type ColumnItems,
+} from "../lib/board-dnd";
 import type { TaskWithAssignee } from "../types";
-import { COLUMN_ORDER } from "../types";
+import { COLUMN_ORDER, TASK_STATUS_LABELS } from "../types";
 import type { MemberOption } from "./assignee-picker";
 import { CreateTaskDialog } from "./create-task-dialog";
 import { KanbanColumn } from "./kanban-column";
@@ -43,11 +54,10 @@ export interface KanbanBoardProps {
     eyebrow?: string;
 }
 
-interface MoveAction {
-    taskId: string;
-    status: TaskStatus;
-    position: number;
-}
+const SCREEN_READER_INSTRUCTIONS = {
+    draggable:
+        "Press Space to pick up the task. Use the arrow keys to move it, then press Space or Enter to drop it, or Escape to cancel. Press Enter to open the task.",
+};
 
 export function KanbanBoard({
     initialTasks,
@@ -60,6 +70,14 @@ export function KanbanBoard({
     const [prevInitial, setPrevInitial] =
         useState<TaskWithAssignee[]>(initialTasks);
     const [activeTask, setActiveTask] = useState<TaskWithAssignee | null>(null);
+    // While a card is dragged the columns render from this, so the card's
+    // ghost sits where it will land, in whichever column that is.
+    const [dragItems, setDragItems] = useState<ColumnItems | null>(null);
+    const [overColumn, setOverColumn] = useState<TaskStatus | null>(null);
+    const dragStartItemsRef = useRef<ColumnItems | null>(null);
+    // dnd-kit numbers its describedby ids with a module counter, which differs
+    // between the server render and hydration unless given a stable id.
+    const dndContextId = useId();
     const [selectedTask, setSelectedTask] = useState<TaskWithAssignee | null>(
         null,
     );
@@ -74,17 +92,6 @@ export function KanbanBoard({
         setTasks(initialTasks);
     }
 
-    // Optimistic tasks state for immediate UI feedback on drag
-    const [optimisticTasks, moveOptimisticTask] = useOptimistic(
-        tasks,
-        (currentTasks: TaskWithAssignee[], action: MoveAction) =>
-            currentTasks.map((t) =>
-                t.id === action.taskId
-                    ? { ...t, status: action.status, position: action.position }
-                    : t,
-            ),
-    );
-
     const sensors = useSensors(
         useSensor(PointerSensor, {
             activationConstraint: {
@@ -92,104 +99,140 @@ export function KanbanBoard({
             },
         }),
         useSensor(KeyboardSensor, {
-            coordinateGetter: sortableKeyboardCoordinates,
+            coordinateGetter: boardKeyboardCoordinates,
+            // Enter opens the task, so only Space picks a card up.
+            keyboardCodes: {
+                start: ["Space"],
+                cancel: ["Escape"],
+                end: ["Space", "Enter", "Tab"],
+            },
         }),
     );
 
-    function handleDragStart(event: DragStartEvent) {
-        if (!canEdit) return;
-        const task = optimisticTasks.find((t) => t.id === event.active.id);
-        if (task) {
-            setActiveTask(task);
-        }
+    function resetDrag() {
+        setActiveTask(null);
+        setDragItems(null);
+        setOverColumn(null);
+        dragStartItemsRef.current = null;
     }
 
-    function handleDragEnd(event: DragEndEvent) {
-        const { active, over } = event;
-        setActiveTask(null);
+    function handleDragStart(event: DragStartEvent) {
+        if (!canEdit) return;
+        const task = tasks.find((t) => t.id === event.active.id);
+        if (!task) return;
+        const items = columnItemsFrom(filteredTasks);
+        dragStartItemsRef.current = items;
+        setDragItems(items);
+        setOverColumn(task.status);
+        setActiveTask(task);
+    }
 
-        if (!over || !canEdit) return;
+    // Moving into another column happens here, mid-drag, so the target
+    // column opens a gap for the card. Reordering within a column is left to
+    // the sortable strategy.
+    function handleDragOver({ active, over }: DragOverEvent) {
+        if (!dragItems) return;
+        setOverColumn(over ? findColumn(dragItems, over.id) : null);
+        if (!over) return;
 
-        const activeTaskId = String(active.id);
-        const overId = String(over.id);
+        setDragItems((items) => {
+            if (!items) return items;
+            const activeId = String(active.id);
+            const overId = String(over.id);
+            const from = findColumn(items, activeId);
+            const to = findColumn(items, overId);
+            if (!from || !to || from === to) return items;
 
-        const activeTaskItem = optimisticTasks.find(
-            (t) => t.id === activeTaskId,
-        );
-        if (!activeTaskItem) return;
-
-        // A column's droppable id is its status; anything else is a task id.
-        const overColumn = taskStatusSchema.safeParse(overId);
-
-        // Determine destination status
-        let destinationStatus: TaskStatus;
-        if (overColumn.success) {
-            destinationStatus = overColumn.data;
-        } else {
-            const overTask = optimisticTasks.find((t) => t.id === overId);
-            if (!overTask) return;
-            destinationStatus = overTask.status;
-        }
-
-        // Get sorted tasks in destination column (excluding the active task)
-        const destTasks = optimisticTasks
-            .filter(
-                (t) => t.status === destinationStatus && t.id !== activeTaskId,
-            )
-            .sort((a, b) => a.position - b.position);
-
-        let newPosition: number;
-
-        if (destTasks.length === 0) {
-            newPosition = 1024;
-        } else if (overColumn.success) {
-            // Dropped onto the column container -> append to end
-            const lastTask = destTasks[destTasks.length - 1];
-            newPosition = (lastTask?.position ?? 0) + 1024;
-        } else {
-            // Dropped over a specific task in the column
-            const overIndex = destTasks.findIndex((t) => t.id === overId);
-            if (overIndex === -1) {
-                const lastTask = destTasks[destTasks.length - 1];
-                newPosition = (lastTask?.position ?? 0) + 1024;
-            } else if (overIndex === 0) {
-                // Before the first task
-                const firstPos = destTasks[0].position;
-                newPosition = firstPos > 1 ? firstPos / 2 : firstPos - 1024;
-            } else {
-                // Between overIndex - 1 and overIndex
-                const prevPos = destTasks[overIndex - 1].position;
-                const nextPos = destTasks[overIndex].position;
-                newPosition = (prevPos + nextPos) / 2;
+            const target = items[to];
+            const overIndex = target.indexOf(overId);
+            let index = target.length;
+            if (overIndex !== -1) {
+                const dragged = active.rect.current.translated;
+                const isBelow =
+                    dragged !== null &&
+                    dragged.top + dragged.height / 2 >
+                        over.rect.top + over.rect.height / 2;
+                index = overIndex + (isBelow ? 1 : 0);
             }
+
+            return {
+                ...items,
+                [from]: items[from].filter((id) => id !== activeId),
+                [to]: [
+                    ...target.slice(0, index),
+                    activeId,
+                    ...target.slice(index),
+                ],
+            };
+        });
+    }
+
+    function handleDragEnd({ active, over }: DragEndEvent) {
+        const items = dragItems;
+        const startItems = dragStartItemsRef.current;
+        const activeId = String(active.id);
+        const task = tasks.find((t) => t.id === activeId);
+
+        if (!over || !canEdit || !items || !startItems || !task) {
+            resetDrag();
+            return;
         }
 
-        // Apply optimistic update immediately
+        const column = findColumn(items, activeId);
+        if (!column) {
+            resetDrag();
+            return;
+        }
+
+        // The same arithmetic the sortable strategy previews with, so the
+        // card lands exactly where its ghost was shown.
+        let ids = items[column];
+        const overId = String(over.id);
+        if (overId !== activeId && ids.includes(overId)) {
+            ids = arrayMove(ids, ids.indexOf(activeId), ids.indexOf(overId));
+        }
+
+        const startColumn = findColumn(startItems, activeId);
+        const unchanged =
+            column === startColumn &&
+            ids.length === startItems[column].length &&
+            ids.every((id, i) => id === startItems[column][i]);
+        if (unchanged) {
+            resetDrag();
+            return;
+        }
+
+        const index = ids.indexOf(activeId);
+        const positionOf = (id: string | undefined) =>
+            tasks.find((t) => t.id === id)?.position;
+        const position = positionBetween(
+            positionOf(ids[index - 1]),
+            positionOf(ids[index + 1]),
+        );
+        const previous = { status: task.status, position: task.position };
+
+        setTasks((prev) =>
+            prev.map((t) =>
+                t.id === activeId ? { ...t, status: column, position } : t,
+            ),
+        );
+        resetDrag();
+
         startTransition(async () => {
-            moveOptimisticTask({
-                taskId: activeTaskId,
-                status: destinationStatus,
-                position: newPosition,
+            const result = await moveTaskAction({
+                taskId: activeId,
+                status: column,
+                position,
             });
-
-            // Update local state
-            setTasks((prev) =>
-                prev.map((t) =>
-                    t.id === activeTaskId
-                        ? {
-                              ...t,
-                              status: destinationStatus,
-                              position: newPosition,
-                          }
-                        : t,
-                ),
-            );
-
-            await moveTaskAction({
-                taskId: activeTaskId,
-                status: destinationStatus,
-                position: newPosition,
-            });
+            if (!result.success) {
+                // Put the card back rather than leave the board lying.
+                setTasks((prev) =>
+                    prev.map((t) =>
+                        t.id === activeId ? { ...t, ...previous } : t,
+                    ),
+                );
+                toast.error(result.error);
+            }
         });
     }
 
@@ -214,7 +257,7 @@ export function KanbanBoard({
 
     // Filter tasks by search query if any
     const filteredTasks = searchQuery.trim()
-        ? optimisticTasks.filter(
+        ? tasks.filter(
               (t) =>
                   t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                   t.description
@@ -224,7 +267,34 @@ export function KanbanBoard({
                       ?.toLowerCase()
                       .includes(searchQuery.toLowerCase()),
           )
-        : optimisticTasks;
+        : tasks;
+
+    const columns = dragItems ?? columnItemsFrom(filteredTasks);
+    const taskById = new Map(tasks.map((t) => [t.id, t]));
+
+    const titleOf = (id: UniqueIdentifier) =>
+        taskById.get(String(id))?.title ?? "The task";
+    const placeOf = (id: UniqueIdentifier) => {
+        const column = findColumn(columns, id);
+        const label = column ? TASK_STATUS_LABELS[column] : "the board";
+        return taskById.has(String(id)) ? `${titleOf(id)} in ${label}` : label;
+    };
+
+    // Spoken by dnd-kit's live region: task titles and column names, never
+    // raw ids.
+    const announcements: Announcements = {
+        onDragStart: ({ active }) => `Picked up ${titleOf(active.id)}.`,
+        onDragOver: ({ active, over }) =>
+            over
+                ? `${titleOf(active.id)} is over ${placeOf(over.id)}.`
+                : `${titleOf(active.id)} is no longer over a column.`,
+        onDragEnd: ({ active, over }) =>
+            over
+                ? `${titleOf(active.id)} was dropped in ${placeOf(over.id)}.`
+                : `${titleOf(active.id)} was dropped outside the board and stays where it was.`,
+        onDragCancel: ({ active }) =>
+            `Moving ${titleOf(active.id)} was cancelled. It stays where it was.`,
+    };
 
     const toolbar = (
         <>
@@ -323,17 +393,30 @@ export function KanbanBoard({
                 {/* Kanban columns. The board scrolls sideways inside its own
                     box on a narrow screen, never the page. */}
                 <DndContext
+                    id={dndContextId}
                     sensors={sensors}
-                    collisionDetection={closestCorners}
+                    collisionDetection={columnOverlapCollision}
+                    measuring={{
+                        droppable: { strategy: MeasuringStrategy.Always },
+                    }}
+                    accessibility={{
+                        announcements,
+                        screenReaderInstructions: SCREEN_READER_INSTRUCTIONS,
+                    }}
                     onDragStart={handleDragStart}
+                    onDragOver={handleDragOver}
                     onDragEnd={handleDragEnd}
+                    onDragCancel={resetDrag}
                 >
                     <div className="-mx-4 overflow-x-auto overscroll-x-contain px-4 pb-2 sm:mx-0 sm:px-0">
-                        <div className="grid grid-cols-[repeat(3,minmax(17rem,1fr))] items-start gap-4">
+                        <div className="grid grid-cols-[repeat(5,minmax(17rem,1fr))] items-start gap-4">
                             {COLUMN_ORDER.map((status) => {
-                                const colTasks = filteredTasks
-                                    .filter((t) => t.status === status)
-                                    .sort((a, b) => a.position - b.position);
+                                const colTasks = columns[status].flatMap(
+                                    (id) => {
+                                        const task = taskById.get(id);
+                                        return task ? [task] : [];
+                                    },
+                                );
 
                                 return (
                                     <KanbanColumn
@@ -341,6 +424,10 @@ export function KanbanBoard({
                                         status={status}
                                         tasks={colTasks}
                                         canEdit={canEdit}
+                                        isDropTarget={
+                                            activeTask !== null &&
+                                            overColumn === status
+                                        }
                                         onOpenDetail={setSelectedTask}
                                         onAddTask={
                                             canEdit ? handleAddTask : undefined

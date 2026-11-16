@@ -1,6 +1,12 @@
 import { z } from "zod";
 
-export const taskStatusSchema = z.enum(["TODO", "IN_PROGRESS", "DONE"]);
+export const taskStatusSchema = z.enum([
+    "BACKLOG",
+    "TODO",
+    "IN_PROGRESS",
+    "REVIEW",
+    "DONE",
+]);
 export type TaskStatusValue = z.infer<typeof taskStatusSchema>;
 
 export const taskPrioritySchema = z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]);
@@ -50,6 +56,11 @@ export const moveTaskSchema = z.object({
     taskId: z.string().min(1, "Task ID is required"),
     status: taskStatusSchema,
     position: z.number(),
+});
+
+export const setTaskPrioritySchema = z.object({
+    taskId: z.string().min(1, "Task ID is required"),
+    priority: taskPrioritySchema,
 });
 
 export const deleteTaskSchema = z.object({
