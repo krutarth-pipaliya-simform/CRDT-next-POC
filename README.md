@@ -206,6 +206,10 @@ Every page of the product is built in Paddock: off-white paper, olive ink, one a
     - **Shell UI store** (`src/stores/shell-ui-store.ts`): which header panel (notifications, account menu, workspace switcher, full-screen menu) is open, so opening one closes the others. Client-only UI state, so it is a plain module store.
     - Stores use selectors, keep their actions inside, and enable `devtools` in development only. See "State Management (Zustand)" in `AGENTS.md` for the rules.
 
+## CI/CD, Docker and Sonar
+
+GitHub Actions (`ci.yml`: lint, type-check, unit tests + coverage, build, Playwright e2e on postgres, Sonar; `cd.yml`: GHCR images + SSH deploy), a standalone-output `Dockerfile`, `server/Dockerfile` and `docker-compose.yml` (`docker compose up --build`). Details, required secrets/variables and honest verification limits: [docs/ci-cd.md](docs/ci-cd.md). Uploads live in `storage/` and need a volume in containers. The deploy job is unexercised scaffolding until a host exists.
+
 ## Getting Started
 
 1. **Environment Setup**

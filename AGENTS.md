@@ -269,3 +269,13 @@ All TypeScript/React source files MUST strictly follow these ordering and naming
 ### API Design & Refactoring Instructions
 
 - **Document API Payload Refactoring (Pending)**: In future refactors, update document-related schemas (e.g., `updateDocumentSchema`, `deleteDocumentSchema`, `saveDocumentStateSchema`) to only require the `documentId` (renaming the ambiguous `id` field to `documentId`) and remove `workspaceId` from the client payload. The server should fetch the document by `documentId` to determine its `workspaceId` and verify permissions dynamically. This simplifies the API payload and prevents the client from ever sending mismatched IDs.
+
+### CI/CD & Docker (Binding)
+
+- **CI installs with `npm ci --legacy-peer-deps`**; the collab server (`server/`) uses plain `npm ci`. Workflows: `.github/workflows/ci.yml`, `cd.yml`; full reference in `docs/ci-cd.md`.
+- **New required env vars go in three places**: the `env` block of `ci.yml`, the builder stage of `Dockerfile` (`src/lib/env.ts` has no skip switch, so build needs placeholders) and `docker-compose.yml`. Optional integrations (Stripe, OAuth, SMTP, Sentry) stay unconfigured in CI.
+- **CI contract with Jest**: `npm test` runs unit tests and `npm run test:coverage` writes `coverage/lcov.info`, which the Sonar job consumes (`sonar-project.properties`). Keep both.
+- **`NEXT_PUBLIC_*` are Docker build args** (inlined at build), never runtime env. `next.config.ts` keeps `output: "standalone"`.
+- **Uploads need a volume**: `storage/` is written at runtime; mount `/app/storage`. Containers set `AUTH_TRUST_HOST=true` (Auth.js `UntrustedHost`).
+- **Schema sync is `prisma db push`** (checked-in migrations are stale) in CI, the compose `migrate` service and deploy.
+- **Sonar and deploy skip cleanly** when `SONAR_TOKEN` / `DEPLOY_*` are not set; keep that behaviour. The deploy job has never been run against a real host.
