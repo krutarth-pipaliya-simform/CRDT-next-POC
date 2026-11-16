@@ -21,19 +21,21 @@ An enterprise-grade collaborative SaaS workspace built with Next.js 16 and React
 
 Every page of the product is built in Paddock: off-white paper, olive ink, one acid-lime accent, faint contour-line backgrounds, two-voice display headings (Instrument Serif caps over heavy wide Mona Sans caps), notched-corner cards and a hand-drawn scribble. The pages follow the "Converge — every page in the Paddock style" design canvas, one artboard per route. `/design-system/v2` renders every primitive; `/design-system` (v1) is kept as a record of the previous "Presence First" direction, which Paddock replaced.
 
-| Where                                         | What                                                                                                                                                                                            |
-| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/app/layout.tsx`                          | Wraps every route (and the toaster) in `<PaddockRoot>`, which attaches the Paddock fonts and turns on the scoped `.paddock-*` classes                                                           |
-| `src/components/paddock/`                     | The primitives: Wordmark, DisplayHeading, Tag, buttons, fields, RadioCardGroup, NotchedCard, ContourBackground, Scribble, WorkspaceTabs, PillTabs, MenuOverlay, avatars, pills, dialog and more |
-| `src/components/layout/`                      | The shell: `SiteHeader` (wordmark, workspace switcher, notification bell, avatar, burger + full-screen menu), `WorkspaceNav` (section tabs + the team), and `PageHeader` (the contour hero)     |
-| `src/components/layout/workspace-sections.ts` | The one list of workspace sections, shared by the tab bar and the menu                                                                                                                          |
-| `src/app/globals.css` (Paddock block)         | `--color-paddock-*` (with dark values), `--font-paddock-*`, `--radius-paddock*`, `--shadow-paddock-*`, runtime-read people and chart colours in `:root`, and the `.paddock-*` devices           |
-| `src/hooks/`                                  | `usePrefersReducedMotion`, `useScrollLock`, `useModalDialog` (native `<dialog>` as a controlled modal; a `data-autofocus` field takes first focus) and `useCurrentWorkspace`                    |
+| Where                                         | What                                                                                                                                                                                                                                                                                                 |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/app/layout.tsx`                          | Wraps every route (and the toaster) in `<PaddockRoot>`, which attaches the Paddock fonts and turns on the scoped `.paddock-*` classes                                                                                                                                                                |
+| `src/components/paddock/`                     | The primitives: Wordmark, DisplayHeading, Tag, buttons, `BackLink`, fields, RadioCardGroup, NotchedCard, ContourBackground, Scribble, WorkspaceTabs, PillTabs, MenuOverlay, avatars, pills, dialog and more                                                                                          |
+| `src/components/layout/`                      | The shell: `SiteHeader` (wordmark, workspace switcher, notification bell, avatar, burger + full-screen menu), `WorkspaceNav` (section tabs + the team), `PageHeader` (the contour hero, with an optional `back` link), and `ShellNotice` / `RouteError` (404, 403 and error panels inside the shell) |
+| `src/components/layout/workspace-sections.ts` | The one list of workspace sections, shared by the tab bar and the menu                                                                                                                                                                                                                               |
+| `src/app/globals.css` (Paddock block)         | `--color-paddock-*` (with dark values), `--font-paddock-*`, `--radius-paddock*`, `--shadow-paddock-*`, runtime-read people and chart colours in `:root`, and the `.paddock-*` devices                                                                                                                |
+| `src/hooks/`                                  | `usePrefersReducedMotion`, `useScrollLock`, `useModalDialog` (native `<dialog>` as a controlled modal; a `data-autofocus` field takes first focus), `useCurrentWorkspace`, and `useDebouncedValue` / `useDebouncedCallback` (trailing debounce, with `flush` / `cancel`)                             |
 
 - **Lime is the system.** Primary actions, selection and the focus ring (lime with an ink outline, because lime is about 1.1:1 on paper). Lime is a fill with dark `on-fill` text, or text on the always-dark `night` / `deep` grounds only.
 - **People keep their colour.** Four people hues (coral, amber, cyan, violet), hashed from the user id by `paddockPresenceVar()`, appear on avatars, card rails, chat rails and collaborator carets. Statuses, priorities and charts of counts use ink, neutrals and lime instead.
 - **Uppercase is CSS.** Tags and display headings are uppercased by `text-transform`; source text stays in sentence case, so screen readers and tests read words.
 - **Motion stops on request.** The menu reveal, drifting recent documents, scribbles, marquee and word reveal all stop under `prefers-reduced-motion`, and the marquee has a pause control.
+- **Where you are never looks like where you could go.** The current workspace tab is a lime pill (lime is selection) and ignores hover; the hand-drawn scribble only answers hover and focus on the other tabs.
+- **Every page has a way out.** Pages below a top-level section carry a `BackLink` to a real parent route (never browser history): the editor back to Documents, a workspace's overview back to All workspaces, and Profile back to the page it was opened from (`/profile?from=…`, validated server-side as a same-origin path in a workspace the caller can still open). Missing pages and errors render inside the shell (`not-found.tsx` / `error.tsx` at the root, `(dashboard)` and `[workspaceId]` levels) with links out.
 - **Charts sit on a night band.** Analytics reads `--color-paddock-chart-*` (lime, paper and neutrals) through `readChartPalette(theme)`.
 
 > **Note on tokens read at runtime.** Tailwind v4 only emits an `@theme` variable whose name appears literally in the source. The people and chart palettes are composed or read at runtime (`paddockPresenceVar()`, `readChartPalette()`), so they are declared as plain custom properties in `:root`, outside `@theme`. Any future runtime-read token belongs there too.
@@ -60,7 +62,7 @@ Every page of the product is built in Paddock: off-white paper, olive ink, one a
 
 4. **User Profile & Account Settings**
     - Comprehensive profile page at `/profile` for users to manage personal details and account preferences.
-    - Features Profile Picture Upload (local file storage) supporting JPEG, PNG, and WebP up to 5MB, with image preview before uploading and removal.
+    - Features Profile Picture Upload (local file storage) supporting JPEG, PNG, and WebP up to 5MB, with image preview before uploading, and removal behind a confirmation dialog.
     - Supports modifying the user's Full Name.
     - Secure Change Password functionality with current password validation.
     - Built with Server Actions and Zod validation.
@@ -122,7 +124,8 @@ Every page of the product is built in Paddock: off-white paper, olive ink, one a
         - **Document Image Upload & Embedding**: Dedicated `<ImageDialog>` supporting local device image uploads (PNG, JPG, WebP, GIF, SVG up to 5MB) with drag-and-drop, live thumbnail preview, file size metadata, server-side storage at `/api/uploads/documents/`, and web URL embedding with alt text.
         - Offline-first local durability via `y-indexeddb` (`IndexeddbPersistence`), allowing unimpeded editing during network disconnects and commutative merge on reconnect.
     - **Autosave & Persistence (FR-10)**:
-        - 5-second dirty-checked autosave interval persisting Yjs binary state snapshots to PostgreSQL via the `saveDocumentAction` Server Action (strictly suppressed during read-only sessions to prevent accidental overwrites).
+        - 5-second dirty-checked autosave interval persisting Yjs binary state snapshots to PostgreSQL via the `saveDocumentAction` Server Action (strictly suppressed during read-only sessions to prevent accidental overwrites). Only one save runs at a time, edits typed while a save is in flight stay dirty for the next one, and pending edits are flushed when the editor unmounts or the page is hidden.
+        - The editor does not re-render on every ProseMirror transaction (`shouldRerenderOnTransaction: false`); the toolbar and bubble menu subscribe to one shared `selectFormatState` selector via `useEditorState`, and the word count recounts after a 300 ms pause in typing.
         - Live save status indicator reflecting `Saved`, `Saving...`, `Offline (saved locally)`, and `Failed (retry)` states.
         - In-place collaborative document title editing with real-time propagation.
     - **Workspace Document Management**: Search, filtering, creation modal, and document deletion with accessible confirmation dialogs.
@@ -130,8 +133,9 @@ Every page of the product is built in Paddock: off-white paper, olive ink, one a
 
 9. **Task Management & Kanban Board (Phase 4 / FR-11, FR-12)**
     - **Kanban Board Workflow Engine**: Three-column workflow board (`To Do`, `In Progress`, `Done`) powered by `@dnd-kit/core` and `@dnd-kit/sortable` with droppable column containers, drag overlays, and status indicators.
-    - **Optimistic Drag-and-Drop (Next.js 16 Pattern)**: Instant visual reordering across and within columns using React 19's `useOptimistic` reducer and `startTransition`, backed by `moveTaskAction` Server Action with fractional position indexing (`Float`).
-    - **Instant Priority Cycling**: One-click priority cycling (`LOW` → `MEDIUM` → `HIGH` → `URGENT` → `LOW`) via `<PriorityBadge>` using optimistic transitions and semantic brand color tokens.
+    - **Drag-and-Drop That Lands Where It Shows**: The target column is the one under most of the dragged card (each column counts as a full-height lane), wherever the card was grabbed; inside it the nearest card picks the slot (`columnOverlapCollision` in `src/features/task/lib/board-dnd.ts`). The card moves between columns mid-drag, so the target column is outlined and the card's ghost sits at the insertion point while the source column closes up. The drop position is computed with the same `arrayMove` the preview uses, saved through `moveTaskAction` with fractional positions (`Float`), applied instantly, and rolled back with a toast if the server refuses. A drag that ends where it started writes nothing, and Escape restores the board.
+    - **Keyboard and Screen Readers**: Space picks a card up, arrows move it (Left/Right between columns, Up/Down within one), Space or Enter drops it, Escape cancels; Enter on a resting card opens it. Live-region announcements use task titles and column names. `DndContext` takes a stable `useId()` so its `aria-describedby` ids survive hydration.
+    - **Priority Cycling**: One-click priority cycling (`LOW` → `MEDIUM` → `HIGH` → `URGENT` → `LOW`) via `<PriorityBadge>`. The label moves on every click, but only where the clicking stops is saved (`setTaskPriorityAction`, 500 ms debounce): Low to Urgent is three clicks and one request, and a full circle sends none.
     - **Task CRUD & Modal Lifecycle**:
         - Create task modal with key-based form reset and pending state management via `useActionState`.
         - Detailed task inspection and field-level updates in `<TaskDetailDialog>` (title, description, column, priority, assignee, due date).
@@ -139,14 +143,14 @@ Every page of the product is built in Paddock: off-white paper, olive ink, one a
         - Task deletion with confirmation safety banner.
     - **Real-Time Search & Filtering**: Fast client-side filtering by task title, description, or assigned collaborator.
     - **Strict Role-Based Access Control (RBAC)**: Admins and Members can create, edit, move, and delete tasks; Guests are restricted to view-only mode with disabled drag, non-interactive badges, and hidden action triggers.
-    - **E2E Test Suite**: Comprehensive Playwright test suite (`e2e/task.spec.ts`) with 8 scenarios verifying empty state, task creation, priority cycling, detail editing, search filtering, drag-and-drop column transition, deletion confirmation, and guest RBAC enforcement.
+    - **E2E Test Suite**: Comprehensive Playwright test suite (`e2e/task.spec.ts`) with 8 scenarios verifying empty state, task creation, priority cycling, detail editing, search filtering, drag-and-drop column transition, deletion confirmation, and guest RBAC enforcement. `e2e/task-dnd.spec.ts` adds 5 drag scenarios: a cross-column drop between two cards (outline, ghost and stored order), a same-column move landing where the preview showed it, column choice by overlap when grabbed near the card's edge, a drag ending on its own slot writing nothing, and a keyboard move between columns.
 
 10. **Team Chat, Presence & Notifications (Phase 5 / FR-13, FR-14)**
     - **Realtime Workspace Chat**: A `#general` channel per workspace at `/[workspaceId]/chat`, backed by the same standalone Yjs collaboration server as the document editor (room `chat:<workspaceId>`). PostgreSQL is the source of truth — `sendMessageAction` persists the message first, then the author appends it to a shared `Y.Array` that fans it out to every connected client. Messages are de-duplicated by database id, so the server-rendered history and the CRDT replay converge on one list.
     - **Optimistic Message Delivery**: Messages render immediately in a `sending` state, swap to the persisted row on success, and fall back to an inline `Not sent / Retry` affordance on failure — no message is ever silently lost.
     - **Online Presence & Typing Indicators**: Yjs awareness drives a live participant bar (deterministic per-user colors via the shared `getUserColor` palette, overflow chip, and connection status) plus a debounced typing indicator. Typing flags are re-derived on a timer so a peer who goes quiet expires correctly instead of appearing stuck.
     - **Composer Ergonomics**: Auto-growing textarea, `Enter` to send / `Shift+Enter` for a newline, a 2000-character limit with a counter that appears near the threshold, and `@mention` support.
-    - **SSE Notification Stream**: `GET /api/notifications/stream` is an authenticated Server-Sent Events route handler. The recipient is taken from the session — never the request — so a client cannot subscribe to another user's notifications. It sends an opening `ready` frame, 25-second heartbeat comments to defeat proxy buffering, and unsubscribes cleanly on `request.signal` abort. The client reconnects automatically on error.
+    - **SSE Notification Stream**: `GET /api/notifications/stream` is an authenticated Server-Sent Events route handler. The recipient is taken from the session — never the request — so a client cannot subscribe to another user's notifications. It sends an opening `ready` frame, 25-second heartbeat comments to defeat proxy buffering, and unsubscribes cleanly on `request.signal` abort. The client reconnects automatically on error, backing off from 5 s to a minute. A burst of notifications triggers one `router.refresh()` (750 ms debounce), and only the header bell refreshes, so the activity page's second stream does not double it.
     - **Notification Bell & Activity Feed**: A bell in the site header shows a live unread badge, a dropdown of recent notifications with a per-item read state, `Mark all read`, and a live-connection dot. Each workspace also has an `/[workspaceId]/activity` feed listing that user's workspace activity, read and unread alike.
     - **Notification Triggers**: `TASK_ASSIGNED` (on creation and on reassignment, never to the actor), `TASK_COMPLETED` (any path into the `Done` column, including a drag), `DOCUMENT_CREATED`, `MEMBER_JOINED` (invite link and public self-join), and `MENTION` (chat `@mentions` resolved against workspace display names and email handles).
     - **Best-Effort Delivery**: `notify()` fans out one persisted row per recipient and then publishes to an in-process bus. Failures are logged and swallowed, so a notification problem can never fail the mutation that triggered it.
@@ -174,6 +178,15 @@ Every page of the product is built in Paddock: off-white paper, olive ink, one a
     - **Cross-Surface Coverage**: Sonner toasts receive the resolved theme explicitly (`AppToaster`); Kanban column tints, task priority badges, the collaborative editor, code blocks (which stay dark in both themes to match the bundled highlight.js theme), and hard-edged shadows all have dark values. Shadows are tokenised via `--color-brand-shadow` so the "Machined Precision" hard shadow stays visible on a dark ground.
     - **Cross-Tab Sync**: A change in one tab propagates through the `storage` event; other tabs re-theme without a reload.
     - **E2E Test Suite**: Playwright coverage (`e2e/theme.spec.ts`) with 6 scenarios verifying OS-default resolution in both directions, switching and persistence across a hard reload, an explicit choice overriding the OS, the init script shipping inside `<head>` ahead of any body content, returning to `system` and picking up a live OS change, and the control exposing an accessible radio group.
+
+13. **PRD Gap Closure (Password Reset, Five-Column Board, Enterprise Billing, Analytics Export)**
+    - **Password Reset (FR-3)**: `/forgot-password` emails a one-hour, single-use link to `/reset-password`. Tokens reuse the Auth.js `VerificationToken` table under a `password-reset:<email>` identifier and are stored as SHA-256 hashes, so neither a database read nor a verification token can be redeemed as a reset. The request form answers identically whether or not the address has an account and rate-limits to one email a minute; redemption deletes the token inside the transaction that sets the password, so two concurrent redemptions cannot both succeed. Following the link also verifies an unverified email. Accounts created with Google or GitHub can use it to set a first password. The development quick link is never returned in production.
+    - **`APP_URL`**: links in emails and Stripe return URLs are built from `APP_URL` when set, instead of the client-controlled `Host` header (which would let an attacker point a victim's reset link at another site).
+    - **Five Kanban Columns (FR-15)**: Backlog → To Do → In Progress → Review → Completed (`TaskStatus` gained `BACKLOG` and `REVIEW`; `DONE` keeps its value and is labelled "Completed"). Columns, status pills, the status donut and keyboard movement all derive from `COLUMN_ORDER`.
+    - **Enterprise Plan & Plan Changes (FR-19, FR-21)**: Free / Pro / Enterprise. Enterprise unlocks a 12-month analytics range and is sold through `STRIPE_ENTERPRISE_PRICE_ID` (optional; without it the plan is listed but not for sale). A paying workspace switches between Pro and Enterprise in place (`changeSubscriptionPlanAction`: an upgrade is invoiced for the prorated difference immediately, a downgrade credits the next invoice) and can cancel at period end or take the cancellation back (`setCancelAtPeriodEndAction`) behind a confirmation dialog. The webhook now reads the plan off the subscription's Stripe price (`planForPriceId`), so a portal plan switch also lands correctly.
+    - **Invoice & Payment History (FR-21)**: the billing page lists the workspace's last 24 invoices (number, period, amount, status, hosted page and PDF) and payments (card, amount, refunds, receipt), read live from Stripe for admins only.
+    - **Analytics Zoom, Export & User Growth (FR-17, FR-18)**: time-series charts zoom by wheel, pinch, drag or a slider; every chart has PNG and CSV download buttons (CSV cells that would run as spreadsheet formulas are neutralised); a new **Member growth** chart plots members over time from `WorkspaceMember.joinedAt`. The legend toggles series, and the date range remains the server-enforced filter.
+    - **E2E**: `e2e/password-reset.spec.ts` (3 scenarios) plus new billing/analytics scenarios for Enterprise history, plan-card actions, the cancel dialog, billing history, and CSV/PNG export. `E2E_PORT=3001 npm run test:e2e` runs the suite against a server on another port.
 
 ## Getting Started
 
@@ -210,6 +223,7 @@ Every page of the product is built in Paddock: off-white paper, olive ink, one a
     STRIPE_SECRET_KEY="sk_test_..."
     STRIPE_WEBHOOK_SECRET="whsec_..."   # printed by `stripe listen`
     STRIPE_PRO_PRICE_ID="price_..."     # a recurring price on the Pro product
+    STRIPE_ENTERPRISE_PRICE_ID="price_..."  # optional: a recurring price for Enterprise
     ```
 
     Forward webhooks to the app while developing:
@@ -221,6 +235,17 @@ Every page of the product is built in Paddock: off-white paper, olive ink, one a
     Without these, the billing page renders a "Stripe is not configured" notice and the upgrade button is disabled — the rest of the app is unaffected.
 
 Open [http://localhost:3000](http://localhost:3000) with your browser. You will be automatically redirected to the `/login` screen due to the `proxy.ts` auth guard.
+
+## Known Limitations (PRD Gap Closure)
+
+- **Sessions for deleted accounts end within a minute**, not instantly: the `jwt` callback re-checks the user at most once a minute to avoid a database read on every `auth()` call. Creating a workspace in that window reports "Your session has ended" and signs the session out.
+
+- **A password reset does not sign other devices out.** Sessions are JWTs, so a token issued before the reset stays valid until it expires. Revoking them needs a per-user token version checked in the `jwt` callback.
+- **Reset requests have a small timing difference.** An existing account takes longer to answer (token write and email send) than an unknown one; the copy is identical, but the timing is not padded.
+- **`joinedAt` was backfilled to the date of the schema push**, so member growth is only accurate for people who joined afterwards. Members who leave disappear from the series rather than being subtracted on their leave date.
+- **"Professional" is labelled "Pro"** in the product, as before.
+- **Enterprise cannot be bought until `STRIPE_ENTERPRISE_PRICE_ID` is set**; no Enterprise price was created in the Stripe account.
+- **Zoom is pointer-only.** The ECharts slider cannot be operated from the keyboard; the same data is available through the CSV export and each chart's text label.
 
 ## Known Limitations (Design System)
 
