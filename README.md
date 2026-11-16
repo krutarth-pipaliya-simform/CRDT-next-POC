@@ -260,6 +260,12 @@ Every page of the product is built in Paddock: off-white paper, olive ink, one a
 
     Set `NEXT_PUBLIC_SENTRY_DSN` (see `.env.example` for the rest). To verify in development, open `/sentry-test` (404 in production) and press the buttons: a client error, a render error and a server route error each appear as an issue in your Sentry project within a minute, and page loads appear under Performance when traced. `NEXT_PUBLIC_*` values are inlined at build time, so rebuild after changing them. With `tunnelRoute` active, browser events go through `/monitoring` on this origin, which `proxy.ts` excludes from the login redirect.
 
+## Testing
+
+- **Unit tests (Jest)**: `npm test` runs them once, `npm run test:watch` re-runs on change, `npm run test:coverage` writes `coverage/lcov.info` plus a text summary and **fails below 80% statements, branches, functions and lines**. Set up with `next/jest`; no database, network or `.env` is needed (Prisma, Auth.js, Stripe, `fetch` and nodemailer are mocked, test env values come from `jest.env.ts`, and `TZ` is pinned to UTC). Tests are colocated with the code as `*.test.ts(x)`; a file that needs a DOM starts with `/** @jest-environment jsdom */`. Jest only looks under `src/`, so `e2e/`, `server/`, `.next/` and the git worktrees in `.claude/` are never picked up.
+- **What the 80% measures**: the unit-testable logic, declared in `collectCoverageFrom` in `jest.config.mjs`: `src/lib`, `src/schemas`, `src/hooks`, `src/stores`, every feature's `lib/`, `schemas`, `stores/`, `hooks/` and `types.ts`, plus the Paddock and layout modules. **It excludes**, each with a comment in the config: Server Actions (`actions/`), DB queries (`queries/`), route files (`src/app/**`) and feature components (integration-shaped; Playwright covers them), the Yjs/WebSocket and EventSource hooks, Auth.js and Prisma wiring, ECharts option builders, interface-only `types.ts` files, the app-shell composites and the motion-only Paddock pieces. The number is therefore a measure of that logic, not of the whole app.
+- **E2E (Playwright)**: `npm run test:e2e` (see above).
+
 Open [http://localhost:3000](http://localhost:3000) with your browser. You will be automatically redirected to the `/login` screen due to the `proxy.ts` auth guard.
 
 ## Known Limitations (Headless CMS)
