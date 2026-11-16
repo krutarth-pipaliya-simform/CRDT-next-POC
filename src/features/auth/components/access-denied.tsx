@@ -45,11 +45,16 @@ export function AccessDenied({
 }
 
 export interface ForbiddenNumeralProps {
+    /** The status drawn in outline. Defaults to "403". */
+    numeral?: string;
     className?: string;
 }
 
-/** The outlined "403" behind a refusal. Decoration only; the code is also written out. */
-export function ForbiddenNumeral({ className }: ForbiddenNumeralProps) {
+/** The outlined status ("403", "404") behind a refusal. Decoration only; the code is also written out. */
+export function ForbiddenNumeral({
+    numeral = "403",
+    className,
+}: ForbiddenNumeralProps) {
     return (
         <span
             aria-hidden="true"
@@ -59,7 +64,7 @@ export function ForbiddenNumeral({ className }: ForbiddenNumeralProps) {
                 className,
             )}
         >
-            403
+            {numeral}
         </span>
     );
 }

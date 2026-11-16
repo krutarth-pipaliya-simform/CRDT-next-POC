@@ -5,6 +5,10 @@
 export const publicRoutes: string[] = [
     "/",
     "/verify-email",
+    // Public rather than an auth route, so a signed-in user who follows a
+    // reset link from their email is not bounced to the dashboard.
+    "/forgot-password",
+    "/reset-password",
     "/favicon.ico",
     "/design-system/v2",
 ];

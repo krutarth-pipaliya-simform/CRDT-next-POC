@@ -126,6 +126,12 @@ export function LoginForm() {
                     autoComplete="current-password"
                     required
                 />
+                <Link
+                    href="/forgot-password"
+                    className={`${AUTH_TEXT_LINK} -mt-1.5 self-end text-sm`}
+                >
+                    Forgot password?
+                </Link>
 
                 {state?.error && state.error !== "unverified" && (
                     <AuthNotice tone="danger">{state.error}</AuthNotice>

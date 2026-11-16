@@ -8,6 +8,15 @@ import Google from "next-auth/providers/google";
 import { db } from "@/lib/db";
 import { loginSchema } from "@/schemas/auth";
 
+/**
+ * How long a session may go between checks that its user still exists. A JWT
+ * is never looked up on its own, so without this a deleted user stays signed
+ * in until the token expires; with it they are signed out within a minute.
+ */
+const USER_RECHECK_MS = 60_000;
+
+type SessionUserCheck = "exists" | "gone" | "unknown";
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
     adapter: PrismaAdapter(db),
     pages: {
@@ -71,7 +80,40 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         async jwt({ token, user }) {
             if (user?.id) {
                 token.id = user.id;
+                token.userCheckedAt = Date.now();
+                return token;
             }
+
+            const userId = token.id ?? token.sub;
+            if (
+                userId &&
+                Date.now() - (token.userCheckedAt ?? 0) > USER_RECHECK_MS
+            ) {
+                // A failed lookup keeps the session and retries next request:
+                // a thrown error here would make Auth.js clear the cookie and
+                // sign everyone out during a database blip.
+                const check = await db.user
+                    .findUnique({ where: { id: userId }, select: { id: true } })
+                    .then((found): SessionUserCheck =>
+                        found ? "exists" : "gone",
+                    )
+                    .catch((error: unknown): SessionUserCheck => {
+                        console.error(
+                            "[auth] session user check failed",
+                            error,
+                        );
+                        return "unknown";
+                    });
+                // Returning null makes Auth.js clear the session cookie, so
+                // every later check (proxy, pages, actions) sees no session.
+                if (check === "gone") {
+                    return null;
+                }
+                if (check === "exists") {
+                    token.userCheckedAt = Date.now();
+                }
+            }
+
             return token;
         },
         async session({ session, token }) {
