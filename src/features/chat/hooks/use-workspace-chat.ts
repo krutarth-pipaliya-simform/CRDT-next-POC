@@ -5,17 +5,21 @@ import { WebsocketProvider } from "y-websocket";
 import * as Y from "yjs";
 
 import { getUserColor } from "@/lib/presence";
+import { chatAttachmentKind, chatBroadcastSchema } from "@/schemas/chat";
 
 import { sendMessageAction } from "../actions/send-message";
 import {
     CHAT_BROADCAST_LIMIT,
     TYPING_THROTTLE_MS,
     TYPING_TIMEOUT_MS,
+    type ChatAuthor,
     type ChatBroadcast,
     type ChatConnectionStatus,
     type ChatMessage,
     type ChatPresenceUser,
+    type ChatReadReceipt,
 } from "../types";
+import { useChatReadReceipts } from "./use-chat-read-receipts";
 
 const MESSAGES_KEY = "messages";
 /** Cadence at which stale typing flags are re-evaluated. */
@@ -32,6 +36,10 @@ export interface UseWorkspaceChatOptions {
     };
     /** GUEST members read the channel without contributing presence noise or messages. */
     canPost: boolean;
+    /** Members' persisted read cursors, from `getChatReadReceipts`. */
+    initialReadReceipts: ChatReadReceipt[];
+    /** The reader is scrolled to the newest message, so it counts as seen. */
+    isViewingLatest: boolean;
 }
 
 export interface UseWorkspaceChatResult {
@@ -40,7 +48,9 @@ export interface UseWorkspaceChatResult {
     typingUsers: ChatPresenceUser[];
     connectionStatus: ChatConnectionStatus;
     isSending: boolean;
-    sendMessage: (body: string) => Promise<void>;
+    /** Other members whose read cursor stops at each message, keyed by message id. */
+    seenBy: ReadonlyMap<string, ChatAuthor[]>;
+    sendMessage: (body: string, file?: File | null) => Promise<void>;
     notifyTyping: () => void;
     retryMessage: (messageId: string) => Promise<void>;
 }
@@ -53,17 +63,20 @@ function sortByCreatedAt(messages: ChatMessage[]): ChatMessage[] {
     });
 }
 
-function isBroadcast(value: unknown): value is ChatBroadcast {
-    if (typeof value !== "object" || value === null) return false;
-    const candidate = value as Partial<ChatBroadcast>;
-    return (
-        typeof candidate.id === "string" &&
-        typeof candidate.body === "string" &&
-        typeof candidate.createdAt === "string" &&
-        typeof candidate.author === "object" &&
-        candidate.author !== null &&
-        typeof candidate.author.id === "string"
-    );
+/** Entries any peer wrote to the room are parsed; one that does not parse is dropped. */
+function parseBroadcasts(values: unknown[]): ChatBroadcast[] {
+    const broadcasts: ChatBroadcast[] = [];
+    for (const value of values) {
+        const parsed = chatBroadcastSchema.safeParse(value);
+        if (parsed.success) broadcasts.push(parsed.data);
+    }
+    return broadcasts;
+}
+
+/** A message waiting to be (re)delivered: what the user typed and attached. */
+interface PendingMessage {
+    body: string;
+    file: File | null;
 }
 
 function resolveWebSocketUrl(): string {
@@ -88,9 +101,11 @@ export function useWorkspaceChat({
     initialMessages,
     currentUser,
     canPost,
+    initialReadReceipts,
+    isViewingLatest,
 }: UseWorkspaceChatOptions): UseWorkspaceChatResult {
     const lastTypingSentRef = useRef<number>(0);
-    const pendingBodiesRef = useRef<Map<string, string>>(new Map());
+    const pendingRef = useRef<Map<string, PendingMessage>>(new Map());
 
     const [messages, setMessages] = useState<ChatMessage[]>(() =>
         sortByCreatedAt(initialMessages),
@@ -157,7 +172,7 @@ export function useWorkspaceChat({
         const yMessages = ydoc.getArray<ChatBroadcast>(MESSAGES_KEY);
 
         const syncFromDoc = () => {
-            mergeBroadcasts(yMessages.toArray().filter(isBroadcast));
+            mergeBroadcasts(parseBroadcasts(yMessages.toArray()));
         };
 
         syncFromDoc();
@@ -357,24 +372,33 @@ export function useWorkspaceChat({
         [ydoc],
     );
 
+    const markFailed = useCallback((localId: string) => {
+        setMessages((prev) =>
+            prev.map((message) =>
+                message.id === localId
+                    ? { ...message, deliveryState: "failed" }
+                    : message,
+            ),
+        );
+    }, []);
+
     const deliver = useCallback(
-        async (localId: string, body: string) => {
+        async (localId: string, { body, file }: PendingMessage) => {
             setIsSending(true);
             try {
-                const result = await sendMessageAction({ workspaceId, body });
+                const formData = new FormData();
+                formData.set("workspaceId", workspaceId);
+                formData.set("body", body);
+                if (file) formData.set("file", file);
+
+                const result = await sendMessageAction(formData);
 
                 if (!result.success) {
-                    setMessages((prev) =>
-                        prev.map((message) =>
-                            message.id === localId
-                                ? { ...message, deliveryState: "failed" }
-                                : message,
-                        ),
-                    );
+                    markFailed(localId);
                     return result.error;
                 }
 
-                pendingBodiesRef.current.delete(localId);
+                pendingRef.current.delete(localId);
 
                 // Swap the optimistic row for the persisted one, keyed by database id
                 setMessages((prev) =>
@@ -388,29 +412,26 @@ export function useWorkspaceChat({
                     ),
                 );
 
+                // Persisted first, fanned out second
                 broadcast(result.data);
                 return null;
             } catch (error) {
                 console.error("[Chat] Failed to deliver message:", error);
-                setMessages((prev) =>
-                    prev.map((message) =>
-                        message.id === localId
-                            ? { ...message, deliveryState: "failed" }
-                            : message,
-                    ),
-                );
-                return "Failed to send message";
+                markFailed(localId);
+                return file
+                    ? `"${file.name}" could not be sent. Check your connection and try again.`
+                    : "Failed to send message";
             } finally {
                 setIsSending(false);
             }
         },
-        [workspaceId, broadcast],
+        [workspaceId, broadcast, markFailed],
     );
 
     const sendMessage = useCallback(
-        async (rawBody: string) => {
+        async (rawBody: string, file: File | null = null) => {
             const body = rawBody.trim();
-            if (body.length === 0 || !canPost) return;
+            if ((body.length === 0 && !file) || !canPost) return;
 
             const localId = `local-${
                 typeof crypto !== "undefined" &&
@@ -419,7 +440,8 @@ export function useWorkspaceChat({
                     : `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
             }`;
 
-            pendingBodiesRef.current.set(localId, body);
+            const pending: PendingMessage = { body, file };
+            pendingRef.current.set(localId, pending);
             clearTyping();
 
             setMessages((prev) =>
@@ -435,12 +457,23 @@ export function useWorkspaceChat({
                             email: currentUser.email ?? null,
                             image: currentUser.image ?? null,
                         },
+                        // No URL until the server has stored the file
+                        attachment: file
+                            ? {
+                                  url: "",
+                                  name: file.name,
+                                  type:
+                                      chatAttachmentKind(file.name)
+                                          ?.contentType ?? file.type,
+                                  size: file.size,
+                              }
+                            : null,
                         deliveryState: "sending",
                     },
                 ]),
             );
 
-            const error = await deliver(localId, body);
+            const error = await deliver(localId, pending);
             if (error) {
                 const { toast } = await import("sonner");
                 toast.error(error);
@@ -451,8 +484,8 @@ export function useWorkspaceChat({
 
     const retryMessage = useCallback(
         async (messageId: string) => {
-            const body = pendingBodiesRef.current.get(messageId);
-            if (!body) return;
+            const pending = pendingRef.current.get(messageId);
+            if (!pending) return;
 
             setMessages((prev) =>
                 prev.map((message) =>
@@ -462,7 +495,7 @@ export function useWorkspaceChat({
                 ),
             );
 
-            const error = await deliver(messageId, body);
+            const error = await deliver(messageId, pending);
             if (error) {
                 const { toast } = await import("sonner");
                 toast.error(error);
@@ -471,12 +504,23 @@ export function useWorkspaceChat({
         [deliver],
     );
 
+    const seenBy = useChatReadReceipts({
+        ydoc,
+        workspaceId,
+        currentUserId: currentUser.id,
+        canWrite: canPost,
+        messages,
+        initialReceipts: initialReadReceipts,
+        isViewingLatest,
+    });
+
     return {
         messages,
         participants,
         typingUsers,
         connectionStatus,
         isSending,
+        seenBy,
         sendMessage,
         notifyTyping,
         retryMessage,

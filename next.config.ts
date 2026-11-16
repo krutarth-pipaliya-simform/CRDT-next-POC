@@ -16,6 +16,13 @@ const nextConfig: NextConfig = {
             },
         ],
     },
+    experimental: {
+        serverActions: {
+            // Uploads go through Server Actions; the largest is a chat file
+            // (CHAT_ATTACHMENT_MAX_BYTES, 8 MB) plus multipart overhead.
+            bodySizeLimit: "9mb",
+        },
+    },
     // Required to allow other devices on LAN to use the dev server properly
     allowedDevOrigins: ["172.16.6.126"],
 };

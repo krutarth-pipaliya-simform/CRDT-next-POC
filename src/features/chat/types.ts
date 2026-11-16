@@ -2,6 +2,16 @@ import type { User } from "@prisma/client";
 
 export type ChatAuthor = Pick<User, "id" | "name" | "email" | "image">;
 
+/** One shared file on a message. `url` is served by `/api/uploads/chat/…` to members only. */
+export interface ChatAttachment {
+    url: string;
+    name: string;
+    /** Content type from the allow-list, never the browser's claim. */
+    type: string;
+    /** Bytes. */
+    size: number;
+}
+
 /** Delivery state of a message in the local list. Persisted messages are "sent". */
 export type ChatDeliveryState = "sending" | "sent" | "failed";
 
@@ -11,6 +21,7 @@ export interface ChatMessage {
     /** ISO string — keeps server payloads and CRDT broadcasts identically shaped. */
     createdAt: string;
     author: ChatAuthor;
+    attachment: ChatAttachment | null;
     deliveryState: ChatDeliveryState;
 }
 
@@ -23,6 +34,18 @@ export interface ChatBroadcast {
     body: string;
     createdAt: string;
     author: ChatAuthor;
+    attachment: ChatAttachment | null;
+}
+
+/**
+ * How far one member has read the channel. Persisted as a `ChatReadCursor`
+ * row, then written to the room's shared `Y.Map` under the reader's id so
+ * other clients move their "Seen by" marker without a reload.
+ */
+export interface ChatReadReceipt {
+    user: ChatAuthor;
+    /** ISO string: the `createdAt` of the latest message the reader has seen. */
+    lastReadAt: string;
 }
 
 export interface ChatPresenceUser {
@@ -50,6 +73,9 @@ export const TYPING_THROTTLE_MS = 1_500;
 
 /** Messages loaded from PostgreSQL when the chat page renders. */
 export const CHAT_HISTORY_LIMIT = 50;
+
+/** Quiet period before a read cursor is written, so a burst of messages costs one write. */
+export const READ_RECEIPT_DEBOUNCE_MS = 800;
 
 /** Upper bound on messages retained in the shared CRDT array. */
 export const CHAT_BROADCAST_LIMIT = 300;
