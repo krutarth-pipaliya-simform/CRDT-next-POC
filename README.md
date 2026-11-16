@@ -9,6 +9,7 @@ An enterprise-grade collaborative SaaS workspace built with Next.js 16 and React
 - **Styling**: Tailwind CSS v4 with the custom "Presence First" design system (see below)
 - **Database**: PostgreSQL with Prisma ORM
 - **Billing**: Stripe Checkout + Billing Portal, verified webhooks at `/api/webhooks/stripe`
+- **Client State**: Zustand (`zustand`) for genuinely shared client state only: the Kanban board, the notification inbox and the header panels. Server data stays with Server Components and Server Actions; the Yjs document stays in Yjs.
 - **Charts**: Apache ECharts, dynamically imported on the analytics route only
 - **Typography**: Schibsted Grotesk for product chrome, Newsreader for the document canvas, Geist Mono for data
 - **Authentication**: NextAuth v5 (Auth.js) supporting Google OAuth & Email/Password Credentials
@@ -198,6 +199,12 @@ Every page of the product is built in Paddock: off-white paper, olive ink, one a
     - **Read Receipts**: when a Member or Admin has the channel open on a visible tab and is scrolled to the newest message, `markChatReadAction` moves their `ChatReadCursor` forward to that message's own `createdAt` (the client names a message, never a time, and the cursor never moves back). The persisted receipt is then written to the room's shared `Y.Map` (`receipts`), so other open clients move the "Seen by" avatars under the latest message each member has read without a reload. Readers never see their own receipt, and an author is not listed under their own message. Guests neither write a cursor nor appear in receipts, matching how they leave no presence or typing trace.
     - **Shared Upload Storage**: `src/lib/upload-storage.ts` (`saveUpload` / `readUpload` / `deleteUpload`) is now the only code that touches `storage/uploads`; profile pictures and document images use it too, and it refuses path segments that could climb out of the upload root. `serverActions.bodySizeLimit` is raised to 9 MB, which also lets document images up to their stated 5 MB through (the 1 MB default rejected them).
     - **E2E**: `e2e/chat-files-and-receipts.spec.ts` (4 scenarios): a file and an image surviving a reload and downloading byte-for-byte; a refused SVG, an oversized PDF and a text file disguised as a PNG (rejected by the server, nothing stored); a chat file refused to a non-member (404) and to a signed-out request (401) but served to a member; and a live "Seen by" receipt in a second session that survives a reload.
+
+15. **Zustand State Management**
+    - **Kanban board store** (`src/features/task/stores/board-store.ts`): the optimistic task list, search query, open-task and create dialogs, and the drag preview (`dragItems`, `overColumn`, start snapshot) with their actions (`placeTask` / `restorePlacement` for the move and its rollback). Created per mounted board by `BoardStoreProvider` and seeded from the server-rendered tasks, so the toolbar and dialogs read it with selectors instead of receiving callbacks.
+    - **Notification store** (`src/features/notification/stores/notification-store.ts`): one inbox (list, unread count, stream status) shared by the header bell and the activity feed, provided by the dashboard layout. The bell owns the single SSE connection and the one router refresher; the feed only reads the store.
+    - **Shell UI store** (`src/stores/shell-ui-store.ts`): which header panel (notifications, account menu, workspace switcher, full-screen menu) is open, so opening one closes the others. Client-only UI state, so it is a plain module store.
+    - Stores use selectors, keep their actions inside, and enable `devtools` in development only. See "State Management (Zustand)" in `AGENTS.md` for the rules.
 
 ## Getting Started
 
